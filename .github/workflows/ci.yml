@@ -1,0 +1,58 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: control-plane
+    services:
+      postgres:
+        image: postgres:15.4
+        env:
+          POSTGRES_DB: db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+    steps:
+    - name: Check out git repo
+      uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install poetry
+      run: curl -sSL https://install.python-poetry.org | python -
+    - name: Install dependencies
+      run: poetry install
+    - name: Run type checker
+      run: poetry run mypy .
+    - name: Run unit tests
+      run: poetry run pytest
+    - name: Build wheel
+      run: poetry build --format wheel
+    - name: Build Docker image
+      run: docker build -t 921216064263.dkr.ecr.eu-west-2.amazonaws.com/control-plane:$(echo $GITHUB_SHA | cut -c1-8) .
+    - name: Install AWS CLI
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        pip install --upgrade pip
+        pip install awscli
+    - name: Upload image to ECR
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 921216064263.dkr.ecr.eu-west-2.amazonaws.com
+        docker push 921216064263.dkr.ecr.eu-west-2.amazonaws.com/control-plane:$(echo $GITHUB_SHA | cut -c1-8)
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: 'eu-west-2'

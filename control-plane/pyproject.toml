@@ -7,7 +7,27 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pydantic = "^2.4.0"
+fastapi = "^0.103.1"
+uvicorn = "^0.23.2"
+psycopg2-binary = "^2.9.7"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
+pytest = "^7.4.2"
+types-psycopg2 = "^2.9.21.14"
+
+[tool.poetry.scripts]
+api = "control_plane.entrypoints.basic_api:main"
+
+[tool.pytest.ini_options]
+addopts = "--verbose"
+testpaths = [
+    "tests"
+]
+
+[tool.mypy]
+strict = true
 
 [build-system]
 requires = ["poetry-core"]
