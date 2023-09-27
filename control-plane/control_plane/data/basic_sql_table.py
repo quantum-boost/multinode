@@ -6,7 +6,6 @@ import psycopg2
 
 
 class BasicSqlDataStore:
-
     def __init__(self, conn: psycopg2.extensions.connection) -> None:
         self._conn = conn
 
@@ -39,7 +38,7 @@ class BasicSqlDataStore:
                     INSERT INTO people
                     VALUES (%s, %s);
                     """,
-                    (name, age)
+                    (name, age),
                 )
 
     def get_person_age(self, name: str) -> int:
@@ -51,7 +50,7 @@ class BasicSqlDataStore:
                     FROM people
                     WHERE name = %s;
                     """,
-                    (name,)
+                    (name,),
                 )
 
                 row = cursor.fetchone()
