@@ -36,6 +36,8 @@ jobs:
       run: poetry install
     - name: Run type checker
       run: poetry run mypy .
+    - name: Run formatting checker
+      run: poetry run black --check .
     - name: Run unit tests
       run: poetry run pytest
     - name: Build wheel

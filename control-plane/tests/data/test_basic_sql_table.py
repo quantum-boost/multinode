@@ -12,7 +12,7 @@ from control_plane.data.sql_connection import get_local_postgres_connection
 
 
 # The same connection will be used for all tests...
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def conn() -> Generator[psycopg2.extensions.connection, None, None]:
     conn = get_local_postgres_connection()
     try:

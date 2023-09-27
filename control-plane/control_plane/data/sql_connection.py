@@ -1,13 +1,11 @@
 import psycopg2
 
 
-def get_postgres_connection(host: str, port: int, db: str, user: str, password: str) -> psycopg2.extensions.connection:
+def get_postgres_connection(
+    host: str, port: int, db: str, user: str, password: str
+) -> psycopg2.extensions.connection:
     conn = psycopg2.connect(
-        host=host,
-        port=port,
-        database=db,
-        user=user,
-        password=password
+        host=host, port=port, database=db, user=user, password=password
     )
 
     # The following two settings are redundant in the current version of the code because we don't have any
@@ -26,9 +24,5 @@ def get_postgres_connection(host: str, port: int, db: str, user: str, password: 
 def get_local_postgres_connection() -> psycopg2.extensions.connection:
     # For tests
     return get_postgres_connection(
-        host='localhost',
-        port=5432,
-        db='db',
-        user='user',
-        password='password'
+        host="localhost", port=5432, db="db", user="user", password="password"
     )
