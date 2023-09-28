@@ -11,6 +11,14 @@ class ApiError(BaseException):
         raise NotImplementedError
 
 
+class ExecutionAlreadyExists(ApiError):
+    def error_message(self) -> str:
+        return "An execution with this ID already exists for this invocation"
+
+    def error_code(self) -> int:
+        return 409
+
+
 class ExecutionDoesNotExist(ApiError):
     def error_message(self) -> str:
         return "An execution with this ID does not exist for this invocation"
@@ -19,36 +27,52 @@ class ExecutionDoesNotExist(ApiError):
         return 404
 
 
-class ExecutionHasAlreadyBeenMarkedAsStarted(ApiError):
+class ExecutionHasAlreadyStarted(ApiError):
     def error_message(self) -> str:
-        return "This execution has already been marked as started"
+        return "This execution has already started"
 
     def error_code(self) -> int:
         return 409
 
 
-class ExecutionHasNotBeenMarkedAsStarted(ApiError):
+class ExecutionHasNotStarted(ApiError):
     def error_message(self) -> str:
-        return "This execution has not yet been marked as started"
+        return "This execution has not yet started"
 
     def error_code(self) -> int:
         return 409
 
 
-class ExecutionHasAlreadyBeenFinalized(ApiError):
+class ExecutionHasAlreadyFinished(ApiError):
     def error_message(self) -> str:
-        return "This execution has already been finalized"
+        return "This execution has already finished"
 
     def error_code(self) -> int:
         return 409
 
 
-class InvocationIsStillIncomplete(ApiError):
+class ExecutionHasNotFinished(ApiError):
     def error_message(self) -> str:
-        return "This invocation is not yet complete"
+        return "This execution has not yet finished"
 
     def error_code(self) -> int:
-        return 400
+        return 409
+
+
+class InvocationAlreadyExists(ApiError):
+    def error_message(self) -> str:
+        return "An invocation with this ID already exists for this function"
+
+    def error_code(self) -> int:
+        return 409
+
+
+class InvocationDoesNotExist(ApiError):
+    def error_message(self) -> str:
+        return "An invocation with this ID does not exist for this function"
+
+    def error_code(self) -> int:
+        return 404
 
 
 class ParentInvocationDoesNotExist(ApiError):
@@ -59,6 +83,14 @@ class ParentInvocationDoesNotExist(ApiError):
         return 400
 
 
+class FunctionAlreadyExists(ApiError):
+    def error_message(self) -> str:
+        return "A function with this name already exists for this project version"
+
+    def error_code(self) -> int:
+        return 409
+
+
 class FunctionDoesNotExist(ApiError):
     def error_message(self) -> str:
         return "A function with this name does not exist for this project version"
@@ -67,22 +99,20 @@ class FunctionDoesNotExist(ApiError):
         return 404
 
 
-class VersionDoesNotExist(ApiError):
+class VersionAlreadyExists(ApiError):
     def error_message(self) -> str:
-        return "No version exists with this ID exists for this project"
-
-    def error_code(self) -> int:
-        return 404
-
-
-class VersionStillHasIncompleteInvocations(ApiError):
-    def error_message(self) -> str:
-        return (
-            "This project version still has function invocations that are not complete"
-        )
+        return "A version with this ID already exists for this project"
 
     def error_code(self) -> int:
         return 409
+
+
+class VersionDoesNotExist(ApiError):
+    def error_message(self) -> str:
+        return "A version with this ID does not exist for this project"
+
+    def error_code(self) -> int:
+        return 404
 
 
 class ProjectAlreadyExists(ApiError):
@@ -95,23 +125,7 @@ class ProjectAlreadyExists(ApiError):
 
 class ProjectDoesNotExist(ApiError):
     def error_message(self) -> str:
-        return "No project exists with this ID"
-
-    def error_code(self) -> int:
-        return 404
-
-
-class ProjectStillHasActiveVersions(ApiError):
-    def error_message(self) -> str:
-        return "This project still has some active versions."
-
-    def error_code(self) -> int:
-        return 409
-
-
-class InvocationDoesNotExist(ApiError):
-    def error_message(self) -> str:
-        return "An invocation with this ID does not exist for this function"
+        return "A project with this ID does not exist"
 
     def error_code(self) -> int:
         return 404

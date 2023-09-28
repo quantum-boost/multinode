@@ -1,6 +1,6 @@
 from typing import Optional
 
-from control_plane.types.datatypes import VersionId, ExecutionLogs
+from control_plane.types.datatypes import VersionReference, ExecutionLogs
 
 
 class LogsApiHandler:
@@ -11,7 +11,7 @@ class LogsApiHandler:
     def get_execution_logs(
         self,
         project_name: str,
-        version_id: VersionId,
+        version_ref: VersionReference,
         function_name: str,
         invocation_id: str,
         execution_id: str,
