@@ -1,10 +1,15 @@
 from typing import Optional
 
+from control_plane.control.utils.random_ids import generate_random_id
+from control_plane.control.utils.version_reference_utils import (
+    resolve_version_reference,
+)
+from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
-    VersionId,
+    VersionReference,
     InvocationDefinition,
     InvocationInfo,
-    InvocationsList,
+    InvocationsListForFunction,
     InvocationStatus,
     InvocationIdentifier,
 )
@@ -20,10 +25,13 @@ class InvocationApiHandler:
         an existing function invocation
     """
 
+    def __init__(self, data_store: DataStore) -> None:
+        self._data_store = data_store
+
     def create_invocation(
         self,
         project_name: str,
-        version_id: VersionId,
+        version_ref: VersionReference,
         function_name: str,
         invocation_definition: InvocationDefinition,
         time: int,
@@ -34,12 +42,45 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises ParentInvocationDoesNotExist:
         """
-        raise NotImplementedError
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
+
+        invocation_id = generate_random_id("inv")
+
+        self._data_store.invocations.create(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            parent_invocation_function_name=(
+                invocation_definition.parent_invocation.function_name
+                if invocation_definition.parent_invocation is not None
+                else None
+            ),
+            parent_invocation_invocation_id=(
+                invocation_definition.parent_invocation.invocation_id
+                if invocation_definition.parent_invocation is not None
+                else None
+            ),
+            input=invocation_definition.input,
+            cancellation_requested=False,
+            invocation_status=InvocationStatus.RUNNING,
+            creation_time=time,
+            last_update_time=time,
+        )
+
+        return self._data_store.invocations.get(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+        )
 
     def cancel_invocation(
         self,
         project_name: str,
-        version_id: VersionId,
+        version_ref: VersionReference,
         function_name: str,
         invocation_id: str,
         time: int,
@@ -50,29 +91,30 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        raise NotImplementedError
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
-    def delete_invocation(
-        self,
-        project_name: str,
-        version_id: VersionId,
-        function_name: str,
-        invocation_id: str,
-        time: int,
-    ) -> None:
-        """
-        :raises ProjectDoesNotExist:
-        :raises VersionDoesNotExist:
-        :raises FunctionDoesNotExist:
-        :raises InvocationDoesNotExist:
-        :raises InvocationIsStillIncomplete:
-        """
-        raise NotImplementedError
+        self._data_store.invocations.update(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            update_time=time,
+            set_cancellation_requested=True,
+        )
+
+        return self._data_store.invocations.get(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+        )
 
     def get_invocation(
         self,
         project_name: str,
-        version_id: VersionId,
+        version_ref: VersionReference,
         function_name: str,
         invocation_id: str,
     ) -> InvocationInfo:
@@ -82,21 +124,47 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        raise NotImplementedError
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
+
+        return self._data_store.invocations.get(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+        )
 
     def list_invocations(
         self,
         project_name: str,
-        version_id: VersionId,
+        version_ref: VersionReference,
         function_name: str,
+        max_results: Optional[int] = None,
+        cursor: Optional[str] = None,
         statuses: Optional[set[InvocationStatus]] = None,
         parent_invocation: Optional[InvocationIdentifier] = None,
-        max_results: int = 50,
-        cursor: Optional[str] = None,
-    ) -> InvocationsList:
+    ) -> InvocationsListForFunction:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
         """
-        raise NotImplementedError
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
+
+        if max_results is None or max_results >= 50:
+            sanitised_max_results = 50
+        else:
+            sanitised_max_results = max_results
+
+        return self._data_store.invocations.list_for_function(
+            project_name=project_name,
+            version_id=version_id,
+            function_name=function_name,
+            max_results=sanitised_max_results,
+            cursor=cursor,
+            statuses=statuses,
+            parent_invocation=parent_invocation,
+        )

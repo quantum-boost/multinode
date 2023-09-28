@@ -8,7 +8,7 @@ import psycopg2
 import pytest as pytest
 
 from control_plane.data.basic_sql_table import BasicSqlDataStore
-from control_plane.data.sql_connection import get_local_postgres_connection
+from control_plane.data.sql_utils.sql_connection import get_local_postgres_connection
 
 
 # The same connection will be used for all tests...

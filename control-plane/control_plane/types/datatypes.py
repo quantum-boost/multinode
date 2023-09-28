@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union, Literal, Optional
+from typing import Optional, NamedTuple
 
 from pydantic import BaseModel, model_validator
 
@@ -35,6 +35,8 @@ class ExecutionLogs(BaseModel):
 
 
 class WorkerStatus(StrEnum):
+    PENDING = "PENDING"
+    PROVISIONING = "PROVISIONING"
     RUNNING = "RUNNING"
     TERMINATED = "TERMINATED"
 
@@ -50,14 +52,24 @@ class WorkerDetails(BaseModel):
     logs_identifier: str  # e.g. ARN of Cloudwatch log stream for this ECS task
 
 
+class PreparedFunctionDetails(BaseModel):
+    type: WorkerType
+    identifier: str  # e.g. the ARN of the ECS task definition
+
+
 class ExecutionOutcome(StrEnum):
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
     ABORTED = "ABORTED"  # i.e. SIGTERM signal received due to cancellation/timeout - aborted gracefully
 
 
+class FunctionStatus(StrEnum):
+    PENDING = "PENDING"
+    READY = "READY"
+
+
 class ExecutionTemporaryResultPayload(BaseModel):
-    temporary_output: Optional[str]
+    latest_output: Optional[str]
 
 
 class ExecutionFinalResultPayload(BaseModel):
@@ -75,25 +87,42 @@ class ExecutionInfo(BaseModel):
     docker_image: str
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
+    function_status: FunctionStatus
+    prepared_function_details: Optional[PreparedFunctionDetails]
     input: str
+    cancellation_requested: bool
     worker_status: WorkerStatus
-    worker_details: WorkerDetails
+    worker_details: Optional[WorkerDetails]
+    termination_signal_sent: bool
     outcome: Optional[ExecutionOutcome]
     output: Optional[str]
     error_message: Optional[str]
-    start_time: Optional[int]
-    end_time: Optional[int]
+    creation_time: int
+    last_update_time: int
+    execution_start_time: Optional[int]
+    execution_finish_time: Optional[int]
 
 
 class ExecutionSummary(BaseModel):
     execution_id: str
     worker_status: WorkerStatus
-    worker_details: WorkerDetails
+    worker_details: Optional[WorkerDetails]
+    termination_signal_sent: bool
     outcome: Optional[ExecutionOutcome]
     output: Optional[str]
     error_message: Optional[str]
-    start_time: Optional[int]
-    end_time: Optional[int]
+    creation_time: int
+    last_update_time: int
+    execution_start_time: Optional[int]
+    execution_finish_time: Optional[int]
+
+
+class ExecutionsListForInvocation(BaseModel):
+    project_name: str
+    version_id: str
+    function_name: str
+    invocation_id: str
+    executions: list[ExecutionSummary]
 
 
 class InvocationIdentifier(BaseModel):
@@ -107,11 +136,8 @@ class InvocationDefinition(BaseModel):
 
 
 class InvocationStatus(StrEnum):
-    PENDING = "PENDING"  # i.e. no execution in progress, and waiting for new execution to be kicked off
-    RUNNING = "RUNNING"  # i.e. some execution is in progress
-    COMPLETE = (
-        "COMPLETE"  # i.e. no execution in progress, and no further executions required
-    )
+    RUNNING = "RUNNING"
+    TERMINATED = "TERMINATED"
 
 
 class InvocationInfo(BaseModel):
@@ -123,11 +149,13 @@ class InvocationInfo(BaseModel):
     docker_image: str
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
+    function_status: FunctionStatus
+    prepared_function_details: Optional[PreparedFunctionDetails]
     input: str
     cancellation_requested: bool
     invocation_status: InvocationStatus
     creation_time: int
-    last_status_update_time: int
+    last_update_time: int
     executions: list[ExecutionSummary]
 
 
@@ -140,20 +168,15 @@ class InvocationSummary(BaseModel):
     cancellation_requested: bool
     invocation_status: InvocationStatus
     creation_time: int
-    last_status_change_time: int
+    last_update_time: int
 
 
-class InvocationsList(BaseModel):
+class InvocationsListForFunction(BaseModel):
     project_name: str
     version_id: str
     function_name: str
     invocations: list[InvocationSummary]
     next_cursor: Optional[str]
-
-
-class PersistedFunctionDetails(BaseModel):
-    type: WorkerType
-    identifier: str  # e.g. the ARN of the ECS task definition
 
 
 class FunctionSpec(BaseModel):
@@ -163,12 +186,14 @@ class FunctionSpec(BaseModel):
     execution_spec: ExecutionSpec
 
 
-class FunctionSpecWithDetails(BaseModel):
+class FunctionInfoForVersion(BaseModel):
+    # omit project_name and version_id, since this will be nested inside a VersionInfo object
     function_name: str
-    docker_image_override: Optional[str]
+    docker_image: Optional[str]
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
-    persisted_function_details: Optional[PersistedFunctionDetails]
+    function_status: FunctionStatus
+    prepared_function_details: Optional[PreparedFunctionDetails]
 
 
 class FunctionInfo(BaseModel):
@@ -178,13 +203,14 @@ class FunctionInfo(BaseModel):
     docker_image: str
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
-    persisted_function_details: Optional[PersistedFunctionDetails]
+    function_status: FunctionStatus
+    prepared_function_details: Optional[PreparedFunctionDetails]
 
 
-class FunctionsList(BaseModel):
+class FunctionsListForVersion(BaseModel):
     project_name: str
     version_id: str
-    functions: list[FunctionInfo]
+    functions: list[FunctionInfoForVersion]
 
 
 class VersionDefinition(BaseModel):
@@ -205,21 +231,23 @@ class VersionDefinition(BaseModel):
 class VersionInfo(BaseModel):
     project_name: str
     version_id: str
-    default_docker_image: str
     creation_time: int
-    functions: list[FunctionSpecWithDetails]
+    functions: list[FunctionInfoForVersion]
 
 
-class VersionsList(BaseModel):
+class VersionsListForProject(BaseModel):
     project_name: str
     versions: list[VersionInfo]
 
 
-class Version(Enum):
-    LATEST = "latest"  # an alias for the latest version of a project
+class VersionReferenceType(Enum):
+    NAMED = "NAMED"
+    LATEST = "LATEST"
 
 
-VersionId = Union[str, Literal[Version.LATEST]]
+class VersionReference(NamedTuple):
+    type: VersionReferenceType
+    named_version_id: Optional[str]
 
 
 class ProjectInfo(BaseModel):
