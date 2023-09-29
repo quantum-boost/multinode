@@ -1,8 +1,7 @@
-from typing import NamedTuple
-
+from control_plane.control.periodic.executions_helper import classify_running_executions
 from control_plane.data.data_store import DataStore
 from control_plane.provisioning.provisioner import AbstractProvisioner
-from control_plane.types.datatypes import ExecutionInfo, WorkerStatus
+from control_plane.types.datatypes import WorkerStatus
 
 
 class ExecutionsLifecycleActions:
@@ -141,17 +140,3 @@ class ExecutionsLifecycleActions:
                 update_time=time,
                 new_worker_status=WorkerStatus.TERMINATED,
             )
-
-
-# Helper functions
-
-
-class RunningExecutionsClassification(NamedTuple):
-    executions_requiring_termination_signal: list[ExecutionInfo]
-    executions_to_leave_alone: list[ExecutionInfo]
-
-
-def classify_running_executions(
-    running_executions: list[ExecutionInfo], time: int
-) -> RunningExecutionsClassification:
-    raise NotImplementedError

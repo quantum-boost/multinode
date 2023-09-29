@@ -42,6 +42,7 @@ class WorkerStatus(StrEnum):
 
 
 class WorkerType(StrEnum):
+    TEST = "TEST"
     AWS_ECS = "AWS_ECS"
     # can add K8s in future
 
@@ -84,13 +85,12 @@ class ExecutionInfo(BaseModel):
     function_name: str
     invocation_id: str
     execution_id: str
-    docker_image: str
+    input: str
+    cancellation_requested: bool
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
     prepared_function_details: Optional[PreparedFunctionDetails]
-    input: str
-    cancellation_requested: bool
     worker_status: WorkerStatus
     worker_details: Optional[WorkerDetails]
     termination_signal_sent: bool
@@ -101,6 +101,7 @@ class ExecutionInfo(BaseModel):
     last_update_time: int
     execution_start_time: Optional[int]
     execution_finish_time: Optional[int]
+    invocation_creation_time: int
 
 
 class ExecutionSummary(BaseModel):
@@ -146,7 +147,6 @@ class InvocationInfo(BaseModel):
     function_name: str
     invocation_id: str
     parent_invocation: Optional[InvocationIdentifier]
-    docker_image: str
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
     function_status: FunctionStatus

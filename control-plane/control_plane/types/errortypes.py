@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class ApiError(BaseException):
+class ApiError(BaseException, ABC):
     @abstractmethod
     def error_message(self) -> str:
         raise NotImplementedError
