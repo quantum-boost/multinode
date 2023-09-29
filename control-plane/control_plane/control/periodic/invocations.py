@@ -1,8 +1,9 @@
-from typing import NamedTuple, Optional
-
+from control_plane.control.periodic.invocations_helper import (
+    classify_running_invocations,
+)
 from control_plane.control.utils.random_ids import generate_random_id
 from control_plane.data.data_store import DataStore
-from control_plane.types.datatypes import InvocationInfo, InvocationStatus, WorkerStatus
+from control_plane.types.datatypes import InvocationStatus, WorkerStatus, FunctionStatus
 
 
 class InvocationsLifecycleActions:
@@ -23,7 +24,7 @@ class InvocationsLifecycleActions:
         then we should set cancellation_requested = True on this invocation.
         """
         # It's more efficient to iterate over the possible children, rather than iterating over the possible parents.
-        # This is because the possible children have status = PENDING or RUNNING, so there shouldn't be too many
+        # This is because the possible children have status = RUNNING, so there shouldn't be too many
         # to load from the DB.
         running_invocations = self._data_store.invocations.list_all(
             statuses={InvocationStatus.RUNNING}
@@ -90,10 +91,13 @@ class InvocationsLifecycleActions:
             statuses={InvocationStatus.RUNNING}
         )
 
-        # To determine which pending invocations to run, we need to know about invocations that are currently running.
-        # This is so that we can correctly apply resource restrictions.
+        functions_in_ready_status = self._data_store.functions.list_all(
+            statuses={FunctionStatus.READY}
+        )
+
         classification = classify_running_invocations(
             running_invocations=running_invocations,
+            functions_in_ready_status=functions_in_ready_status,
             time=time,
         )
 
@@ -135,18 +139,3 @@ class InvocationsLifecycleActions:
                 update_time=time,
                 new_invocation_status=InvocationStatus.TERMINATED,
             )
-
-
-# Helper functions
-
-
-class RunningInvocationsClassification(NamedTuple):
-    invocations_to_terminate: list[InvocationInfo]
-    invocations_to_create_executions_for: list[InvocationInfo]
-    invocations_to_leave_untouched: list[InvocationInfo]
-
-
-def classify_running_invocations(
-    running_invocations: list[InvocationInfo], time: int
-) -> RunningInvocationsClassification:
-    raise NotImplementedError
