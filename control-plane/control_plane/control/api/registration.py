@@ -50,9 +50,7 @@ class RegistrationApiHandler:
         """
         version_id = generate_random_id("ver")
 
-        self._data_store.project_versions.create(
-            project_name=project_name, version_id=version_id, creation_time=time
-        )
+        self._data_store.project_versions.create(project_name=project_name, version_id=version_id, creation_time=time)
 
         for function in version_definition.functions:
             self._data_store.functions.create(
@@ -70,44 +68,30 @@ class RegistrationApiHandler:
                 prepared_function_details=None,
             )
 
-        return self._data_store.project_versions.get(
-            project_name=project_name, version_id=version_id
-        )
+        return self._data_store.project_versions.get(project_name=project_name, version_id=version_id)
 
-    def get_project_version(
-        self, project_name: str, version_ref: VersionReference
-    ) -> VersionInfo:
+    def get_project_version(self, project_name: str, version_ref: VersionReference) -> VersionInfo:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         """
-        version_id = resolve_version_reference(
-            project_name, version_ref, self._data_store
-        )
+        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
 
-        return self._data_store.project_versions.get(
-            project_name=project_name, version_id=version_id
-        )
+        return self._data_store.project_versions.get(project_name=project_name, version_id=version_id)
 
     def list_project_versions(self, project_name: str) -> VersionsListForProject:
         """
         :raises ProjectDoesNotExist:
         """
-        return self._data_store.project_versions.list_for_project(
-            project_name=project_name
-        )
+        return self._data_store.project_versions.list_for_project(project_name=project_name)
 
-    def get_function(
-        self, project_name: str, version_ref: VersionReference, function_name: str
-    ) -> FunctionInfo:
+    def get_function(self, project_name: str, version_ref: VersionReference, function_name: str) -> FunctionInfo:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
         """
-        version_id = resolve_version_reference(
-            project_name, version_ref, self._data_store
-        )
+        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
 
         return self._data_store.functions.get(
             project_name=project_name,
@@ -115,17 +99,11 @@ class RegistrationApiHandler:
             function_name=function_name,
         )
 
-    def list_functions(
-        self, project_name: str, version_ref: VersionReference
-    ) -> FunctionsListForVersion:
+    def list_functions(self, project_name: str, version_ref: VersionReference) -> FunctionsListForVersion:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         """
-        version_id = resolve_version_reference(
-            project_name, version_ref, self._data_store
-        )
+        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
 
-        return self._data_store.functions.list_for_project_version(
-            project_name=project_name, version_id=version_id
-        )
+        return self._data_store.functions.list_for_project_version(project_name=project_name, version_id=version_id)

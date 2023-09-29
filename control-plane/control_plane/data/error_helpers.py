@@ -56,16 +56,12 @@ def function_exists(
         return row is not None
 
 
-def raise_error_if_project_does_not_exist(
-    project_name: str, pool: SqlConnectionPool
-) -> None:
+def raise_error_if_project_does_not_exist(project_name: str, pool: SqlConnectionPool) -> None:
     if not project_exists(project_name, pool):
         raise ProjectDoesNotExist
 
 
-def raise_error_if_version_does_not_exist(
-    project_name: str, version_id: str, pool: SqlConnectionPool
-) -> None:
+def raise_error_if_version_does_not_exist(project_name: str, version_id: str, pool: SqlConnectionPool) -> None:
     if not version_exists(project_name, version_id, pool):
         # Must make sure to raise correct error.
         # It could be that the *project* doesn't exist, let alone the version.

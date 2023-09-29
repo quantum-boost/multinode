@@ -47,10 +47,7 @@ def classify_running_invocations(
         # Will subtract from this number later.
 
     for invocation in running_invocations:
-        if any(
-            execution.worker_status != WorkerStatus.TERMINATED
-            for execution in invocation.executions
-        ):
+        if any(execution.worker_status != WorkerStatus.TERMINATED for execution in invocation.executions):
             # This invocation is currently using the function's capacity.
             function_id = FunctionId(
                 project_name=invocation.project_name,
@@ -71,17 +68,13 @@ def classify_running_invocations(
             function_name=invocation.function_name,
         )
 
-        if all(
-            execution.worker_status == WorkerStatus.TERMINATED
-            for execution in invocation.executions
-        ):
+        if all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions):
             # This includes the very important sub-case where the invocation
             # does not yet have any executions at all.
             # This works because Python's all(...) returns True if the iterable is empty.
 
             if any(
-                execution.outcome
-                in {ExecutionOutcome.SUCCEEDED, ExecutionOutcome.ABORTED}
+                execution.outcome in {ExecutionOutcome.SUCCEEDED, ExecutionOutcome.ABORTED}
                 for execution in invocation.executions
             ):
                 invocations_to_terminate.append(invocation)
@@ -103,13 +96,8 @@ def classify_running_invocations(
                     invocations_to_terminate.append(invocation)
 
                 else:
-                    function_is_ready = (
-                        invocation.function_status == FunctionStatus.READY
-                    )
-                    function_has_capacity = (
-                        function_is_ready
-                        and remaining_function_capacities[function_id] >= 1
-                    )
+                    function_is_ready = invocation.function_status == FunctionStatus.READY
+                    function_has_capacity = function_is_ready and remaining_function_capacities[function_id] >= 1
 
                     if function_has_capacity:
                         invocations_to_create_executions_for.append(invocation)

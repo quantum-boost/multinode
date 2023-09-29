@@ -166,9 +166,7 @@ class VersionsTable:
                         execution_spec=ExecutionSpec.model_validate_json(row[3]),
                         function_status=FunctionStatus(row[4]),
                         prepared_function_details=(
-                            PreparedFunctionDetails.model_validate_json(row[5])
-                            if row[5] is not None
-                            else None
+                            PreparedFunctionDetails.model_validate_json(row[5]) if row[5] is not None else None
                         ),
                     )
                 )
@@ -196,9 +194,6 @@ class VersionsTable:
 
             rows = cursor.fetchall()
 
-            versions = [
-                VersionInfoForProject(version_id=row[0], creation_time=row[1])
-                for row in rows
-            ]
+            versions = [VersionInfoForProject(version_id=row[0], creation_time=row[1]) for row in rows]
 
             return VersionsListForProject(project_name=project_name, versions=versions)

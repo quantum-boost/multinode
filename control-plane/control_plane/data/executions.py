@@ -72,13 +72,7 @@ class ExecutionsTable:
         raise NotImplementedError
 
     def get(
-        self,
-        *,
-        project_name: str,
-        version_id: str,
-        function_name: str,
-        invocation_id: str,
-        execution_id: str
+        self, *, project_name: str, version_id: str, function_name: str, invocation_id: str, execution_id: str
     ) -> ExecutionInfo:
         """
         :raises ProjectDoesNotExist:
@@ -90,12 +84,7 @@ class ExecutionsTable:
         raise NotImplementedError
 
     def list_for_invocation(
-        self,
-        *,
-        project_name: str,
-        version_id: str,
-        function_name: str,
-        invocation_id: str
+        self, *, project_name: str, version_id: str, function_name: str, invocation_id: str
     ) -> ExecutionsListForInvocation:
         """
         :raises ProjectDoesNotExist:
