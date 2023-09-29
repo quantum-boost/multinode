@@ -27,6 +27,9 @@ testpaths = [
     "tests"
 ]
 
+[tool.black]
+line-length = 120
+
 [tool.mypy]
 strict = true
 

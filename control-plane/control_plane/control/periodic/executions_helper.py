@@ -8,9 +8,7 @@ class RunningExecutionsClassification(NamedTuple):
     executions_to_leave_untouched: list[ExecutionInfo]
 
 
-def classify_running_executions(
-    running_executions: list[ExecutionInfo], time: int
-) -> RunningExecutionsClassification:
+def classify_running_executions(running_executions: list[ExecutionInfo], time: int) -> RunningExecutionsClassification:
     executions_requiring_termination_signal: list[ExecutionInfo] = []
     executions_to_leave_untouched: list[ExecutionInfo] = []
 

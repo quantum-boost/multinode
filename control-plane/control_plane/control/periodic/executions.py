@@ -18,9 +18,7 @@ class ExecutionsLifecycleActions:
         """
         A worker should be provisioned, and the worker status should be set to RUNNING.
         """
-        pending_executions = self._data_store.executions.list_all(
-            worker_statuses={WorkerStatus.PENDING}
-        )
+        pending_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
 
         for execution in pending_executions:
             assert execution.prepared_function_details is not None
@@ -61,16 +59,12 @@ class ExecutionsLifecycleActions:
         The worker may have died (e.g. due to execution finishing naturally, due to a sigterm signal or due to
         a hardware failure). If so, then the worker status should be set to TERMINATED.
         """
-        running_executions = self._data_store.executions.list_all(
-            worker_statuses={WorkerStatus.RUNNING}
-        )
+        running_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
 
         for execution in running_executions:
             assert execution.worker_details is not None
 
-            worker_status = self._provisioner.check_worker_status(
-                worker_details=execution.worker_details
-            )
+            worker_status = self._provisioner.check_worker_status(worker_details=execution.worker_details)
 
             if worker_status == WorkerStatus.TERMINATED:
                 self._data_store.executions.update(
@@ -91,18 +85,14 @@ class ExecutionsLifecycleActions:
         => we should send a termination signal to the worker to abort the execution,
            and set termination_signal_sent = True
         """
-        running_executions = self._data_store.executions.list_all(
-            worker_statuses={WorkerStatus.RUNNING}
-        )
+        running_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
 
         classification = classify_running_executions(running_executions, time)
 
         for execution in classification.executions_requiring_termination_signal:
             assert execution.worker_details is not None
 
-            self._provisioner.send_termination_signal_to_worker(
-                worker_details=execution.worker_details
-            )
+            self._provisioner.send_termination_signal_to_worker(worker_details=execution.worker_details)
 
             self._data_store.executions.update(
                 project_name=execution.project_name,

@@ -94,8 +94,6 @@ class ProjectsTable:
 
             rows = cursor.fetchall()
 
-            projects = [
-                ProjectInfo(project_name=row[0], creation_time=row[1]) for row in rows
-            ]
+            projects = [ProjectInfo(project_name=row[0], creation_time=row[1]) for row in rows]
 
             return ProjectsList(projects=projects)
