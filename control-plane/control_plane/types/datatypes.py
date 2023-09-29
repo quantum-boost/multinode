@@ -189,7 +189,7 @@ class FunctionSpec(BaseModel):
 class FunctionInfoForVersion(BaseModel):
     # omit project_name and version_id, since this will be nested inside a VersionInfo object
     function_name: str
-    docker_image: Optional[str]
+    docker_image: str
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
@@ -235,9 +235,16 @@ class VersionInfo(BaseModel):
     functions: list[FunctionInfoForVersion]
 
 
+class VersionInfoForProject(BaseModel):
+    # omit project_name
+    version_id: str
+    creation_time: int
+    # omit functions too
+
+
 class VersionsListForProject(BaseModel):
     project_name: str
-    versions: list[VersionInfo]
+    versions: list[VersionInfoForProject]
 
 
 class VersionReferenceType(Enum):

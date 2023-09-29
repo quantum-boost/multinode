@@ -34,6 +34,6 @@ class FunctionsLifecycleActions:
                 project_name=function.project_name,
                 version_id=function.version_id,
                 function_name=function.function_name,
-                new_status=FunctionStatus.READY,
+                new_function_status=FunctionStatus.READY,
                 new_prepared_function_details=prepared_function_details,
             )
