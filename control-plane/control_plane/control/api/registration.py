@@ -1,3 +1,5 @@
+import logging
+
 from control_plane.control.utils.random_ids import generate_random_id
 from control_plane.control.utils.version_reference_utils import (
     resolve_version_reference,
@@ -28,6 +30,7 @@ class RegistrationApiHandler:
         :raises ProjectAlreadyExists:
         """
         self._data_store.projects.create(project_name=project_name, creation_time=time)
+        logging.info(f"Created project ({project_name}).")
 
         return self._data_store.projects.get(project_name=project_name)
 
@@ -50,6 +53,8 @@ class RegistrationApiHandler:
 
         self._data_store.project_versions.create(project_name=project_name, version_id=version_id, creation_time=time)
 
+        logging.info(f"Created project version ({project_name}, {version_id})")
+
         for function in version_definition.functions:
             self._data_store.functions.create(
                 project_name=project_name,
@@ -64,6 +69,10 @@ class RegistrationApiHandler:
                 execution_spec=function.execution_spec,
                 function_status=FunctionStatus.PENDING,
                 prepared_function_details=None,
+            )
+            logging.info(
+                f"Created function ({project_name}, {version_id}, {function.function_name})"
+                f" - status = {FunctionStatus.PENDING}"
             )
 
         return self._data_store.project_versions.get(project_name=project_name, version_id=version_id)
