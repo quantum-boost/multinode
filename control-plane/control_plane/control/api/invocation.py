@@ -11,7 +11,8 @@ from control_plane.types.datatypes import (
     InvocationInfo,
     InvocationsListForFunction,
     InvocationStatus,
-    InvocationIdentifier,
+    ParentInvocationDefinition,
+    InvocationsListOffset,
 )
 
 
@@ -51,16 +52,7 @@ class InvocationApiHandler:
             version_id=version_id,
             function_name=function_name,
             invocation_id=invocation_id,
-            parent_invocation_function_name=(
-                invocation_definition.parent_invocation.function_name
-                if invocation_definition.parent_invocation is not None
-                else None
-            ),
-            parent_invocation_invocation_id=(
-                invocation_definition.parent_invocation.invocation_id
-                if invocation_definition.parent_invocation is not None
-                else None
-            ),
+            parent_invocation=invocation_definition.parent_invocation,
             input=invocation_definition.input,
             cancellation_requested=False,
             invocation_status=InvocationStatus.RUNNING,
@@ -135,9 +127,9 @@ class InvocationApiHandler:
         version_ref: VersionReference,
         function_name: str,
         max_results: Optional[int] = None,
-        cursor: Optional[str] = None,
-        statuses: Optional[set[InvocationStatus]] = None,
-        parent_invocation: Optional[InvocationIdentifier] = None,
+        initial_offset: Optional[InvocationsListOffset] = None,
+        status: Optional[InvocationStatus] = None,
+        parent_invocation: Optional[ParentInvocationDefinition] = None,
     ) -> InvocationsListForFunction:
         """
         :raises ProjectDoesNotExist:
@@ -156,7 +148,7 @@ class InvocationApiHandler:
             version_id=version_id,
             function_name=function_name,
             max_results=sanitised_max_results,
-            cursor=cursor,
-            statuses=statuses,
+            initial_offset=initial_offset,
+            status=status,
             parent_invocation=parent_invocation,
         )

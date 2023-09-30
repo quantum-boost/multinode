@@ -22,8 +22,8 @@ class ProjectsTable:
 
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS projects_creation_time
-                ON projects(creation_time);
+                CREATE INDEX IF NOT EXISTS projects_ordering
+                ON projects(creation_time DESC, project_name ASC);
                 """
             )
 
@@ -31,7 +31,7 @@ class ProjectsTable:
         with self._pool.cursor() as cursor:
             cursor.execute(
                 """
-                DROP INDEX IF EXISTS projects_creation_time;
+                DROP INDEX IF EXISTS projects_ordering;
                 """
             )
 
@@ -88,7 +88,7 @@ class ProjectsTable:
                   project_name,
                   creation_time
                 FROM projects
-                ORDER BY creation_time DESC;
+                ORDER BY creation_time DESC, project_name ASC;
                 """
             )
 

@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
 
 import psycopg2
 
@@ -174,18 +174,7 @@ class FunctionsTable:
             if row is None:
                 raise FunctionDoesNotExist
 
-            return FunctionInfo(
-                project_name=row[0],
-                version_id=row[1],
-                function_name=row[2],
-                docker_image=row[3],
-                resource_spec=ResourceSpec.model_validate_json(row[4]),
-                execution_spec=ExecutionSpec.model_validate_json(row[5]),
-                function_status=FunctionStatus(row[6]),
-                prepared_function_details=(
-                    PreparedFunctionDetails.model_validate_json(row[7]) if row[7] is not None else None
-                ),
-            )
+            return _construct_function_info_from_row(row)
 
     def list_for_project_version(self, *, project_name: str, version_id: str) -> FunctionsListForVersion:
         """
@@ -257,18 +246,17 @@ class FunctionsTable:
 
             rows = cursor.fetchall()
 
-            return [
-                FunctionInfo(
-                    project_name=row[0],
-                    version_id=row[1],
-                    function_name=row[2],
-                    docker_image=row[3],
-                    resource_spec=ResourceSpec.model_validate_json(row[4]),
-                    execution_spec=ExecutionSpec.model_validate_json(row[5]),
-                    function_status=FunctionStatus(row[6]),
-                    prepared_function_details=(
-                        PreparedFunctionDetails.model_validate_json(row[7]) if row[7] is not None else None
-                    ),
-                )
-                for row in rows
-            ]
+            return [_construct_function_info_from_row(row) for row in rows]
+
+
+def _construct_function_info_from_row(row: Tuple[Any, ...]) -> FunctionInfo:
+    return FunctionInfo(
+        project_name=row[0],
+        version_id=row[1],
+        function_name=row[2],
+        docker_image=row[3],
+        resource_spec=ResourceSpec.model_validate_json(row[4]),
+        execution_spec=ExecutionSpec.model_validate_json(row[5]),
+        function_status=FunctionStatus(row[6]),
+        prepared_function_details=(PreparedFunctionDetails.model_validate_json(row[7]) if row[7] is not None else None),
+    )

@@ -38,8 +38,8 @@ class VersionsTable:
 
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS project_versions_creation_time
-                ON project_versions(creation_time);
+                CREATE INDEX IF NOT EXISTS project_versions_ordering
+                ON project_versions(project_name ASC, creation_time DESC, version_id ASC);
                 """
             )
 
@@ -47,7 +47,7 @@ class VersionsTable:
         with self._pool.cursor() as cursor:
             cursor.execute(
                 """
-                DROP INDEX IF EXISTS project_versions_creation_time;
+                DROP INDEX IF EXISTS project_versions_ordering;
                 """
             )
 
@@ -88,12 +88,16 @@ class VersionsTable:
         raise_error_if_project_does_not_exist(project_name, self._pool)
 
         with self._pool.cursor() as cursor:
+            # Note on ordering: Really we want to order by creation_time, using version_id as a tie-breaker.
+            # However, we'll write it as ORDER BY project_name ASC, creation_time DESC, version_id ASC,
+            # making it explicit to Postgres that we want to use the project_versions_ordering index.
+            # Of course, in reality, there is only one possible value for project_name: the value we pass in.
             cursor.execute(
                 """
                 SELECT version_id
                 FROM project_versions
                 WHERE project_name = %s
-                ORDER BY creation_time DESC, version_id ASC
+                ORDER BY project_name ASC, creation_time DESC, version_id ASC
                 LIMIT 1;
                 """,
                 [project_name],
@@ -180,6 +184,8 @@ class VersionsTable:
         raise_error_if_project_does_not_exist(project_name, self._pool)
 
         with self._pool.cursor() as cursor:
+            # Again, the project_name ASC in the ORDER BY clause is logically redundant, but it acts as an
+            # explicit cue to Postgres to use the project_versions_ordering index.
             cursor.execute(
                 """
                 SELECT
@@ -187,7 +193,7 @@ class VersionsTable:
                   creation_time
                 FROM project_versions
                 WHERE project_name = %s
-                ORDER BY creation_time DESC;
+                ORDER BY project_name ASC, creation_time DESC, version_id ASC;
                 """,
                 [project_name],
             )

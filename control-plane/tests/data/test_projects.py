@@ -56,6 +56,12 @@ def test_create_two_project(data_store: DataStore) -> None:
     # Create project-2
     data_store.projects.create(project_name=PROJECT_NAME_2, creation_time=TIME)
 
+    project_1 = data_store.projects.get(project_name=PROJECT_NAME_1)
+    assert project_1.project_name == PROJECT_NAME_1
+
+    project_2 = data_store.projects.get(project_name=PROJECT_NAME_2)
+    assert project_2.project_name == PROJECT_NAME_2
+
     projects = data_store.projects.list().projects
     assert len(projects) == 2
     assert {project.project_name for project in projects} == {

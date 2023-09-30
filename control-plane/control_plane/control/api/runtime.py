@@ -7,7 +7,6 @@ from control_plane.types.datatypes import (
     ExecutionInfo,
     ExecutionTemporaryResultPayload,
     ExecutionFinalResultPayload,
-    ExecutionsListForInvocation,
 )
 
 
@@ -73,7 +72,7 @@ class ExecutionApiHandler:
             invocation_id=invocation_id,
             execution_id=execution_id,
             update_time=time,
-            execution_start_time=time,
+            new_execution_start_time=time,
             should_already_have_started=False,
         )
 
@@ -154,7 +153,7 @@ class ExecutionApiHandler:
             invocation_id=invocation_id,
             execution_id=execution_id,
             update_time=time,
-            execution_end_time=time,
+            new_execution_finish_time=time,
             new_outcome=final_result_payload.outcome,
             new_output=final_result_payload.final_output,
             new_error_message=final_result_payload.error_message,
@@ -170,24 +169,8 @@ class ExecutionApiHandler:
             execution_id=execution_id,
         )
 
-    def list_executions(
-        self,
-        project_name: str,
-        version_ref: VersionReference,
-        function_name: str,
-        invocation_id: str,
-    ) -> ExecutionsListForInvocation:
-        """
-        :raises ProjectDoesNotExist:
-        :raises VersionDoesNotExist:
-        :raises FunctionDoesNotExist:
-        :raises InvocationDoesNotExist:
-        """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
-
-        return self._data_store.executions.list_for_invocation(
-            project_name=project_name,
-            version_id=version_id,
-            function_name=function_name,
-            invocation_id=invocation_id,
-        )
+    # Do not implement an API method for listing executions for a given invocation.
+    # The .get_invocation method in InvocationsApiHandler already lists executions for a given invocation.
+    # And besides, the ability to list executions for a given invocation belongs in InvocationsApiHandler
+    # rather than ExecutionsApiHandler, since that method should be called by the invoker of the function,
+    # not by the worker executing the function.
