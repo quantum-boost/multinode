@@ -157,6 +157,20 @@ def test_create_two_functions(data_store: DataStore) -> None:
         prepared_function_details=None,
     )
 
+    function_1 = data_store.functions.get(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID_1,
+        function_name=FUNCTION_NAME_1,
+    )
+    assert function_1.function_name == FUNCTION_NAME_1
+
+    function_2 = data_store.functions.get(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID_1,
+        function_name=FUNCTION_NAME_2,
+    )
+    assert function_2.function_name == FUNCTION_NAME_2
+
     all_functions = data_store.functions.list_all(statuses={FunctionStatus.PENDING})
     assert len(all_functions) == 2
     assert {function.function_name for function in all_functions} == {
@@ -264,6 +278,20 @@ def test_update_function(data_store: DataStore) -> None:
     assert other_function.function_status == FunctionStatus.PENDING
     assert other_function.prepared_function_details is None
 
+    functions_for_version = data_store.functions.list_for_project_version(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1
+    ).functions
+    assert (
+        functions_for_version[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
+        or functions_for_version[1].prepared_function_details == PREPARED_FUNCTION_DETAILS
+    )
+
+    version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_1)
+    assert (
+        version.functions[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
+        or version.functions[1].prepared_function_details == PREPARED_FUNCTION_DETAILS
+    )
+
     functions_in_pending_status = data_store.functions.list_all(statuses={FunctionStatus.PENDING})
     assert len(functions_in_pending_status) == 1
     assert functions_in_pending_status[0].function_name == FUNCTION_NAME_2
@@ -271,6 +299,7 @@ def test_update_function(data_store: DataStore) -> None:
     functions_in_ready_status = data_store.functions.list_all(statuses={FunctionStatus.READY})
     assert len(functions_in_ready_status) == 1
     assert functions_in_ready_status[0].function_name == FUNCTION_NAME_1
+    assert functions_in_ready_status[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
 
 
 def test_update_when_function_does_not_exist(data_store: DataStore) -> None:

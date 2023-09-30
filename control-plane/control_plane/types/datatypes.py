@@ -126,19 +126,28 @@ class ExecutionsListForInvocation(BaseModel):
     executions: list[ExecutionSummary]
 
 
-class InvocationIdentifier(BaseModel):
+class InvocationStatus(StrEnum):
+    RUNNING = "RUNNING"
+    TERMINATED = "TERMINATED"
+
+
+class ParentInvocationDefinition(BaseModel):
     function_name: str
     invocation_id: str
 
 
 class InvocationDefinition(BaseModel):
-    parent_invocation: Optional[InvocationIdentifier]
+    parent_invocation: Optional[ParentInvocationDefinition]
     input: str
 
 
-class InvocationStatus(StrEnum):
-    RUNNING = "RUNNING"
-    TERMINATED = "TERMINATED"
+class ParentInvocationInfo(BaseModel):
+    function_name: str
+    invocation_id: str
+    cancellation_requested: bool
+    invocation_status: InvocationStatus
+    creation_time: int
+    last_update_time: int
 
 
 class InvocationInfo(BaseModel):
@@ -146,7 +155,7 @@ class InvocationInfo(BaseModel):
     version_id: str
     function_name: str
     invocation_id: str
-    parent_invocation: Optional[InvocationIdentifier]
+    parent_invocation: Optional[ParentInvocationInfo]
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
@@ -159,24 +168,26 @@ class InvocationInfo(BaseModel):
     executions: list[ExecutionSummary]
 
 
-class InvocationSummary(BaseModel):
-    project_name: str
-    version_id: str
-    function_name: str
+class InvocationInfoForFunction(BaseModel):
     invocation_id: str
-    parent_invocation: Optional[InvocationIdentifier]
+    parent_invocation: Optional[ParentInvocationDefinition]
     cancellation_requested: bool
     invocation_status: InvocationStatus
     creation_time: int
     last_update_time: int
 
 
+class InvocationsListOffset(BaseModel):
+    next_creation_time: int
+    next_invocation_id: str
+
+
 class InvocationsListForFunction(BaseModel):
     project_name: str
     version_id: str
     function_name: str
-    invocations: list[InvocationSummary]
-    next_cursor: Optional[str]
+    invocations: list[InvocationInfoForFunction]
+    next_offset: Optional[InvocationsListOffset]
 
 
 class FunctionSpec(BaseModel):

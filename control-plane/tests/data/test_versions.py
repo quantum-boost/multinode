@@ -86,6 +86,12 @@ def test_create_two_versions(data_store: DataStore) -> None:
     # Create second version, with a later timestamp
     data_store.project_versions.create(project_name=PROJECT_NAME_1, version_id=VERSION_ID_2, creation_time=LATER_TIME)
 
+    version_1 = data_store.project_versions.get(project_name=PROJECT_NAME_1, version_id=VERSION_ID_1)
+    assert version_1.version_id == VERSION_ID_1
+
+    version_2 = data_store.project_versions.get(project_name=PROJECT_NAME_1, version_id=VERSION_ID_2)
+    assert version_2.version_id == VERSION_ID_2
+
     versions = data_store.project_versions.list_for_project(project_name=PROJECT_NAME_1).versions
     assert len(versions) == 2
     assert {version.version_id for version in versions} == {VERSION_ID_1, VERSION_ID_2}

@@ -33,15 +33,8 @@ class InvocationsLifecycleActions:
         running_invocations = sorted(running_invocations, key=(lambda inv: inv.creation_time))
 
         for invocation in running_invocations:
-            if invocation.parent_invocation is not None:
-                parent_invocation = self._data_store.invocations.get(
-                    project_name=invocation.project_name,
-                    version_id=invocation.version_id,
-                    function_name=invocation.parent_invocation.function_name,
-                    invocation_id=invocation.parent_invocation.invocation_id,
-                )
-
-                if parent_invocation.cancellation_requested:
+            if not invocation.cancellation_requested:
+                if invocation.parent_invocation is not None and invocation.parent_invocation.cancellation_requested:
                     self._data_store.invocations.update(
                         project_name=invocation.project_name,
                         version_id=invocation.version_id,
@@ -119,7 +112,7 @@ class InvocationsLifecycleActions:
                 creation_time=time,
                 last_update_time=time,
                 execution_start_time=None,
-                execution_end_time=None,
+                execution_finish_time=None,
             )
 
         for invocation in classification.invocations_to_terminate:

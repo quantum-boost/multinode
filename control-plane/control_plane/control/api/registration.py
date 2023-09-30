@@ -10,8 +10,6 @@ from control_plane.types.datatypes import (
     VersionInfo,
     VersionsListForProject,
     VersionReference,
-    FunctionInfo,
-    FunctionsListForVersion,
     FunctionStatus,
 )
 
@@ -85,25 +83,6 @@ class RegistrationApiHandler:
         """
         return self._data_store.project_versions.list_for_project(project_name=project_name)
 
-    def get_function(self, project_name: str, version_ref: VersionReference, function_name: str) -> FunctionInfo:
-        """
-        :raises ProjectDoesNotExist:
-        :raises VersionDoesNotExist:
-        :raises FunctionDoesNotExist:
-        """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
-
-        return self._data_store.functions.get(
-            project_name=project_name,
-            version_id=version_id,
-            function_name=function_name,
-        )
-
-    def list_functions(self, project_name: str, version_ref: VersionReference) -> FunctionsListForVersion:
-        """
-        :raises ProjectDoesNotExist:
-        :raises VersionDoesNotExist:
-        """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
-
-        return self._data_store.functions.list_for_project_version(project_name=project_name, version_id=version_id)
+    # Do not implement API methods for getting and listing functions for a given project version,
+    # since the VersionInfo object returned by .get_project_version already contains full information about
+    # the functions. I prefer it if our API provides only one way of accomplishing each thing.
