@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from control_plane.control.utils.random_ids import generate_random_id
@@ -60,6 +61,11 @@ class InvocationApiHandler:
             last_update_time=time,
         )
 
+        logging.info(
+            f"Created invocation ({project_name}, {version_id}, {function_name}, {invocation_id})"
+            f" - status = {InvocationStatus.RUNNING}"
+        )
+
         return self._data_store.invocations.get(
             project_name=project_name,
             version_id=version_id,
@@ -90,6 +96,11 @@ class InvocationApiHandler:
             invocation_id=invocation_id,
             update_time=time,
             set_cancellation_requested=True,
+        )
+
+        logging.info(
+            f"Updated invocation ({project_name}, {version_id}, {function_name}, {invocation_id})"
+            f" - set cancellation request flag"
         )
 
         return self._data_store.invocations.get(

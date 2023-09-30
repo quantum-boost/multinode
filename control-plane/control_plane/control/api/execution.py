@@ -1,3 +1,5 @@
+import logging
+
 from control_plane.control.utils.version_reference_utils import (
     resolve_version_reference,
 )
@@ -76,6 +78,11 @@ class ExecutionApiHandler:
             should_already_have_started=False,
         )
 
+        logging.info(
+            f"Updated execution ({project_name}, {version_id}, {function_name}, {invocation_id}, {execution_id})"
+            f" - started"
+        )
+
         return self._data_store.executions.get(
             project_name=project_name,
             version_id=version_id,
@@ -115,6 +122,11 @@ class ExecutionApiHandler:
             new_output=temporary_result_payload.latest_output,
             should_already_have_started=True,
             should_already_have_finished=False,
+        )
+
+        logging.info(
+            f"Updated execution ({project_name}, {version_id}, {function_name}, {invocation_id}, {execution_id})"
+            f" - temporary result"
         )
 
         return self._data_store.executions.get(
@@ -159,6 +171,11 @@ class ExecutionApiHandler:
             new_error_message=final_result_payload.error_message,
             should_already_have_started=True,
             should_already_have_finished=False,
+        )
+
+        logging.info(
+            f"Updated execution ({project_name}, {version_id}, {function_name}, {invocation_id}, {execution_id})"
+            f" - finished"
         )
 
         return self._data_store.executions.get(

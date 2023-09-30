@@ -70,13 +70,13 @@ class FunctionStatus(StrEnum):
 
 
 class ExecutionTemporaryResultPayload(BaseModel):
-    latest_output: Optional[str]
+    latest_output: Optional[str] = None
 
 
 class ExecutionFinalResultPayload(BaseModel):
     outcome: ExecutionOutcome
-    final_output: Optional[str]
-    error_message: Optional[str]
+    final_output: Optional[str] = None
+    error_message: Optional[str] = None
 
 
 class ExecutionInfo(BaseModel):
@@ -137,7 +137,7 @@ class ParentInvocationDefinition(BaseModel):
 
 
 class InvocationDefinition(BaseModel):
-    parent_invocation: Optional[ParentInvocationDefinition]
+    parent_invocation: Optional[ParentInvocationDefinition] = None
     input: str
 
 
@@ -192,7 +192,7 @@ class InvocationsListForFunction(BaseModel):
 
 class FunctionSpec(BaseModel):
     function_name: str
-    docker_image_override: Optional[str]
+    docker_image_override: Optional[str] = None
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
 

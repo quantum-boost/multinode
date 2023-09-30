@@ -1,3 +1,8 @@
+import logging
+
+from control_plane.control.periodic.invocations_cancellation_propagation_helper import (
+    classify_invocations_for_cancellation_propagation,
+)
 from control_plane.control.periodic.invocations_helper import (
     classify_running_invocations,
 )
@@ -15,6 +20,14 @@ class InvocationsLifecycleActions:
     def __init__(self, data_store: DataStore):
         self._data_store = data_store
 
+    def run_all(self, time: int) -> None:
+        # Any ordering will work. However, this choice of ordering should slightly improve user experience,
+        # since it reduces the chance of an execution being created for a child invocation
+        # when its parent has already been cancelled.
+
+        self.propagate_cancellation_requests_from_parents(time)
+        self.handle_running_invocations(time)
+
     def propagate_cancellation_requests_from_parents(self, time: int) -> None:
         """
         If an invocation:
@@ -28,21 +41,23 @@ class InvocationsLifecycleActions:
         # to load from the DB.
         running_invocations = self._data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
 
-        # Optimisation: iterate over invocations in the order in which they were created.
-        # This usually reduces the number of iterations required to propagate cancellation requests to grandchildren.
-        running_invocations = sorted(running_invocations, key=(lambda inv: inv.creation_time))
+        classification = classify_invocations_for_cancellation_propagation(running_invocations)
 
-        for invocation in running_invocations:
-            if not invocation.cancellation_requested:
-                if invocation.parent_invocation is not None and invocation.parent_invocation.cancellation_requested:
-                    self._data_store.invocations.update(
-                        project_name=invocation.project_name,
-                        version_id=invocation.version_id,
-                        function_name=invocation.function_name,
-                        invocation_id=invocation.invocation_id,
-                        update_time=time,
-                        set_cancellation_requested=True,
-                    )
+        for invocation in classification.invocations_to_set_cancellation_requested:
+            self._data_store.invocations.update(
+                project_name=invocation.project_name,
+                version_id=invocation.version_id,
+                function_name=invocation.function_name,
+                invocation_id=invocation.invocation_id,
+                update_time=time,
+                set_cancellation_requested=True,
+            )
+
+            logging.info(
+                f"Updated invocation ({invocation.project_name}, {invocation.version_id}, "
+                f"{invocation.function_name}, {invocation.invocation_id})"
+                f" - set cancellation request flag"
+            )
 
     def handle_running_invocations(self, time: int) -> None:
         """
@@ -115,6 +130,12 @@ class InvocationsLifecycleActions:
                 execution_finish_time=None,
             )
 
+            logging.info(
+                f"Created execution ({invocation.project_name}, {invocation.version_id}, "
+                f"{invocation.function_name}, {invocation.invocation_id}, {execution_id})"
+                f" - worker status = {WorkerStatus.PENDING}"
+            )
+
         for invocation in classification.invocations_to_terminate:
             self._data_store.invocations.update(
                 project_name=invocation.project_name,
@@ -123,4 +144,10 @@ class InvocationsLifecycleActions:
                 invocation_id=invocation.invocation_id,
                 update_time=time,
                 new_invocation_status=InvocationStatus.TERMINATED,
+            )
+
+            logging.info(
+                f"Updated invocation ({invocation.project_name}, {invocation.version_id}, "
+                f"{invocation.function_name}, {invocation.invocation_id})"
+                f" - status = {InvocationStatus.TERMINATED}"
             )
