@@ -20,7 +20,8 @@ black = "^23.9.1"
 pytest-timeout = "^2.1.0"
 
 [tool.poetry.scripts]
-api = "control_plane.entrypoints.basic_api:main"
+api = "control_plane.entrypoints.api:main"
+loop = "control_plane.entrypoints.loop:main"
 
 [tool.pytest.ini_options]
 addopts = "--verbose"

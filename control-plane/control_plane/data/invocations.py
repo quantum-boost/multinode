@@ -18,9 +18,9 @@ from control_plane.types.datatypes import (
     WorkerStatus,
     WorkerDetails,
     ExecutionOutcome,
-    InvocationsListOffset,
     InvocationInfoForFunction,
 )
+from control_plane.types.offset_helpers import ListOffset
 from control_plane.types.errortypes import (
     InvocationAlreadyExists,
     FunctionDoesNotExist,
@@ -294,7 +294,7 @@ class InvocationsTable:
         version_id: str,
         function_name: str,
         max_results: Optional[int] = None,
-        initial_offset: Optional[InvocationsListOffset] = None,
+        initial_offset: Optional[str] = None,
         status: Optional[InvocationStatus] = None,
         parent_invocation: Optional[ParentInvocationDefinition] = None,
     ) -> InvocationsListForFunction:
@@ -302,8 +302,14 @@ class InvocationsTable:
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
+        :raises OffsetIsInvalid:
         """
         raise_error_if_function_does_not_exist(project_name, version_id, function_name, self._pool)
+
+        if initial_offset is not None:
+            initial_offset_obj = ListOffset.deserialise(initial_offset)
+        else:
+            initial_offset_obj = None
 
         with self._pool.cursor() as cursor:
             extra_where_statement_clauses: list[str] = []
@@ -320,15 +326,15 @@ class InvocationsTable:
                 extra_where_statement_clauses.append("parent_invocation_id = %s")
                 extra_where_statement_args.append(parent_invocation.invocation_id)
 
-            if initial_offset is not None:
+            if initial_offset_obj is not None:
                 extra_where_statement_clauses.append(
                     "(creation_time < %s OR (creation_time = %s AND invocation_id >= %s))"
                 )
                 extra_where_statement_args.extend(
                     [
-                        initial_offset.next_creation_time,
-                        initial_offset.next_creation_time,
-                        initial_offset.next_invocation_id,
+                        initial_offset_obj.next_creation_time,
+                        initial_offset_obj.next_creation_time,
+                        initial_offset_obj.next_id,
                     ]
                 )
 
@@ -397,7 +403,7 @@ class InvocationsTable:
 
             if max_results is not None and len(rows) > max_results:
                 next_row = rows[max_results]
-                next_offset = InvocationsListOffset(next_creation_time=next_row[5], next_invocation_id=next_row[0])
+                next_offset = ListOffset(next_creation_time=next_row[5], next_id=next_row[0]).serialise()
             else:
                 next_offset = None
 

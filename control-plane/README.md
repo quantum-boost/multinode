@@ -17,7 +17,7 @@ poetry run black .
 
 Running unit tests (requires Postgres)
 ```commandline
-docker run --name postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=db -p 5432:5432 -d postgres:15.4
+docker run --name postgres --env-file=example-dev.env -p 5432:5432 -d postgres:15.4
 poetry run pytest
 ```
 
@@ -27,9 +27,22 @@ poetry build --format wheel
 docker build -t control-plane:latest .
 ```
 
-Running Docker image
+Running loop and API in dev mode (requires Postgres)
 ```commandline
-docker run -d -p 5000:5000 control-plane:latest api
+docker run --name postgres --env-file=example-dev.env -p 5432:5432 -d postgres:15.4
+docker run --name control-loop --env-file=example-dev.env --network host -d control-plane:latest loop --provisioner=dev
+docker run --name control-api --env-file=example-dev.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=dev
+```
+
+Calling this API
+```commandline
+curl -X GET http://localhost:5000/projects -H "Authorization: Bearer butterflyburger"
+```
+
+Auto-generating a schema and saving it to `../api-schemas/control-plane.json`. (NB this folder is gitignored)
+```commandline
+mkdir ../api-schemas
+curl -X GET http://localhost:5000/openapi.json | jq '.' > ../api-schemas/control-plane.json
 ```
 
 

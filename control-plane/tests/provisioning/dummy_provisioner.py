@@ -1,6 +1,7 @@
-from typing import NamedTuple, Union
+from typing import Optional
 
-from control_plane.provisioning.provisioner import AbstractProvisioner
+from control_plane.provisioning.dev_provisioner import create_identifier
+from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
 from control_plane.types.datatypes import ResourceSpec, WorkerDetails, PreparedFunctionDetails, WorkerType, WorkerStatus
 
 
@@ -32,7 +33,7 @@ class DummyProvisioner(AbstractProvisioner):
         resource_spec: ResourceSpec,
         prepared_function_details: PreparedFunctionDetails
     ) -> WorkerDetails:
-        identifier = _create_identifier(project_name, version_id, function_name, invocation_id, execution_id)
+        identifier = create_identifier(project_name, version_id, function_name, invocation_id, execution_id)
         self._workers_provisioned.add(identifier)
 
         return WorkerDetails(type=WorkerType.TEST, identifier=identifier, logs_identifier="mocked")
@@ -50,6 +51,11 @@ class DummyProvisioner(AbstractProvisioner):
         else:
             return WorkerStatus.TERMINATED
 
+    def get_worker_logs(
+        self, *, worker_details: WorkerDetails, max_lines: Optional[int], initial_offset: Optional[str]
+    ) -> LogsResult:
+        return LogsResult(log_lines=["hello", "world"], next_offset=None)
+
     # The following methods are not part of the AbstractProvisioner interface.
     # They are used in tests to mock the behaviour of the provisioner
     # or to assert something about what state the worker is in.
@@ -65,9 +71,3 @@ class DummyProvisioner(AbstractProvisioner):
 
     def worker_is_terminated(self, worker_details: WorkerDetails) -> bool:
         return worker_details.identifier in self._workers_terminated
-
-
-def _create_identifier(
-    project_name: str, version_id: str, function_name: str, invocation_id: str, execution_id: str
-) -> str:
-    return str(abs(hash(project_name + version_id + function_name + invocation_id + execution_id)))
