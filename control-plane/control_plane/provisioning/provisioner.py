@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional, NamedTuple
 
 from control_plane.types.datatypes import (
     ResourceSpec,
@@ -6,6 +7,11 @@ from control_plane.types.datatypes import (
     WorkerDetails,
     WorkerStatus,
 )
+
+
+class LogsResult(NamedTuple):
+    log_lines: list[str]
+    next_offset: Optional[str]
 
 
 class AbstractProvisioner(ABC):
@@ -47,5 +53,24 @@ class AbstractProvisioner(ABC):
         """
         Check if the worker is still alive.
         (Should only ever return RUNNING or TERMINATED; should never return PENDING.)
+        """
+        raise NotImplementedError
+
+    def notify_of_execution_completion(self, *, worker_details: WorkerDetails) -> None:
+        """
+        Only used in the mocked-up development provisioner.
+        The purpose of this method is to simulate worker termination after executions complete.
+
+        For real cloud provisioners, this method is a no-op.
+        """
+        # Override in development server
+        pass
+
+    @abstractmethod
+    def get_worker_logs(
+        self, *, worker_details: WorkerDetails, max_lines: Optional[int], initial_offset: Optional[str]
+    ) -> LogsResult:
+        """
+        Get the logs outputted by the worker
         """
         raise NotImplementedError

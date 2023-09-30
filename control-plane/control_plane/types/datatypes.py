@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Optional, NamedTuple
+from typing import Optional, Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 
 
 class StrEnum(str, Enum):
@@ -18,10 +18,58 @@ class ResourceSpec(BaseModel):
     max_concurrency: int
     # can add GPUs in future
 
+    @field_validator("virtual_cpus")
+    @classmethod
+    def check_valid_virtual_cpus(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("virtual_cpus must be positive")
+        if value > 16:
+            raise ValueError("virtual_cpus must not exceed 16")
+
+        return value
+
+    @field_validator("memory_gbs")
+    @classmethod
+    def check_valid_memory_gbs(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("memory_gbs must be positive")
+        if value > 64:
+            raise ValueError("memory_gbs must not exceed 64")
+
+        return value
+
+    @field_validator("max_concurrency")
+    @classmethod
+    def check_valid_max_concurrency(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("max_concurrency must be positive")
+        if value > 100:
+            raise ValueError("max_concurrency must not exceed 100")
+
+        return value
+
 
 class ExecutionSpec(BaseModel):
     max_retries: int
     timeout_seconds: int
+
+    @field_validator("max_retries")
+    @classmethod
+    def check_valid_max_retries(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("max_retries must be non-negative")
+
+        return value
+
+    @field_validator("timeout_seconds")
+    @classmethod
+    def check_valid_timeout_seconds(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        if value > 86400:
+            raise ValueError("timeout_seconds must not exceed 86400")
+
+        return value
 
 
 class ExecutionLogs(BaseModel):
@@ -31,7 +79,7 @@ class ExecutionLogs(BaseModel):
     invocation_id: str
     execution_id: str
     log_lines: list[str]
-    next_cursor: Optional[str]
+    next_offset: Optional[str]
 
 
 class WorkerStatus(StrEnum):
@@ -70,7 +118,7 @@ class FunctionStatus(StrEnum):
 
 
 class ExecutionTemporaryResultPayload(BaseModel):
-    latest_output: Optional[str] = None
+    latest_output: str
 
 
 class ExecutionFinalResultPayload(BaseModel):
@@ -177,17 +225,12 @@ class InvocationInfoForFunction(BaseModel):
     last_update_time: int
 
 
-class InvocationsListOffset(BaseModel):
-    next_creation_time: int
-    next_invocation_id: str
-
-
 class InvocationsListForFunction(BaseModel):
     project_name: str
     version_id: str
     function_name: str
     invocations: list[InvocationInfoForFunction]
-    next_offset: Optional[InvocationsListOffset]
+    next_offset: Optional[str]
 
 
 class FunctionSpec(BaseModel):
@@ -232,7 +275,7 @@ class VersionDefinition(BaseModel):
     def check_no_duplicate_function_names(self) -> "VersionDefinition":
         distinct_function_names = set(function.function_name for function in self.functions)
         if len(distinct_function_names) < len(self.functions):
-            raise ValueError("Function names must be distinct")
+            raise ValueError("function_name values must be distinct")
 
         return self
 
@@ -256,16 +299,6 @@ class VersionsListForProject(BaseModel):
     versions: list[VersionInfoForProject]
 
 
-class VersionReferenceType(Enum):
-    NAMED = "NAMED"
-    LATEST = "LATEST"
-
-
-class VersionReference(NamedTuple):
-    type: VersionReferenceType
-    named_version_id: Optional[str]
-
-
 class ProjectInfo(BaseModel):
     project_name: str
     creation_time: int
@@ -273,3 +306,7 @@ class ProjectInfo(BaseModel):
 
 class ProjectsList(BaseModel):
     projects: list[ProjectInfo]
+
+
+class HealthStatus(BaseModel):
+    status: str

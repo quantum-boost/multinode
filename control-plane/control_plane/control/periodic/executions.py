@@ -105,6 +105,11 @@ class ExecutionsLifecycleActions:
                     f" - worker status = {WorkerStatus.TERMINATED}"
                 )
 
+            # For development version only: Need mechanism of mocking worker termination after execution completes
+            # In production version, this step is a no-op.
+            if execution.outcome is not None:
+                self._provisioner.notify_of_execution_completion(worker_details=execution.worker_details)
+
     def handle_running_executions_requiring_termination_signal(self, time: int) -> None:
         """
         Case:

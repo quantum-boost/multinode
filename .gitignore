@@ -7,3 +7,4 @@ build/*
 **/__pycache__/
 *.pyc
 dist/*
+api-schemas/*

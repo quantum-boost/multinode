@@ -1,8 +1,9 @@
 import logging
 
 from control_plane.control.utils.random_ids import generate_random_id
-from control_plane.control.utils.version_reference_utils import (
+from control_plane.control.utils.version_reference import (
     resolve_version_reference,
+    VersionReference,
 )
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
@@ -11,7 +12,6 @@ from control_plane.types.datatypes import (
     VersionDefinition,
     VersionInfo,
     VersionsListForProject,
-    VersionReference,
     FunctionStatus,
 )
 

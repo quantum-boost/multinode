@@ -1,131 +1,221 @@
 from abc import ABC, abstractmethod
 
+from pydantic import BaseModel
 
-class ApiError(BaseException, ABC):
+
+class ErrorResponse(BaseModel):
+    detail: str
+
+
+class ApiError(Exception, ABC):
+    def response(self) -> ErrorResponse:
+        return ErrorResponse(detail=self.error_message())
+
+    @staticmethod
     @abstractmethod
-    def error_message(self) -> str:
+    def error_message() -> str:
         raise NotImplementedError
 
+    @staticmethod
     @abstractmethod
-    def error_code(self) -> int:
+    def error_code() -> int:
         raise NotImplementedError
+
+
+# Errors about request headers
+
+
+class ApiKeyIsInvalid(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The API key is invalid"
+
+    @staticmethod
+    def error_code() -> int:
+        return 403
+
+
+# Errors about query params
+
+
+class OffsetIsInvalid(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The next offset is in an invalid format"
+
+    @staticmethod
+    def error_code() -> int:
+        return 400
+
+
+class ParentFunctionNameIsMissing(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The parent function name is missing"
+
+    @staticmethod
+    def error_code() -> int:
+        return 400
+
+
+# Errors from the database
+
+
+class ParentInvocationIdIsMissing(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The parent invocation ID is missing"
+
+    @staticmethod
+    def error_code() -> int:
+        return 400
 
 
 class ExecutionAlreadyExists(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "An execution with this ID already exists for this invocation"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class ExecutionDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "An execution with this ID does not exist for this invocation"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 404
 
 
 class ExecutionHasAlreadyStarted(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "This execution has already started"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class ExecutionHasNotStarted(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "This execution has not yet started"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class ExecutionHasAlreadyFinished(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "This execution has already finished"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class ExecutionHasNotFinished(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "This execution has not yet finished"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class InvocationAlreadyExists(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "An invocation with this ID already exists for this function"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class InvocationDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "An invocation with this ID does not exist for this function"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 404
 
 
 class ParentInvocationDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "The ID of the parent invocation is invalid"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 400
 
 
 class FunctionAlreadyExists(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A function with this name already exists for this project version"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class FunctionDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A function with this name does not exist for this project version"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 404
 
 
 class VersionAlreadyExists(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A version with this ID already exists for this project"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class VersionDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A version with this ID does not exist for this project"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 404
 
 
 class ProjectAlreadyExists(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A project with this ID already exists."
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 409
 
 
 class ProjectDoesNotExist(ApiError):
-    def error_message(self) -> str:
+    @staticmethod
+    def error_message() -> str:
         return "A project with this ID does not exist"
 
-    def error_code(self) -> int:
+    @staticmethod
+    def error_code() -> int:
         return 404

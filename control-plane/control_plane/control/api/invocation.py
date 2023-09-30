@@ -2,18 +2,17 @@ import logging
 from typing import Optional
 
 from control_plane.control.utils.random_ids import generate_random_id
-from control_plane.control.utils.version_reference_utils import (
+from control_plane.control.utils.version_reference import (
     resolve_version_reference,
+    VersionReference,
 )
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
-    VersionReference,
     InvocationDefinition,
     InvocationInfo,
     InvocationsListForFunction,
     InvocationStatus,
     ParentInvocationDefinition,
-    InvocationsListOffset,
 )
 
 
@@ -137,15 +136,16 @@ class InvocationApiHandler:
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
-        max_results: Optional[int] = None,
-        initial_offset: Optional[InvocationsListOffset] = None,
-        status: Optional[InvocationStatus] = None,
-        parent_invocation: Optional[ParentInvocationDefinition] = None,
+        max_results: Optional[int],
+        initial_offset: Optional[str],
+        status: Optional[InvocationStatus],
+        parent_invocation: Optional[ParentInvocationDefinition],
     ) -> InvocationsListForFunction:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
+        :raises OffsetIsInvalid:
         """
         version_id = resolve_version_reference(project_name, version_ref, self._data_store)
 
