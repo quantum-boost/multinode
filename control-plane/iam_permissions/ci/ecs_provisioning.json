@@ -1,0 +1,37 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecs:RegisterTaskDefinition"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecs:RunTask",
+                "ecs:StopTask",
+                "ecs:DescribeTasks"
+            ],
+            "Resource": [
+                "arn:aws:ecs:eu-west-2:921216064263:task-definition/*",
+                "arn:aws:ecs:eu-west-2:921216064263:task/Multinode/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "logs:GetLogEvents",
+            "Resource": "arn:aws:logs:eu-west-2:921216064263:log-group:*:log-stream:*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": [
+                "arn:aws:iam::921216064263:role/ecsTaskExecutionRole",
+                "arn:aws:iam::921216064263:role/MultinodeTaskRole"
+            ]
+        }
+    ]
+}

@@ -15,10 +15,17 @@ Running formatter
 poetry run black .
 ```
 
-Running unit tests (requires Postgres)
+Running unit tests
 ```commandline
-docker run --name postgres --env-file=example-dev.env -p 5432:5432 -d postgres:15.4
+docker run --name postgres --env-file=environment/example-dev.env -p 5432:5432 -d postgres:15.4
 poetry run pytest
+```
+
+Running ECS integration tests
+(requires `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `DEFAULT_AWS_REGION` environment variables,
+where the access key has the permissions in iam_permissions/ci/ecs_provisioning.json).
+```commandline
+poetry run ecs-test
 ```
 
 Building Docker image
@@ -27,11 +34,20 @@ poetry build --format wheel
 docker build -t control-plane:latest .
 ```
 
-Running loop and API in dev mode (requires Postgres)
+Running loop and API in dev mode
 ```commandline
-docker run --name postgres --env-file=example-dev.env -p 5432:5432 -d postgres:15.4
-docker run --name control-loop --env-file=example-dev.env --network host -d control-plane:latest loop --provisioner=dev
-docker run --name control-api --env-file=example-dev.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=dev
+docker run --name postgres --env-file=environment/example-dev.env -p 5432:5432 -d postgres:15.4
+docker run --name control-loop --env-file=environment/example-dev.env --network host -d control-plane:latest loop --provisioner=dev --create-tables --delete-tables
+docker run --name control-api --env-file=environment/example-dev.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=dev
+```
+
+Running loop and API using ECS provisioner (requires the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables
+to refer to an access key with the permissions in iam_permissions/ci/ecs_provisioning.json;
+can omit these environment variables if using an IAM role).
+```commandline
+docker run --name postgres --env-file=environment/example-ecs.env -p 5432:5432 -d postgres:15.4
+docker run --name control-loop --env-file=environment/example-ecs.env --network host -d control-plane:latest loop --provisioner=ecs --create-tables --delete-tables
+docker run --name control-api --env-file=environment/example-ecs.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=ecs
 ```
 
 Calling this API
@@ -44,7 +60,6 @@ Auto-generating a schema and saving it to `../api-schemas/control-plane.json`. (
 mkdir ../api-schemas
 curl -X GET http://localhost:5000/openapi.json | jq '.' > ../api-schemas/control-plane.json
 ```
-
 
 ### Data structure
 
