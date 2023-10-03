@@ -14,9 +14,10 @@ from control_plane.control.api.all import ApiHandler
 from control_plane.control.utils.version_reference import parse_version_reference
 from control_plane.data.data_store import DataStore
 from control_plane.entrypoints.utils.authenticator_setup import authenticator_from_environment_variables
+from control_plane.entrypoints.utils.cli_arguments import parse_cli_arguments
 from control_plane.entrypoints.utils.current_time import current_time
 from control_plane.entrypoints.utils.documentation import document_possible_errors
-from control_plane.entrypoints.utils.provisioner_setup import provisioner_from_cli_arguments
+from control_plane.entrypoints.utils.provisioner_setup import provisioner_from_environment_variables
 from control_plane.entrypoints.utils.sql_setup import datastore_from_environment_variables
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import (
@@ -350,10 +351,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
 
 
 def main() -> None:
-    provisioner = provisioner_from_cli_arguments()
+    cli_args = parse_cli_arguments()
+    provisioner = provisioner_from_environment_variables(cli_args)
     authenticator = authenticator_from_environment_variables()
 
-    with datastore_from_environment_variables(create_tables_at_start=False, delete_tables_at_end=False) as data_store:
+    with datastore_from_environment_variables(cli_args) as data_store:
         app = build_app(data_store, provisioner, authenticator)
         uvicorn.run(app, host="0.0.0.0", port=5000)
 

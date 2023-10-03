@@ -11,6 +11,7 @@ pydantic = "^2.4.0"
 fastapi = "^0.103.1"
 uvicorn = "^0.23.2"
 psycopg2-binary = "^2.9.7"
+boto3 = "^1.28.58"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.5.1"
@@ -18,10 +19,13 @@ pytest = "^7.4.2"
 types-psycopg2 = "^2.9.21.14"
 black = "^23.9.1"
 pytest-timeout = "^2.1.0"
+boto3-stubs = "^1.28.58"
+types-urllib3 = "^1.26.25.14"
 
 [tool.poetry.scripts]
 api = "control_plane.entrypoints.api:main"
 loop = "control_plane.entrypoints.loop:main"
+ecs-test = "integration_tests.provisioning.run_ecs_provisioner:main"
 
 [tool.pytest.ini_options]
 addopts = "--verbose"
