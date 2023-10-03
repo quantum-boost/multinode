@@ -94,7 +94,7 @@ WORKER_DETAILS = WorkerDetails(type=WorkerType.TEST, identifier="123", logs_iden
 
 def test_get_logs_returned_in_one_page() -> None:
     provisioner = DevelopmentProvisioner(lag_cycles=1)
-    logs_page = provisioner.get_worker_logs(worker_details=WORKER_DETAILS, max_lines=None, initial_offset=None)
+    logs_page = provisioner.get_worker_logs(worker_details=WORKER_DETAILS, max_lines=250, initial_offset=None)
     assert len(logs_page.log_lines) == TOTAL_LOG_LINES
     assert logs_page.log_lines[0] == "line-0"
     assert logs_page.log_lines[-1] == f"line-{TOTAL_LOG_LINES - 1}"

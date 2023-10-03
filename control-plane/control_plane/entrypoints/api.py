@@ -333,11 +333,13 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         function_name: str,
         invocation_id: str,
         execution_id: str,
+        max_lines: Optional[int] = None,
+        initial_offset: Optional[str] = None,
         auth_info: AuthResult = Depends(authenticate),
     ) -> ExecutionLogs:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.logs.get_execution_logs(
-            project_name, version_ref, function_name, invocation_id, execution_id
+            project_name, version_ref, function_name, invocation_id, execution_id, max_lines, initial_offset
         )
 
     # Error handling

@@ -255,7 +255,9 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     assert invocation_2.executions[0].worker_status == WorkerStatus.TERMINATED
 
     # The logs from the executions should be accessible
-    logs = api.logs.get_execution_logs(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id, execution_2_id)
+    logs = api.logs.get_execution_logs(
+        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id, execution_2_id, None, None
+    )
     assert isinstance(logs.log_lines, list)
 
 

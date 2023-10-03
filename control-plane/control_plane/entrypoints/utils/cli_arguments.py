@@ -1,15 +1,15 @@
 import argparse
+from enum import StrEnum
 from typing import NamedTuple
 
-from control_plane.types.datatypes import WorkerType
 
-
-DEV_PROVISIONER_CLI_VALUE = "dev"
-ECS_PROVISIONER_CLI_VALUE = "ecs"
+class ProvisionerType(StrEnum):
+    DEV = "dev"
+    EXTERNAL = "external"
 
 
 class CliArguments(NamedTuple):
-    worker_type: WorkerType
+    provisioner_type: ProvisionerType
     create_tables_at_start: bool
     delete_tables_at_end: bool
 
@@ -21,7 +21,7 @@ def parse_cli_arguments() -> CliArguments:
         "--provisioner",
         type=str,
         help="Type of provisioner",
-        choices=[DEV_PROVISIONER_CLI_VALUE, ECS_PROVISIONER_CLI_VALUE],
+        choices=[str(ProvisionerType.DEV), str(ProvisionerType.EXTERNAL)],
         required=True,
     )
 
@@ -35,18 +35,13 @@ def parse_cli_arguments() -> CliArguments:
 
     args = parser.parse_args()
 
-    if args.provisioner == DEV_PROVISIONER_CLI_VALUE:
-        worker_type = WorkerType.TEST
-    elif args.provisioner == ECS_PROVISIONER_CLI_VALUE:
-        worker_type = WorkerType.AWS_ECS
-    else:
-        raise ValueError
+    provisioner_type = ProvisionerType(args.provisioner)
 
     create_tables_at_start = args.create_tables
     delete_tables_at_end = args.delete_tables
 
     return CliArguments(
-        worker_type=worker_type,
+        provisioner_type=provisioner_type,
         create_tables_at_start=create_tables_at_start,
         delete_tables_at_end=delete_tables_at_end,
     )
