@@ -69,7 +69,7 @@ class DevelopmentProvisioner(AbstractProvisioner):
             self._workers_to_remaining_cycles[worker_details.identifier] = remaining_cycles_after_update
 
     def get_worker_logs(
-        self, *, worker_details: WorkerDetails, max_lines: Optional[int], initial_offset: Optional[str]
+        self, *, worker_details: WorkerDetails, max_lines: int, initial_offset: Optional[str]
     ) -> LogsResult:
         if initial_offset is not None:
             left_bound = int(initial_offset)  # inclusive bound

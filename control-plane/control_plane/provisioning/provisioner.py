@@ -68,7 +68,7 @@ class AbstractProvisioner(ABC):
 
     @abstractmethod
     def get_worker_logs(
-        self, *, worker_details: WorkerDetails, max_lines: Optional[int], initial_offset: Optional[str]
+        self, *, worker_details: WorkerDetails, max_lines: int, initial_offset: Optional[str]
     ) -> LogsResult:
         """
         Get the logs outputted by the worker

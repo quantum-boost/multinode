@@ -22,8 +22,8 @@ class LogsApiHandler:
         function_name: str,
         invocation_id: str,
         execution_id: str,
-        max_lines: int = 50,
-        initial_offset: Optional[str] = None,
+        max_lines: Optional[int],
+        initial_offset: Optional[str],
     ) -> ExecutionLogs:
         """
         :raises ProjectDoesNotExist:
@@ -33,6 +33,11 @@ class LogsApiHandler:
         :raises ExecutionDoesNotExist:
         """
         version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+
+        if max_lines is not None:
+            sanitised_max_lines = min(250, max_lines)
+        else:
+            sanitised_max_lines = 250
 
         execution = self._data_store.executions.get(
             project_name=project_name,
@@ -44,7 +49,7 @@ class LogsApiHandler:
 
         if execution.worker_details is not None:
             logs_result = self._provisioner.get_worker_logs(
-                worker_details=execution.worker_details, max_lines=max_lines, initial_offset=initial_offset
+                worker_details=execution.worker_details, max_lines=sanitised_max_lines, initial_offset=initial_offset
             )
 
             return ExecutionLogs(
