@@ -3,7 +3,9 @@ from typing import Any
 from control_plane.types.errortypes import ApiError, ErrorResponse
 
 
-def document_possible_errors(possible_errors: list[type[ApiError]]) -> dict[int | str, dict[str, Any]]:
+def document_possible_errors(
+    possible_errors: list[type[ApiError]],
+) -> dict[int | str, dict[str, Any]]:
     """
     Generate dictionary of status codes to response types / descriptions.
     Used solely for OpenAPI documentation, doesn't affect the way the code runs.
@@ -16,7 +18,10 @@ def document_possible_errors(possible_errors: list[type[ApiError]]) -> dict[int 
 
     for error in possible_errors:
         if error.error_code() not in responses:
-            responses[error.error_code()] = {"model": ErrorResponse, "description": error.error_message()}
+            responses[error.error_code()] = {
+                "model": ErrorResponse,
+                "description": error.error_message(),
+            }
         else:
             responses[error.error_code()]["description"] += "; " + error.error_message()
 

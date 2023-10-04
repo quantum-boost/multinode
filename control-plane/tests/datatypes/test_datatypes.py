@@ -1,7 +1,12 @@
 import pytest
 from pydantic import ValidationError
 
-from control_plane.types.datatypes import ResourceSpec, ExecutionSpec, VersionDefinition, FunctionSpec
+from control_plane.types.datatypes import (
+    ResourceSpec,
+    ExecutionSpec,
+    VersionDefinition,
+    FunctionSpec,
+)
 
 
 def test_valid_resource_spec() -> None:
@@ -86,18 +91,25 @@ def test_valid_version_definition() -> None:
         functions=[
             FunctionSpec(
                 function_name="foo",
-                resource_spec=ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5),
+                resource_spec=ResourceSpec(
+                    virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5
+                ),
                 execution_spec=ExecutionSpec(timeout_seconds=300, max_retries=1),
             ),
             FunctionSpec(
                 function_name="bar",
                 docker_image_override="other:2.0",
-                resource_spec=ResourceSpec(virtual_cpus=2.0, memory_gbs=8.0, max_concurrency=1),
+                resource_spec=ResourceSpec(
+                    virtual_cpus=2.0, memory_gbs=8.0, max_concurrency=1
+                ),
                 execution_spec=ExecutionSpec(timeout_seconds=120, max_retries=0),
             ),
         ],
     )
-    assert {function.function_name for function in version_def.functions} == {"foo", "bar"}
+    assert {function.function_name for function in version_def.functions} == {
+        "foo",
+        "bar",
+    }
 
 
 def test_version_definition_with_duplicate_function_names() -> None:
@@ -107,13 +119,17 @@ def test_version_definition_with_duplicate_function_names() -> None:
             functions=[
                 FunctionSpec(
                     function_name="foo",
-                    resource_spec=ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5),
+                    resource_spec=ResourceSpec(
+                        virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5
+                    ),
                     execution_spec=ExecutionSpec(timeout_seconds=300, max_retries=1),
                 ),
                 FunctionSpec(
                     function_name="foo",
                     docker_image_override="other:2.0",
-                    resource_spec=ResourceSpec(virtual_cpus=2.0, memory_gbs=8.0, max_concurrency=1),
+                    resource_spec=ResourceSpec(
+                        virtual_cpus=2.0, memory_gbs=8.0, max_concurrency=1
+                    ),
                     execution_spec=ExecutionSpec(timeout_seconds=120, max_retries=0),
                 ),
             ],

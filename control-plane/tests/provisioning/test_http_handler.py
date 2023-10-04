@@ -47,7 +47,9 @@ def test_with_200() -> None:
         actual_response_body = http_handler.post(PATH, REQUEST_BODY, DummyResponseBody)
 
         mock_post.assert_called_with(
-            url=FULL_URL, json=REQUEST_BODY_DICT, headers={"Authorization": f"Bearer {BEARER_TOKEN}"}
+            url=FULL_URL,
+            json=REQUEST_BODY_DICT,
+            headers={"Authorization": f"Bearer {BEARER_TOKEN}"},
         )
 
         assert actual_response_body == RESPONSE_BODY
@@ -73,7 +75,9 @@ def test_with_200_when_json_is_unparseable() -> None:
 
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.side_effect = JSONDecodeError(ERROR_MESSAGE, MALFORMED_RESPONSE_STRING, 13)
+    mock_response.json.side_effect = JSONDecodeError(
+        ERROR_MESSAGE, MALFORMED_RESPONSE_STRING, 13
+    )
 
     with patch(f"{__name__}.requests.post") as mock_post:
         mock_post.return_value = mock_response
@@ -143,7 +147,9 @@ def test_with_400_when_json_is_unparseable() -> None:
 
     mock_response = Mock()
     mock_response.status_code = 400
-    mock_response.json.side_effect = JSONDecodeError(ERROR_MESSAGE, MALFORMED_RESPONSE_STRING, 13)
+    mock_response.json.side_effect = JSONDecodeError(
+        ERROR_MESSAGE, MALFORMED_RESPONSE_STRING, 13
+    )
 
     with patch(f"{__name__}.requests.post") as mock_post:
         mock_post.return_value = mock_response

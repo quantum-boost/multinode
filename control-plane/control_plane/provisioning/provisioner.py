@@ -17,7 +17,13 @@ class LogsResult(NamedTuple):
 class AbstractProvisioner(ABC):
     @abstractmethod
     def prepare_function(
-        self, *, project_name: str, version_id: str, function_name: str, docker_image: str, resource_spec: ResourceSpec
+        self,
+        *,
+        project_name: str,
+        version_id: str,
+        function_name: str,
+        docker_image: str,
+        resource_spec: ResourceSpec
     ) -> PreparedFunctionDetails:
         """
         Create all necessary cloud resources so that it's possible to create workers that execute this function.
@@ -42,7 +48,9 @@ class AbstractProvisioner(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def send_termination_signal_to_worker(self, *, worker_details: WorkerDetails) -> None:
+    def send_termination_signal_to_worker(
+        self, *, worker_details: WorkerDetails
+    ) -> None:
         """
         Send a termination signal to the worker.
         """
@@ -68,7 +76,11 @@ class AbstractProvisioner(ABC):
 
     @abstractmethod
     def get_worker_logs(
-        self, *, worker_details: WorkerDetails, max_lines: int, initial_offset: Optional[str]
+        self,
+        *,
+        worker_details: WorkerDetails,
+        max_lines: int,
+        initial_offset: Optional[str]
     ) -> LogsResult:
         """
         Get the logs outputted by the worker

@@ -61,16 +61,21 @@ def assert_results(
     expected_ids_to_leave_untouched: Optional[set[str]] = None,
 ) -> None:
     actual_ids_requiring_termination_signal = {
-        execution.execution_id for execution in classification.executions_requiring_termination_signal
+        execution.execution_id
+        for execution in classification.executions_requiring_termination_signal
     }
     actual_ids_to_leave_untouched = {
-        execution.execution_id for execution in classification.executions_to_leave_untouched
+        execution.execution_id
+        for execution in classification.executions_to_leave_untouched
     }
 
     if expected_ids_requiring_termination_signal is None:
         assert len(actual_ids_requiring_termination_signal) == 0
     else:
-        assert actual_ids_requiring_termination_signal == expected_ids_requiring_termination_signal
+        assert (
+            actual_ids_requiring_termination_signal
+            == expected_ids_requiring_termination_signal
+        )
 
     if expected_ids_to_leave_untouched is None:
         assert len(actual_ids_to_leave_untouched) == 0
@@ -93,10 +98,14 @@ def test_classify_with_cancellation_request() -> None:
 
     classification = classify_running_executions(executions, TIME)
 
-    assert_results(classification, expected_ids_requiring_termination_signal={execution_id})
+    assert_results(
+        classification, expected_ids_requiring_termination_signal={execution_id}
+    )
 
 
-def test_classify_with_cancellation_request_but_termination_signal_already_sent() -> None:
+def test_classify_with_cancellation_request_but_termination_signal_already_sent() -> (
+    None
+):
     execution_id = "exe-1"
     executions = [
         create_execution(
@@ -122,7 +131,9 @@ def test_classify_when_timed_out() -> None:
 
     classification = classify_running_executions(executions, TIME)
 
-    assert_results(classification, expected_ids_requiring_termination_signal={execution_id})
+    assert_results(
+        classification, expected_ids_requiring_termination_signal={execution_id}
+    )
 
 
 def test_classify_when_timed_out_but_termination_signal_already_sent() -> None:

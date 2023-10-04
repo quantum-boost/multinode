@@ -3,7 +3,10 @@ from typing import Optional
 from control_plane.data.data_store import DataStore
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import ExecutionLogs
-from control_plane.control.utils.version_reference import VersionReference, resolve_version_reference
+from control_plane.control.utils.version_reference import (
+    VersionReference,
+    resolve_version_reference,
+)
 
 
 class LogsApiHandler:
@@ -33,7 +36,9 @@ class LogsApiHandler:
         :raises InvocationDoesNotExist:
         :raises ExecutionDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         if max_lines is not None:
             sanitised_max_lines = min(250, max_lines)
@@ -50,7 +55,9 @@ class LogsApiHandler:
 
         if execution.worker_details is not None:
             logs_result = self._provisioner.get_worker_logs(
-                worker_details=execution.worker_details, max_lines=sanitised_max_lines, initial_offset=initial_offset
+                worker_details=execution.worker_details,
+                max_lines=sanitised_max_lines,
+                initial_offset=initial_offset,
             )
 
             return ExecutionLogs(

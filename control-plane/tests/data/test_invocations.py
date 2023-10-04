@@ -43,12 +43,18 @@ FUNCTION_NAME_2 = "function-2"
 NONEXISTENT_FUNCTION_NAME = "nonexistent-function"
 
 DOCKER_IMAGE_FOR_FUNCTION_1 = "image-1"
-RESOURCE_SPEC_FOR_FUNCTION_1 = ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5)
+RESOURCE_SPEC_FOR_FUNCTION_1 = ResourceSpec(
+    virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5
+)
 EXECUTION_SPEC_FOR_FUNCTION_1 = ExecutionSpec(timeout_seconds=300, max_retries=8)
-PREPARED_DETAILS_FOR_FUNCTION_1 = PreparedFunctionDetails(type=WorkerType.TEST, identifier="def-1")
+PREPARED_DETAILS_FOR_FUNCTION_1 = PreparedFunctionDetails(
+    type=WorkerType.TEST, identifier="def-1"
+)
 
 DOCKER_IMAGE_FOR_FUNCTION_2 = "image-2"
-RESOURCE_SPEC_FOR_FUNCTION_2 = ResourceSpec(virtual_cpus=8.0, memory_gbs=16.0, max_concurrency=20)
+RESOURCE_SPEC_FOR_FUNCTION_2 = ResourceSpec(
+    virtual_cpus=8.0, memory_gbs=16.0, max_concurrency=20
+)
 EXECUTION_SPEC_FOR_FUNCTION_2 = ExecutionSpec(timeout_seconds=600, max_retries=19)
 
 INVOCATION_ID_1 = "invocation-1"
@@ -70,7 +76,9 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
     # Set up each test with the project, version and functions already inserted.
     data_store.projects.create(project_name=PROJECT_NAME, creation_time=TIME)
 
-    data_store.project_versions.create(project_name=PROJECT_NAME, version_id=VERSION_ID, creation_time=TIME)
+    data_store.project_versions.create(
+        project_name=PROJECT_NAME, version_id=VERSION_ID, creation_time=TIME
+    )
 
     data_store.functions.create(
         project_name=PROJECT_NAME,
@@ -110,7 +118,9 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
             invocation_id=INVOCATION_ID_1,
         )
 
-    all_invocations = data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+    all_invocations = data_store.invocations.list_all(
+        statuses={InvocationStatus.RUNNING}
+    )
     assert len(all_invocations) == 0
 
     invocations_for_function = data_store.invocations.list_for_function(
@@ -133,7 +143,10 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
     )
 
     invocation_1 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
     )
 
     assert invocation_1.project_name == PROJECT_NAME
@@ -141,7 +154,9 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
     assert invocation_1.function_name == FUNCTION_NAME_1
     assert invocation_1.invocation_id == INVOCATION_ID_1
     assert invocation_1.parent_invocation is None
-    assert invocation_1.resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC_FOR_FUNCTION_1.virtual_cpus)
+    assert invocation_1.resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC_FOR_FUNCTION_1.virtual_cpus
+    )
     assert invocation_1.execution_spec == EXECUTION_SPEC_FOR_FUNCTION_1
     assert invocation_1.function_status == FunctionStatus.READY
     assert invocation_1.prepared_function_details == PREPARED_DETAILS_FOR_FUNCTION_1
@@ -151,17 +166,23 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
     assert invocation_1.creation_time == TIME
     assert invocation_1.last_update_time == TIME
 
-    all_invocations = data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+    all_invocations = data_store.invocations.list_all(
+        statuses={InvocationStatus.RUNNING}
+    )
     assert len(all_invocations) == 1
     assert all_invocations[0].project_name == PROJECT_NAME
     assert all_invocations[0].version_id == VERSION_ID
     assert all_invocations[0].function_name == FUNCTION_NAME_1
     assert all_invocations[0].invocation_id == INVOCATION_ID_1
     assert all_invocations[0].parent_invocation is None
-    assert all_invocations[0].resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC_FOR_FUNCTION_1.virtual_cpus)
+    assert all_invocations[0].resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC_FOR_FUNCTION_1.virtual_cpus
+    )
     assert all_invocations[0].execution_spec == EXECUTION_SPEC_FOR_FUNCTION_1
     assert all_invocations[0].function_status == FunctionStatus.READY
-    assert all_invocations[0].prepared_function_details == PREPARED_DETAILS_FOR_FUNCTION_1
+    assert (
+        all_invocations[0].prepared_function_details == PREPARED_DETAILS_FOR_FUNCTION_1
+    )
     assert all_invocations[0].input == INPUT_1
     assert all_invocations[0].cancellation_requested == False
     assert all_invocations[0].invocation_status == InvocationStatus.RUNNING
@@ -199,21 +220,31 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
     )
 
     invocation_1 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
     )
     assert invocation_1.invocation_id == INVOCATION_ID_1
 
     invocation_2 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_2, invocation_id=INVOCATION_ID_2
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_2,
+        invocation_id=INVOCATION_ID_2,
     )
     assert invocation_2.invocation_id == INVOCATION_ID_2
     assert invocation_2.function_name == FUNCTION_NAME_2
-    assert invocation_2.resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC_FOR_FUNCTION_2.virtual_cpus)
+    assert invocation_2.resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC_FOR_FUNCTION_2.virtual_cpus
+    )
     assert invocation_2.execution_spec == EXECUTION_SPEC_FOR_FUNCTION_2
     assert invocation_2.function_status == FunctionStatus.PENDING
     assert invocation_2.prepared_function_details is None
 
-    all_invocations = data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+    all_invocations = data_store.invocations.list_all(
+        statuses={InvocationStatus.RUNNING}
+    )
     assert len(all_invocations) == 2
 
     invocations_for_function_2 = data_store.invocations.list_for_function(
@@ -261,12 +292,17 @@ def test_create_invocation_with_duplicate_id(data_store: DataStore) -> None:
         )
 
     invocation_1 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
     )
     assert invocation_1.input == INPUT_1  # the original input
 
 
-def test_create_invocations_with_parent_child_relationship(data_store: DataStore) -> None:
+def test_create_invocations_with_parent_child_relationship(
+    data_store: DataStore,
+) -> None:
     # Create parent
     data_store.invocations.create(
         project_name=PROJECT_NAME,
@@ -287,7 +323,9 @@ def test_create_invocations_with_parent_child_relationship(data_store: DataStore
         version_id=VERSION_ID,
         function_name=FUNCTION_NAME_2,
         invocation_id=INVOCATION_ID_2,
-        parent_invocation=ParentInvocationDefinition(function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1),
+        parent_invocation=ParentInvocationDefinition(
+            function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        ),
         input=INPUT_2,
         cancellation_requested=False,  # make all these values different from the parent
         invocation_status=InvocationStatus.RUNNING,
@@ -296,13 +334,19 @@ def test_create_invocations_with_parent_child_relationship(data_store: DataStore
     )
 
     child_invocation = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_2, invocation_id=INVOCATION_ID_2
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_2,
+        invocation_id=INVOCATION_ID_2,
     )
     assert child_invocation.parent_invocation is not None
     assert child_invocation.parent_invocation.function_name == FUNCTION_NAME_1
     assert child_invocation.parent_invocation.invocation_id == INVOCATION_ID_1
     assert child_invocation.parent_invocation.cancellation_requested == True
-    assert child_invocation.parent_invocation.invocation_status == InvocationStatus.TERMINATED
+    assert (
+        child_invocation.parent_invocation.invocation_status
+        == InvocationStatus.TERMINATED
+    )
     assert child_invocation.parent_invocation.creation_time == TIME
     assert child_invocation.parent_invocation.last_update_time == TIME
 
@@ -310,20 +354,36 @@ def test_create_invocations_with_parent_child_relationship(data_store: DataStore
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,
         function_name=FUNCTION_NAME_2,
-        parent_invocation=ParentInvocationDefinition(function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1),
+        parent_invocation=ParentInvocationDefinition(
+            function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        ),
     ).invocations
     assert len(children_of_parent) == 1
     assert children_of_parent[0].invocation_id == INVOCATION_ID_2
     assert children_of_parent[0].parent_invocation is not None
     assert children_of_parent[0].parent_invocation.function_name == FUNCTION_NAME_1
 
-    invocations_in_running_status = data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+    invocations_in_running_status = data_store.invocations.list_all(
+        statuses={InvocationStatus.RUNNING}
+    )
     assert len(invocations_in_running_status) == 1
     assert invocations_in_running_status[0].parent_invocation is not None
-    assert invocations_in_running_status[0].parent_invocation.function_name == FUNCTION_NAME_1
-    assert invocations_in_running_status[0].parent_invocation.invocation_id == INVOCATION_ID_1
-    assert invocations_in_running_status[0].parent_invocation.cancellation_requested == True
-    assert invocations_in_running_status[0].parent_invocation.invocation_status == InvocationStatus.TERMINATED
+    assert (
+        invocations_in_running_status[0].parent_invocation.function_name
+        == FUNCTION_NAME_1
+    )
+    assert (
+        invocations_in_running_status[0].parent_invocation.invocation_id
+        == INVOCATION_ID_1
+    )
+    assert (
+        invocations_in_running_status[0].parent_invocation.cancellation_requested
+        == True
+    )
+    assert (
+        invocations_in_running_status[0].parent_invocation.invocation_status
+        == InvocationStatus.TERMINATED
+    )
     assert invocations_in_running_status[0].parent_invocation.creation_time == TIME
     assert invocations_in_running_status[0].parent_invocation.last_update_time == TIME
 
@@ -336,7 +396,9 @@ def test_create_invocations_with_nonexistent_parent(data_store: DataStore) -> No
             version_id=VERSION_ID,
             function_name=FUNCTION_NAME_2,
             invocation_id=INVOCATION_ID_2,
-            parent_invocation=ParentInvocationDefinition(function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1),
+            parent_invocation=ParentInvocationDefinition(
+                function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+            ),
             input=INPUT_2,
             cancellation_requested=False,
             invocation_status=InvocationStatus.RUNNING,
@@ -403,11 +465,15 @@ def test_update_status(data_store: DataStore) -> None:
     assert invocation_2.last_update_time == TIME
     assert invocation_2.invocation_status == InvocationStatus.RUNNING
 
-    invocations_in_running_status = data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+    invocations_in_running_status = data_store.invocations.list_all(
+        statuses={InvocationStatus.RUNNING}
+    )
     assert len(invocations_in_running_status) == 1
     assert invocations_in_running_status[0].invocation_id == INVOCATION_ID_2
 
-    invocations_in_terminated_status = data_store.invocations.list_all(statuses={InvocationStatus.TERMINATED})
+    invocations_in_terminated_status = data_store.invocations.list_all(
+        statuses={InvocationStatus.TERMINATED}
+    )
     assert len(invocations_in_terminated_status) == 1
     assert invocations_in_terminated_status[0].invocation_id == INVOCATION_ID_1
 
@@ -445,7 +511,9 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
     assert invocation_1.cancellation_requested == True
 
 
-def test_update_cancellation_when_invocation_does_not_exist(data_store: DataStore) -> None:
+def test_update_cancellation_when_invocation_does_not_exist(
+    data_store: DataStore,
+) -> None:
     with pytest.raises(InvocationDoesNotExist):
         data_store.invocations.update(
             project_name=PROJECT_NAME,
@@ -457,7 +525,9 @@ def test_update_cancellation_when_invocation_does_not_exist(data_store: DataStor
         )
 
 
-def test_list_invocations_for_function_using_max_results_and_initial_offset(data_store: DataStore) -> None:
+def test_list_invocations_for_function_using_max_results_and_initial_offset(
+    data_store: DataStore,
+) -> None:
     # Create two invocations of the same function
     data_store.invocations.create(
         project_name=PROJECT_NAME,
@@ -488,7 +558,10 @@ def test_list_invocations_for_function_using_max_results_and_initial_offset(data
     # Iterate through the table, with max_results = 1 for each page.
     # Note that the results should be returned in descending order of creation time.
     first_page = data_store.invocations.list_for_function(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, max_results=1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        max_results=1,
     )
     assert len(first_page.invocations) == 1
     assert first_page.invocations[0].invocation_id == INVOCATION_ID_2
@@ -507,7 +580,10 @@ def test_list_invocations_for_function_using_max_results_and_initial_offset(data
     # Iterate through table once more, but this time, with max_results = 10 for each page.
     # So this time, all the results should fit on a single page.
     single_page = data_store.invocations.list_for_function(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, max_results=10
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        max_results=10,
     )
     assert len(single_page.invocations) == 2
     assert single_page.invocations[0].invocation_id == INVOCATION_ID_2
@@ -549,7 +625,9 @@ def test_methods_when_function_does_not_exist(data_store: DataStore) -> None:
 
     with pytest.raises(FunctionDoesNotExist):
         data_store.invocations.list_for_function(
-            project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=NONEXISTENT_FUNCTION_NAME
+            project_name=PROJECT_NAME,
+            version_id=VERSION_ID,
+            function_name=NONEXISTENT_FUNCTION_NAME,
         )
 
 
@@ -588,7 +666,9 @@ def test_methods_when_project_version_does_not_exist(data_store: DataStore) -> N
 
     with pytest.raises(VersionDoesNotExist):
         data_store.invocations.list_for_function(
-            project_name=PROJECT_NAME, version_id=NONEXISTENT_VERSION_NAME, function_name=FUNCTION_NAME_1
+            project_name=PROJECT_NAME,
+            version_id=NONEXISTENT_VERSION_NAME,
+            function_name=FUNCTION_NAME_1,
         )
 
 
@@ -627,5 +707,7 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
 
     with pytest.raises(ProjectDoesNotExist):
         data_store.invocations.list_for_function(
-            project_name=NONEXISTENT_PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1
+            project_name=NONEXISTENT_PROJECT_NAME,
+            version_id=VERSION_ID,
+            function_name=FUNCTION_NAME_1,
         )

@@ -1,4 +1,7 @@
-from control_plane.control.utils.version_reference import parse_version_reference, VersionReferenceType
+from control_plane.control.utils.version_reference import (
+    parse_version_reference,
+    VersionReferenceType,
+)
 
 
 def test_parse_with_latest() -> None:

@@ -116,7 +116,9 @@ class InvocationsTable:
         :raises InvocationAlreadyExists:
         :raises ParentInvocationDoesNotExist:
         """
-        raise_error_if_function_does_not_exist(project_name, version_id, function_name, self._pool)
+        raise_error_if_function_does_not_exist(
+            project_name, version_id, function_name, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             try:
@@ -130,8 +132,12 @@ class InvocationsTable:
                         version_id,
                         function_name,
                         invocation_id,
-                        parent_invocation.function_name if parent_invocation is not None else None,
-                        parent_invocation.invocation_id if parent_invocation is not None else None,
+                        parent_invocation.function_name
+                        if parent_invocation is not None
+                        else None,
+                        parent_invocation.invocation_id
+                        if parent_invocation is not None
+                        else None,
                         input,
                         cancellation_requested,
                         invocation_status.value,
@@ -166,7 +172,9 @@ class InvocationsTable:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        raise_error_if_function_does_not_exist(project_name, version_id, function_name, self._pool)
+        raise_error_if_function_does_not_exist(
+            project_name, version_id, function_name, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             set_statement_clauses: list[str] = []
@@ -191,7 +199,8 @@ class InvocationsTable:
                 {set_statement}
                 WHERE project_name = %s AND version_id = %s AND function_name = %s AND invocation_id = %s;
                 """,
-                set_statement_args + [project_name, version_id, function_name, invocation_id],
+                set_statement_args
+                + [project_name, version_id, function_name, invocation_id],
             )
 
             if cursor.rowcount == 0:
@@ -210,7 +219,9 @@ class InvocationsTable:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        raise_error_if_function_does_not_exist(project_name, version_id, function_name, self._pool)
+        raise_error_if_function_does_not_exist(
+            project_name, version_id, function_name, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             cursor.execute(
@@ -304,7 +315,9 @@ class InvocationsTable:
         :raises FunctionDoesNotExist:
         :raises OffsetIsInvalid:
         """
-        raise_error_if_function_does_not_exist(project_name, version_id, function_name, self._pool)
+        raise_error_if_function_does_not_exist(
+            project_name, version_id, function_name, self._pool
+        )
 
         if initial_offset is not None:
             initial_offset_obj = ListOffset.deserialise(initial_offset)
@@ -339,13 +352,17 @@ class InvocationsTable:
                 )
 
             if len(extra_where_statement_clauses) > 0:
-                extra_where_statement = " AND " + " AND ".join(extra_where_statement_clauses)
+                extra_where_statement = " AND " + " AND ".join(
+                    extra_where_statement_clauses
+                )
             else:
                 extra_where_statement = ""
 
             if max_results is not None:
                 limit_statement = "LIMIT %s"
-                limit_statement_args = [max_results + 1]  # plus 1 because we need the offset for the next page
+                limit_statement_args = [
+                    max_results + 1
+                ]  # plus 1 because we need the offset for the next page
             else:
                 limit_statement = ""
                 limit_statement_args = []
@@ -372,7 +389,9 @@ class InvocationsTable:
                   invocation_id ASC
                 {limit_statement}
                 """,
-                [project_name, version_id, function_name] + extra_where_statement_args + limit_statement_args,
+                [project_name, version_id, function_name]
+                + extra_where_statement_args
+                + limit_statement_args,
             )
 
             rows = cursor.fetchall()
@@ -386,7 +405,9 @@ class InvocationsTable:
 
             for row in rows_to_return:
                 if row[1] is not None:
-                    parent_invocation_def = ParentInvocationDefinition(function_name=row[1], invocation_id=row[2])
+                    parent_invocation_def = ParentInvocationDefinition(
+                        function_name=row[1], invocation_id=row[2]
+                    )
                 else:
                     parent_invocation_def = None
 
@@ -403,7 +424,9 @@ class InvocationsTable:
 
             if max_results is not None and len(rows) > max_results:
                 next_row = rows[max_results]
-                next_offset = ListOffset(next_creation_time=next_row[5], next_id=next_row[0]).serialise()
+                next_offset = ListOffset(
+                    next_creation_time=next_row[5], next_id=next_row[0]
+                ).serialise()
             else:
                 next_offset = None
 
@@ -459,7 +482,9 @@ class InvocationsTable:
             )
 
             rows = cursor.fetchall()
-            invocations: list[InvocationInfo] = [_construct_invocation_info_from_row(row) for row in rows]
+            invocations: list[InvocationInfo] = [
+                _construct_invocation_info_from_row(row) for row in rows
+            ]
 
             # Must also fetch the executions associated with any of these invocations.
             # Again, we can potentially consider merging this query and the previous one using a LEFT JOIN,
@@ -492,7 +517,8 @@ class InvocationsTable:
 
             rows = cursor.fetchall()
             executions: list[ExecutionSummaryWithInvocationIdentifier] = [
-                _construct_execution_summary_with_invocation_identifier_from_row(row) for row in rows
+                _construct_execution_summary_with_invocation_identifier_from_row(row)
+                for row in rows
             ]
 
             _attach_execution_summaries_to_invocation_infos(invocations, executions)
@@ -523,7 +549,9 @@ def _construct_invocation_info_from_row(row: Tuple[Any, ...]) -> InvocationInfo:
         execution_spec=ExecutionSpec.model_validate_json(row[11]),
         function_status=FunctionStatus(row[12]),
         prepared_function_details=(
-            PreparedFunctionDetails.model_validate_json(row[13]) if row[13] is not None else None
+            PreparedFunctionDetails.model_validate_json(row[13])
+            if row[13] is not None
+            else None
         ),
         input=row[14],
         cancellation_requested=row[15],
@@ -538,7 +566,9 @@ def _construct_execution_summary_from_row(row: Tuple[Any, ...]) -> ExecutionSumm
     return ExecutionSummary(
         execution_id=row[0],
         worker_status=WorkerStatus(row[1]),
-        worker_details=(WorkerDetails.model_validate_json(row[2]) if row[2] is not None else None),
+        worker_details=(
+            WorkerDetails.model_validate_json(row[2]) if row[2] is not None else None
+        ),
         termination_signal_sent=row[3],
         outcome=(ExecutionOutcome(row[4]) if row[4] is not None else None),
         output=row[5],
@@ -568,13 +598,17 @@ def _construct_execution_summary_with_invocation_identifier_from_row(
     return ExecutionSummaryWithInvocationIdentifier(
         execution_summary=_construct_execution_summary_from_row(row),
         invocation_identifier=InvocationUniqueIdentifier(
-            project_name=row[11], version_id=row[12], function_name=row[13], invocation_id=row[14]
+            project_name=row[11],
+            version_id=row[12],
+            function_name=row[13],
+            invocation_id=row[14],
         ),
     )
 
 
 def _attach_execution_summaries_to_invocation_infos(
-    invocation_infos: list[InvocationInfo], execution_summaries: list[ExecutionSummaryWithInvocationIdentifier]
+    invocation_infos: list[InvocationInfo],
+    execution_summaries: list[ExecutionSummaryWithInvocationIdentifier],
 ) -> None:
     invocations_dict: dict[InvocationUniqueIdentifier, InvocationInfo] = dict()
     for invocation in invocation_infos:

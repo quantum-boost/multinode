@@ -1,7 +1,13 @@
 from typing import Union, Optional
 
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
-from control_plane.types.datatypes import PreparedFunctionDetails, ResourceSpec, WorkerType, WorkerDetails, WorkerStatus
+from control_plane.types.datatypes import (
+    PreparedFunctionDetails,
+    ResourceSpec,
+    WorkerType,
+    WorkerDetails,
+    WorkerStatus,
+)
 
 
 TOTAL_LOG_LINES = 100
@@ -25,7 +31,13 @@ class DevelopmentProvisioner(AbstractProvisioner):
         self._workers_to_remaining_cycles: dict[str, Union[int, float]] = dict()
 
     def prepare_function(
-        self, *, project_name: str, version_id: str, function_name: str, docker_image: str, resource_spec: ResourceSpec
+        self,
+        *,
+        project_name: str,
+        version_id: str,
+        function_name: str,
+        docker_image: str,
+        resource_spec: ResourceSpec,
     ) -> PreparedFunctionDetails:
         return PreparedFunctionDetails(type=WorkerType.TEST, identifier="mocked")
 
@@ -40,12 +52,18 @@ class DevelopmentProvisioner(AbstractProvisioner):
         resource_spec: ResourceSpec,
         prepared_function_details: PreparedFunctionDetails,
     ) -> WorkerDetails:
-        identifier = create_identifier(project_name, version_id, function_name, invocation_id, execution_id)
+        identifier = create_identifier(
+            project_name, version_id, function_name, invocation_id, execution_id
+        )
         self._workers_to_remaining_cycles[identifier] = float("inf")
 
-        return WorkerDetails(type=WorkerType.TEST, identifier=identifier, logs_identifier="mocked")
+        return WorkerDetails(
+            type=WorkerType.TEST, identifier=identifier, logs_identifier="mocked"
+        )
 
-    def send_termination_signal_to_worker(self, *, worker_details: WorkerDetails) -> None:
+    def send_termination_signal_to_worker(
+        self, *, worker_details: WorkerDetails
+    ) -> None:
         # Do nothing. For dev purposes, the nicest developer experience is if the worker stays RUNNING until
         # the worker client submits the final result for the execution.
         pass
@@ -64,12 +82,22 @@ class DevelopmentProvisioner(AbstractProvisioner):
 
     def notify_of_execution_completion(self, *, worker_details: WorkerDetails) -> None:
         if worker_details.identifier in self._workers_to_remaining_cycles:
-            remaining_cycles_before_update = self._workers_to_remaining_cycles[worker_details.identifier]
-            remaining_cycles_after_update = min(remaining_cycles_before_update, self._lag_cycles)
-            self._workers_to_remaining_cycles[worker_details.identifier] = remaining_cycles_after_update
+            remaining_cycles_before_update = self._workers_to_remaining_cycles[
+                worker_details.identifier
+            ]
+            remaining_cycles_after_update = min(
+                remaining_cycles_before_update, self._lag_cycles
+            )
+            self._workers_to_remaining_cycles[
+                worker_details.identifier
+            ] = remaining_cycles_after_update
 
     def get_worker_logs(
-        self, *, worker_details: WorkerDetails, max_lines: int, initial_offset: Optional[str]
+        self,
+        *,
+        worker_details: WorkerDetails,
+        max_lines: int,
+        initial_offset: Optional[str],
     ) -> LogsResult:
         if initial_offset is not None:
             left_bound = int(initial_offset)  # inclusive bound
@@ -77,7 +105,9 @@ class DevelopmentProvisioner(AbstractProvisioner):
             left_bound = 0
 
         if max_lines is not None:
-            right_bound = min(TOTAL_LOG_LINES, left_bound + max_lines)  # exclusive bound
+            right_bound = min(
+                TOTAL_LOG_LINES, left_bound + max_lines
+            )  # exclusive bound
         else:
             right_bound = TOTAL_LOG_LINES
 
@@ -92,6 +122,10 @@ class DevelopmentProvisioner(AbstractProvisioner):
 
 
 def create_identifier(
-    project_name: str, version_id: str, function_name: str, invocation_id: str, execution_id: str
+    project_name: str,
+    version_id: str,
+    function_name: str,
+    invocation_id: str,
+    execution_id: str,
 ) -> str:
     return f"{project_name}/{version_id}/{function_name}/{invocation_id}/{execution_id}"

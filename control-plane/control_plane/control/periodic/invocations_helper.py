@@ -34,7 +34,9 @@ def classify_running_invocations(
 ) -> RunningInvocationsClassification:
     # {function id: how many workers we're allowed to create for this function}
     initial_capacities = extract_initial_capacitites(functions_in_ready_status)
-    remaining_capacities = subtract_running_invocations_from_capacities(initial_capacities, running_invocations)
+    remaining_capacities = subtract_running_invocations_from_capacities(
+        initial_capacities, running_invocations
+    )
 
     invocations_to_terminate: list[InvocationInfo] = []
     invocations_to_create_executions_for: list[InvocationInfo] = []
@@ -50,7 +52,10 @@ def classify_running_invocations(
         if function_id not in remaining_capacities.keys():
             # If function is not in ready status, we should leave the invocation as is
             invocations_to_leave_untouched.append(invocation)
-        elif not all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions):
+        elif not all(
+            execution.worker_status == WorkerStatus.TERMINATED
+            for execution in invocation.executions
+        ):
             # If invocation has a non-terminated execution, we should leave it as is
             invocations_to_leave_untouched.append(invocation)
         elif any(
@@ -103,7 +108,10 @@ def subtract_running_invocations_from_capacities(
 ) -> dict[FunctionId, int]:
     remaining_function_capacities = capacities.copy()
     for invocation in running_invocations:
-        if any(execution.worker_status != WorkerStatus.TERMINATED for execution in invocation.executions):
+        if any(
+            execution.worker_status != WorkerStatus.TERMINATED
+            for execution in invocation.executions
+        ):
             function_id = FunctionId(
                 project_name=invocation.project_name,
                 version_id=invocation.version_id,

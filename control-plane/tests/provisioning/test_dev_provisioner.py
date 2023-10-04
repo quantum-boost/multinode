@@ -1,5 +1,13 @@
-from control_plane.provisioning.dev_provisioner import DevelopmentProvisioner, TOTAL_LOG_LINES
-from control_plane.types.datatypes import ResourceSpec, WorkerStatus, WorkerDetails, WorkerType
+from control_plane.provisioning.dev_provisioner import (
+    DevelopmentProvisioner,
+    TOTAL_LOG_LINES,
+)
+from control_plane.types.datatypes import (
+    ResourceSpec,
+    WorkerStatus,
+    WorkerDetails,
+    WorkerType,
+)
 
 PROJECT_NAME = "proj"
 VERSION_ID = "ver"
@@ -34,16 +42,25 @@ def test_lifecycle_with_natural_completion() -> None:
     )
 
     for _ in range(1000):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.RUNNING
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.RUNNING
+        )
 
     # Notify of execution completion. After the lag has elapsed, the worker should go into TERMINATED
     provisioner.notify_of_execution_completion(worker_details=worker_details)
 
     for _ in range(lag_cycles):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.RUNNING
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.RUNNING
+        )
 
     for _ in range(1000):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.TERMINATED
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.TERMINATED
+        )
 
 
 def test_lifecycle_with_interruption_from_termination_signal() -> None:
@@ -70,31 +87,47 @@ def test_lifecycle_with_interruption_from_termination_signal() -> None:
     )
 
     for _ in range(1000):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.RUNNING
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.RUNNING
+        )
 
     # Interrupt by sending a termination signal
     provisioner.send_termination_signal_to_worker(worker_details=worker_details)
 
     # The worker should remain in RUNNING!
     for _ in range(1000):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.RUNNING
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.RUNNING
+        )
 
     # Only once we've notified of completion does the worker go to TERMINATED
     provisioner.notify_of_execution_completion(worker_details=worker_details)
 
     for _ in range(lag_cycles):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.RUNNING
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.RUNNING
+        )
 
     for _ in range(1000):
-        assert provisioner.check_worker_status(worker_details=worker_details) == WorkerStatus.TERMINATED
+        assert (
+            provisioner.check_worker_status(worker_details=worker_details)
+            == WorkerStatus.TERMINATED
+        )
 
 
-WORKER_DETAILS = WorkerDetails(type=WorkerType.TEST, identifier="123", logs_identifier="mocked")
+WORKER_DETAILS = WorkerDetails(
+    type=WorkerType.TEST, identifier="123", logs_identifier="mocked"
+)
 
 
 def test_get_logs_returned_in_one_page() -> None:
     provisioner = DevelopmentProvisioner(lag_cycles=1)
-    logs_page = provisioner.get_worker_logs(worker_details=WORKER_DETAILS, max_lines=250, initial_offset=None)
+    logs_page = provisioner.get_worker_logs(
+        worker_details=WORKER_DETAILS, max_lines=250, initial_offset=None
+    )
     assert len(logs_page.log_lines) == TOTAL_LOG_LINES
     assert logs_page.log_lines[0] == "line-0"
     assert logs_page.log_lines[-1] == f"line-{TOTAL_LOG_LINES - 1}"
@@ -104,14 +137,18 @@ def test_get_logs_returned_in_one_page() -> None:
 def test_get_logs_split_across_two_pages() -> None:
     provisioner = DevelopmentProvisioner(lag_cycles=1)
 
-    logs_page_1 = provisioner.get_worker_logs(worker_details=WORKER_DETAILS, max_lines=60, initial_offset=None)
+    logs_page_1 = provisioner.get_worker_logs(
+        worker_details=WORKER_DETAILS, max_lines=60, initial_offset=None
+    )
     assert len(logs_page_1.log_lines) == 60
     assert logs_page_1.log_lines[0] == "line-0"
     assert logs_page_1.log_lines[-1] == "line-59"
     assert logs_page_1.next_offset is not None
 
     logs_page_2 = provisioner.get_worker_logs(
-        worker_details=WORKER_DETAILS, max_lines=60, initial_offset=logs_page_1.next_offset
+        worker_details=WORKER_DETAILS,
+        max_lines=60,
+        initial_offset=logs_page_1.next_offset,
     )
     assert len(logs_page_2.log_lines) == 40
     assert logs_page_2.log_lines[0] == "line-60"

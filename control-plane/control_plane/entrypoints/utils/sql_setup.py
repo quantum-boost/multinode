@@ -18,13 +18,17 @@ POSTGRES_PASSWORD_ENV = "POSTGRES_PASSWORD"
 
 @contextmanager
 def datastore_from_environment_variables(cli_args: CliArguments) -> Iterator[DataStore]:
-    host = get_optional_environment_variable_with_default(POSTGRES_HOST_ENV, "localhost")
+    host = get_optional_environment_variable_with_default(
+        POSTGRES_HOST_ENV, "localhost"
+    )
     port = 5432
     db = get_mandatory_environment_variable(POSTGRES_DB_ENV)
     user = get_mandatory_environment_variable(POSTGRES_USER_ENV)
     password = get_mandatory_environment_variable(POSTGRES_PASSWORD_ENV)
 
-    conn_pool = SqlConnectionPool(host=host, port=port, db=db, user=user, password=password)
+    conn_pool = SqlConnectionPool(
+        host=host, port=port, db=db, user=user, password=password
+    )
     try:
         data_store = DataStore(conn_pool)
         try:
