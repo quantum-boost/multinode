@@ -12,7 +12,7 @@ from control_plane.types.datatypes import (
     FunctionStatus,
     PreparedFunctionDetails,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     VersionAlreadyExists,
     VersionDoesNotExist,
     ProjectDoesNotExist,

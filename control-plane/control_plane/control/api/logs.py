@@ -3,7 +3,7 @@ from typing import Optional
 from control_plane.data.data_store import DataStore
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import ExecutionLogs
-from control_plane.control.utils.version_reference import (
+from control_plane.types.version_reference import (
     VersionReference,
     resolve_version_reference,
 )

@@ -13,7 +13,7 @@ from control_plane.types.datatypes import (
     ExecutionSpec,
     FunctionInfoForVersion,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     FunctionAlreadyExists,
     FunctionDoesNotExist,
     VersionDoesNotExist,

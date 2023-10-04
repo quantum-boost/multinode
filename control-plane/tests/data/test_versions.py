@@ -4,7 +4,7 @@ import pytest as pytest
 
 from control_plane.data.data_store import DataStore
 from control_plane.data.sql_connection import SqlConnectionPool
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     VersionDoesNotExist,
     ProjectDoesNotExist,
     VersionAlreadyExists,

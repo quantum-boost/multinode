@@ -1,7 +1,7 @@
 import logging
 
-from control_plane.control.utils.random_ids import generate_random_id
-from control_plane.control.utils.version_reference import (
+from control_plane.types.random_ids import generate_random_id
+from control_plane.types.version_reference import (
     resolve_version_reference,
     VersionReference,
 )

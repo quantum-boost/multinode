@@ -13,7 +13,7 @@ from control_plane.types.datatypes import (
     InvocationStatus,
     ParentInvocationDefinition,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     InvocationDoesNotExist,
     InvocationAlreadyExists,
     ParentInvocationDoesNotExist,

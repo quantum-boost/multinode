@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from control_plane.control.api.all import ApiHandler
-from control_plane.control.utils.version_reference import parse_version_reference
+from control_plane.types.version_reference import parse_version_reference
 from control_plane.data.data_store import DataStore
 from control_plane.entrypoints.utils.authenticator_setup import (
     authenticator_from_environment_variables,
@@ -42,7 +42,7 @@ from control_plane.types.datatypes import (
     HealthStatus,
     ExecutionLogs,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     ApiError,
     ProjectAlreadyExists,
     ApiKeyIsInvalid,

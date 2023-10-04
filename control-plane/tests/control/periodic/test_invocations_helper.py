@@ -4,7 +4,7 @@ from control_plane.control.periodic.invocations_helper import (
     classify_running_invocations,
     RunningInvocationsClassification,
 )
-from control_plane.control.utils.random_ids import generate_random_id
+from control_plane.types.random_ids import generate_random_id
 from control_plane.types.datatypes import (
     FunctionInfo,
     ResourceSpec,

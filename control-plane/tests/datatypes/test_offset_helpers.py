@@ -1,7 +1,7 @@
 import pytest
 
 from control_plane.types.offset_helpers import ListOffset
-from control_plane.types.errortypes import OffsetIsInvalid
+from control_plane.types.api_errors import OffsetIsInvalid
 
 
 def test_serialise_then_deserialise() -> None:

@@ -1,6 +1,6 @@
 from typing import Any
 
-from control_plane.types.errortypes import ApiError, ErrorResponse
+from control_plane.types.api_errors import ApiError, ErrorResponse
 
 
 def document_possible_errors(

@@ -1,6 +1,6 @@
 import pytest
 
-from control_plane.types.errortypes import ApiKeyIsInvalid
+from control_plane.types.api_errors import ApiKeyIsInvalid
 from control_plane.user_management.simple_authenticator import SimpleAuthenticator
 
 

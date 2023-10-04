@@ -6,7 +6,7 @@ from control_plane.control.periodic.invocations_cancellation_propagation_helper 
 from control_plane.control.periodic.invocations_helper import (
     classify_running_invocations,
 )
-from control_plane.control.utils.random_ids import generate_random_id
+from control_plane.types.random_ids import generate_random_id
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import InvocationStatus, WorkerStatus, FunctionStatus
 

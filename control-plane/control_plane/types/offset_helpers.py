@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from control_plane.types.errortypes import OffsetIsInvalid
+from control_plane.types.api_errors import OffsetIsInvalid
 
 
 class ListOffset(NamedTuple):

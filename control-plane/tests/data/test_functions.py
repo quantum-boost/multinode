@@ -11,7 +11,7 @@ from control_plane.types.datatypes import (
     PreparedFunctionDetails,
     WorkerType,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     FunctionDoesNotExist,
     FunctionAlreadyExists,
     VersionDoesNotExist,

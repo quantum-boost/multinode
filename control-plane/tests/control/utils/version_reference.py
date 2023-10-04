@@ -1,4 +1,4 @@
-from control_plane.control.utils.version_reference import (
+from control_plane.types.version_reference import (
     parse_version_reference,
     VersionReferenceType,
 )

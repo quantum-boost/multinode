@@ -2,7 +2,7 @@ import psycopg2
 
 from control_plane.data.sql_connection import SqlConnectionPool
 from control_plane.types.datatypes import ProjectInfo, ProjectsList
-from control_plane.types.errortypes import ProjectAlreadyExists, ProjectDoesNotExist
+from control_plane.types.api_errors import ProjectAlreadyExists, ProjectDoesNotExist
 
 
 class ProjectsTable:
