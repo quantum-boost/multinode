@@ -17,13 +17,14 @@ class LogsApiHandler:
 
     def get_execution_logs(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
         invocation_id: str,
         execution_id: str,
         max_lines: Optional[int],
-        initial_offset: Optional[str],
+        initial_offset: Optional[str]
     ) -> ExecutionLogs:
         """
         :raises ProjectDoesNotExist:

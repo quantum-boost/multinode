@@ -25,6 +25,7 @@ class ExecutionApiHandler:
 
     def get_execution(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
@@ -35,7 +36,7 @@ class ExecutionApiHandler:
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
-        :raises InvocationDoesNotExist:
+        :raises InvocationDoesNotExist*:
         :raises ExecutionDoesNotExist:
         """
         version_id = resolve_version_reference(project_name, version_ref, self._data_store)
@@ -50,6 +51,7 @@ class ExecutionApiHandler:
 
     def mark_execution_as_started(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
@@ -93,6 +95,7 @@ class ExecutionApiHandler:
 
     def upload_temporary_execution_result(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
@@ -139,6 +142,7 @@ class ExecutionApiHandler:
 
     def set_final_execution_result(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,

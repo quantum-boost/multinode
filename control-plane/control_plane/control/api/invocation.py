@@ -31,6 +31,7 @@ class InvocationApiHandler:
 
     def create_invocation(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
@@ -73,12 +74,7 @@ class InvocationApiHandler:
         )
 
     def cancel_invocation(
-        self,
-        project_name: str,
-        version_ref: VersionReference,
-        function_name: str,
-        invocation_id: str,
-        time: int,
+        self, *, project_name: str, version_ref: VersionReference, function_name: str, invocation_id: str, time: int
     ) -> InvocationInfo:
         """
         :raises ProjectDoesNotExist:
@@ -110,11 +106,7 @@ class InvocationApiHandler:
         )
 
     def get_invocation(
-        self,
-        project_name: str,
-        version_ref: VersionReference,
-        function_name: str,
-        invocation_id: str,
+        self, *, project_name: str, version_ref: VersionReference, function_name: str, invocation_id: str
     ) -> InvocationInfo:
         """
         :raises ProjectDoesNotExist:
@@ -133,6 +125,7 @@ class InvocationApiHandler:
 
     def list_invocations(
         self,
+        *,
         project_name: str,
         version_ref: VersionReference,
         function_name: str,
