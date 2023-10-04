@@ -19,7 +19,7 @@ from control_plane.types.datatypes import (
     InvocationStatus,
     ParentInvocationDefinition,
 )
-from control_plane.control.utils.version_reference import (
+from control_plane.types.version_reference import (
     VersionReferenceType,
     VersionReference,
 )

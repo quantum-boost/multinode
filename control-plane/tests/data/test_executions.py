@@ -15,7 +15,7 @@ from control_plane.types.datatypes import (
     WorkerDetails,
     ExecutionOutcome,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     ExecutionDoesNotExist,
     ExecutionAlreadyExists,
     ExecutionHasAlreadyStarted,

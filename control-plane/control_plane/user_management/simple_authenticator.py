@@ -1,4 +1,4 @@
-from control_plane.types.errortypes import ApiKeyIsInvalid
+from control_plane.types.api_errors import ApiKeyIsInvalid
 from control_plane.user_management.authenticator import (
     AbstractAuthenticator,
     AuthResult,

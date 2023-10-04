@@ -16,7 +16,7 @@ from control_plane.types.datatypes import (
     PreparedFunctionDetails,
     ExecutionSummary,
 )
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     ExecutionAlreadyExists,
     InvocationDoesNotExist,
     ExecutionHasNotStarted,

@@ -1,4 +1,4 @@
-from control_plane.control.utils.random_ids import generate_random_id
+from control_plane.types.random_ids import generate_random_id
 
 
 def test_generate_random_id() -> None:

@@ -2,7 +2,7 @@
 from typing import Optional
 
 from control_plane.types.datatypes import ParentInvocationDefinition
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     ParentFunctionNameIsMissing,
     ParentInvocationIdIsMissing,
 )

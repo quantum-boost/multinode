@@ -21,7 +21,7 @@ from control_plane.types.datatypes import (
     InvocationInfoForFunction,
 )
 from control_plane.types.offset_helpers import ListOffset
-from control_plane.types.errortypes import (
+from control_plane.types.api_errors import (
     InvocationAlreadyExists,
     FunctionDoesNotExist,
     ParentInvocationDoesNotExist,
