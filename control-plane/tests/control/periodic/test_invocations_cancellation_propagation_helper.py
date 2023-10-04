@@ -67,16 +67,21 @@ def assert_results(
     expected_ids_to_leave_untouched: Optional[set[str]] = None,
 ) -> None:
     actual_ids_to_set_cancellation_requested = {
-        invocation.invocation_id for invocation in classification.invocations_to_set_cancellation_requested
+        invocation.invocation_id
+        for invocation in classification.invocations_to_set_cancellation_requested
     }
     actual_ids_to_leave_untouched = {
-        invocation.invocation_id for invocation in classification.invocations_to_leave_untouched
+        invocation.invocation_id
+        for invocation in classification.invocations_to_leave_untouched
     }
 
     if expected_ids_to_set_cancellation_requested is None:
         assert len(actual_ids_to_set_cancellation_requested) == 0
     else:
-        assert actual_ids_to_set_cancellation_requested == expected_ids_to_set_cancellation_requested
+        assert (
+            actual_ids_to_set_cancellation_requested
+            == expected_ids_to_set_cancellation_requested
+        )
 
     if expected_ids_to_leave_untouched is None:
         assert len(actual_ids_to_leave_untouched) == 0
@@ -88,12 +93,18 @@ def test_when_parent_is_cancelled_and_has_not_yet_been_cancelled_itself() -> Non
     parent_invocation_id = "parent"
     invocation_id = "inv"
 
-    parent_invocation = create_invocation(parent_invocation_id, parent=None, cancellation_requested=True)
-    invocation = create_invocation(invocation_id, parent=parent_invocation, cancellation_requested=False)
+    parent_invocation = create_invocation(
+        parent_invocation_id, parent=None, cancellation_requested=True
+    )
+    invocation = create_invocation(
+        invocation_id, parent=parent_invocation, cancellation_requested=False
+    )
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
     assert_results(
         classification,
@@ -102,16 +113,24 @@ def test_when_parent_is_cancelled_and_has_not_yet_been_cancelled_itself() -> Non
     )
 
 
-def test_with_two_invocation_with_one_cancelled_but_with_no_parent_child_relationship() -> None:
+def test_with_two_invocation_with_one_cancelled_but_with_no_parent_child_relationship() -> (
+    None
+):
     invocation_id_1 = "inv-1"  # Cancelled, but not a parent of invocation 2
     invocation_id_2 = "inv-2"
 
-    invocation_1 = create_invocation(invocation_id_1, parent=None, cancellation_requested=True)
-    invocation_2 = create_invocation(invocation_id_2, parent=None, cancellation_requested=False)
+    invocation_1 = create_invocation(
+        invocation_id_1, parent=None, cancellation_requested=True
+    )
+    invocation_2 = create_invocation(
+        invocation_id_2, parent=None, cancellation_requested=False
+    )
 
     running_invocations = [invocation_1, invocation_2]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
     assert_results(
         classification,
@@ -123,38 +142,60 @@ def test_when_parent_is_cancelled_but_has_already_been_cancelled_itself() -> Non
     parent_invocation_id = "parent"
     invocation_id = "inv"
 
-    parent_invocation = create_invocation(parent_invocation_id, parent=None, cancellation_requested=True)
-    invocation = create_invocation(invocation_id, parent=parent_invocation, cancellation_requested=True)
+    parent_invocation = create_invocation(
+        parent_invocation_id, parent=None, cancellation_requested=True
+    )
+    invocation = create_invocation(
+        invocation_id, parent=parent_invocation, cancellation_requested=True
+    )
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
-    assert_results(classification, expected_ids_to_leave_untouched={parent_invocation_id, invocation_id})
+    assert_results(
+        classification,
+        expected_ids_to_leave_untouched={parent_invocation_id, invocation_id},
+    )
 
 
 def test_when_parent_is_not_cancelled() -> None:
     parent_invocation_id = "parent"
     invocation_id = "inv"
 
-    parent_invocation = create_invocation(parent_invocation_id, parent=None, cancellation_requested=False)
-    invocation = create_invocation(invocation_id, parent=parent_invocation, cancellation_requested=False)
+    parent_invocation = create_invocation(
+        parent_invocation_id, parent=None, cancellation_requested=False
+    )
+    invocation = create_invocation(
+        invocation_id, parent=parent_invocation, cancellation_requested=False
+    )
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
-    assert_results(classification, expected_ids_to_leave_untouched={parent_invocation_id, invocation_id})
+    assert_results(
+        classification,
+        expected_ids_to_leave_untouched={parent_invocation_id, invocation_id},
+    )
 
 
 def test_with_no_parent() -> None:
     invocation_id = "inv"
 
-    invocation = create_invocation(invocation_id, parent=None, cancellation_requested=False)
+    invocation = create_invocation(
+        invocation_id, parent=None, cancellation_requested=False
+    )
 
     running_invocations = [invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
     assert_results(classification, expected_ids_to_leave_untouched={invocation_id})
 
@@ -164,17 +205,26 @@ def test_with_parent_cancelled_and_already_terminated() -> None:
     invocation_id = "inv"
 
     parent_invocation = create_invocation(
-        parent_invocation_id, parent=None, cancellation_requested=True, invocation_status=InvocationStatus.TERMINATED
+        parent_invocation_id,
+        parent=None,
+        cancellation_requested=True,
+        invocation_status=InvocationStatus.TERMINATED,
     )
-    invocation = create_invocation(invocation_id, parent=parent_invocation, cancellation_requested=False)
+    invocation = create_invocation(
+        invocation_id, parent=parent_invocation, cancellation_requested=False
+    )
 
     # Parent is TERMINATED, so don't include in list of running invocations
     running_invocations = [invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(running_invocations)
+    classification = classify_invocations_for_cancellation_propagation(
+        running_invocations
+    )
 
     # Should still cancel the child
-    assert_results(classification, expected_ids_to_set_cancellation_requested={invocation_id})
+    assert_results(
+        classification, expected_ids_to_set_cancellation_requested={invocation_id}
+    )
 
 
 def test_with_double_propagation_with_some_random_ordering() -> None:
@@ -183,13 +233,22 @@ def test_with_double_propagation_with_some_random_ordering() -> None:
     invocation_id = "inv"  # not yet cancelled
 
     grandparent_invocation = create_invocation(
-        grandparent_invocation_id, parent=None, cancellation_requested=True, creation_time=TIME
+        grandparent_invocation_id,
+        parent=None,
+        cancellation_requested=True,
+        creation_time=TIME,
     )
     parent_invocation = create_invocation(
-        parent_invocation_id, parent=grandparent_invocation, cancellation_requested=False, creation_time=(TIME + 1)
+        parent_invocation_id,
+        parent=grandparent_invocation,
+        cancellation_requested=False,
+        creation_time=(TIME + 1),
     )
     invocation = create_invocation(
-        invocation_id, parent=parent_invocation, cancellation_requested=False, creation_time=(TIME + 2)
+        invocation_id,
+        parent=parent_invocation,
+        cancellation_requested=False,
+        creation_time=(TIME + 2),
     )
 
     # Put the invocations in the list in the wrong order.
@@ -201,6 +260,9 @@ def test_with_double_propagation_with_some_random_ordering() -> None:
 
     assert_results(
         classification,
-        expected_ids_to_set_cancellation_requested={invocation_id, parent_invocation_id},
+        expected_ids_to_set_cancellation_requested={
+            invocation_id,
+            parent_invocation_id,
+        },
         expected_ids_to_leave_untouched={grandparent_invocation_id},
     )

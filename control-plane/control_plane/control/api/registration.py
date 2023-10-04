@@ -51,7 +51,9 @@ class RegistrationApiHandler:
         """
         version_id = generate_random_id("ver")
 
-        self._data_store.project_versions.create(project_name=project_name, version_id=version_id, creation_time=time)
+        self._data_store.project_versions.create(
+            project_name=project_name, version_id=version_id, creation_time=time
+        )
 
         logging.info(f"Created project version ({project_name}, {version_id})")
 
@@ -75,22 +77,32 @@ class RegistrationApiHandler:
                 f" - status = {FunctionStatus.PENDING}"
             )
 
-        return self._data_store.project_versions.get(project_name=project_name, version_id=version_id)
+        return self._data_store.project_versions.get(
+            project_name=project_name, version_id=version_id
+        )
 
-    def get_project_version(self, *, project_name: str, version_ref: VersionReference) -> VersionInfo:
+    def get_project_version(
+        self, *, project_name: str, version_ref: VersionReference
+    ) -> VersionInfo:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
-        return self._data_store.project_versions.get(project_name=project_name, version_id=version_id)
+        return self._data_store.project_versions.get(
+            project_name=project_name, version_id=version_id
+        )
 
     def list_project_versions(self, *, project_name: str) -> VersionsListForProject:
         """
         :raises ProjectDoesNotExist:
         """
-        return self._data_store.project_versions.list_for_project(project_name=project_name)
+        return self._data_store.project_versions.list_for_project(
+            project_name=project_name
+        )
 
     # Do not implement API methods for getting and listing functions for a given project version,
     # since the VersionInfo object returned by .get_project_version already contains full information about

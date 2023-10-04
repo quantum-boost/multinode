@@ -32,4 +32,6 @@ class SqlConnectionPool:
 
     @classmethod
     def create_for_local_postgres(cls) -> "SqlConnectionPool":
-        return cls(host="localhost", port=5432, db="db", user="user", password="password")
+        return cls(
+            host="localhost", port=5432, db="db", user="user", password="password"
+        )

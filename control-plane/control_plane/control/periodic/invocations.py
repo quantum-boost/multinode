@@ -39,9 +39,13 @@ class InvocationsLifecycleActions:
         # It's more efficient to iterate over the possible children, rather than iterating over the possible parents.
         # This is because the possible children have status = RUNNING, so there shouldn't be too many
         # to load from the DB.
-        running_invocations = self._data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+        running_invocations = self._data_store.invocations.list_all(
+            statuses={InvocationStatus.RUNNING}
+        )
 
-        classification = classify_invocations_for_cancellation_propagation(running_invocations)
+        classification = classify_invocations_for_cancellation_propagation(
+            running_invocations
+        )
 
         for invocation in classification.invocations_to_set_cancellation_requested:
             self._data_store.invocations.update(
@@ -91,9 +95,13 @@ class InvocationsLifecycleActions:
         Default case:
         => the invocation should remain in RUNNING status, and nothing should be done
         """
-        running_invocations = self._data_store.invocations.list_all(statuses={InvocationStatus.RUNNING})
+        running_invocations = self._data_store.invocations.list_all(
+            statuses={InvocationStatus.RUNNING}
+        )
 
-        functions_in_ready_status = self._data_store.functions.list_all(statuses={FunctionStatus.READY})
+        functions_in_ready_status = self._data_store.functions.list_all(
+            statuses={FunctionStatus.READY}
+        )
 
         classification = classify_running_invocations(
             running_invocations=running_invocations,

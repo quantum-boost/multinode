@@ -26,11 +26,15 @@ def parse_cli_arguments() -> CliArguments:
     )
 
     parser.add_argument(
-        "--create-tables", action="store_true", help="Create database tables when the control loop starts"
+        "--create-tables",
+        action="store_true",
+        help="Create database tables when the control loop starts",
     )
 
     parser.add_argument(
-        "--delete-tables", action="store_true", help="Delete database tables when the control loop finishes"
+        "--delete-tables",
+        action="store_true",
+        help="Delete database tables when the control loop finishes",
     )
 
     args = parser.parse_args()

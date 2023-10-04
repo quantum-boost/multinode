@@ -53,8 +53,12 @@ RESOURCE_SPEC_1 = ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency
 RESOURCE_SPEC_2 = ResourceSpec(virtual_cpus=4.0, memory_gbs=16.0, max_concurrency=5)
 EXECUTION_SPEC_1 = ExecutionSpec(timeout_seconds=300, max_retries=8)
 EXECUTION_SPEC_2 = ExecutionSpec(timeout_seconds=600, max_retries=8)
-PREPARED_FUNCTION_DETAILS_1 = PreparedFunctionDetails(type=WorkerType.TEST, identifier="def-1")
-PREPARED_FUNCTION_DETAILS_2 = PreparedFunctionDetails(type=WorkerType.TEST, identifier="def-2")
+PREPARED_FUNCTION_DETAILS_1 = PreparedFunctionDetails(
+    type=WorkerType.TEST, identifier="def-1"
+)
+PREPARED_FUNCTION_DETAILS_2 = PreparedFunctionDetails(
+    type=WorkerType.TEST, identifier="def-2"
+)
 
 INVOCATION_ID_1 = "invocation-1"
 INVOCATION_ID_2 = "invocation-2"
@@ -69,7 +73,9 @@ ERROR_MESSAGE = "error"
 EXECUTION_ID_1 = "execution-1"
 EXECUTION_ID_2 = "execution-2"
 
-WORKER_DETAILS = WorkerDetails(type=WorkerType.TEST, identifier="worker", logs_identifier="logs")
+WORKER_DETAILS = WorkerDetails(
+    type=WorkerType.TEST, identifier="worker", logs_identifier="logs"
+)
 
 PROJECT_CREATION_TIME = -20
 INVOCATION_CREATION_TIME_1 = -10
@@ -85,10 +91,14 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
 
     # Set up each test with the project, version, functions and invocations already inserted.
     # Note that the two invocations are associated with different functions.
-    data_store.projects.create(project_name=PROJECT_NAME, creation_time=PROJECT_CREATION_TIME)
+    data_store.projects.create(
+        project_name=PROJECT_NAME, creation_time=PROJECT_CREATION_TIME
+    )
 
     data_store.project_versions.create(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, creation_time=PROJECT_CREATION_TIME
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        creation_time=PROJECT_CREATION_TIME,
     )
 
     data_store.functions.create(
@@ -155,7 +165,9 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
             execution_id=EXECUTION_ID_1,
         )
 
-    all_executions = data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
+    all_executions = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.PENDING}
+    )
     assert len(all_executions) == 0
 
     executions_for_invocation_1 = data_store.executions.list_for_invocation(
@@ -199,7 +211,9 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert execution.execution_id == EXECUTION_ID_1
     assert execution.input == INPUT_1
     assert execution.cancellation_requested == False
-    assert execution.resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC_1.virtual_cpus, 1.0e-5)
+    assert execution.resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC_1.virtual_cpus, 1.0e-5
+    )
     assert execution.execution_spec == EXECUTION_SPEC_1
     assert execution.function_status == FunctionStatus.READY
     assert execution.prepared_function_details == PREPARED_FUNCTION_DETAILS_1
@@ -215,7 +229,9 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert execution.execution_finish_time is None
     assert execution.invocation_creation_time == INVOCATION_CREATION_TIME_1
 
-    all_executions = data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
+    all_executions = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.PENDING}
+    )
     assert len(all_executions) == 1
     assert all_executions[0].project_name == PROJECT_NAME
     assert all_executions[0].version_id == VERSION_ID
@@ -224,7 +240,9 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert all_executions[0].execution_id == EXECUTION_ID_1
     assert all_executions[0].input == INPUT_1
     assert all_executions[0].cancellation_requested == False
-    assert all_executions[0].resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC_1.virtual_cpus, 1.0e-5)
+    assert all_executions[0].resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC_1.virtual_cpus, 1.0e-5
+    )
     assert all_executions[0].execution_spec == EXECUTION_SPEC_1
     assert all_executions[0].function_status == FunctionStatus.READY
     assert all_executions[0].prepared_function_details == PREPARED_FUNCTION_DETAILS_1
@@ -261,7 +279,10 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert executions_for_invocation_1[0].execution_finish_time is None
 
     invocation_1 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
     )
     assert len(invocation_1.executions) == 1
     assert invocation_1.executions[0].execution_id == EXECUTION_ID_1
@@ -316,7 +337,9 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert execution_2.execution_spec == EXECUTION_SPEC_2
     assert execution_2.prepared_function_details == PREPARED_FUNCTION_DETAILS_2
 
-    all_executions = data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
+    all_executions = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.PENDING}
+    )
     assert len(all_executions) == 2
 
     executions_for_invocation_1 = data_store.executions.list_for_invocation(
@@ -338,13 +361,19 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert executions_for_invocation_2[0].execution_id == EXECUTION_ID_2
 
     invocation_1 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
     )
     assert len(invocation_1.executions) == 1
     assert invocation_1.executions[0].execution_id == EXECUTION_ID_1
 
     invocation_2 = data_store.invocations.get(
-        project_name=PROJECT_NAME, version_id=VERSION_ID, function_name=FUNCTION_NAME_2, invocation_id=INVOCATION_ID_2
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_2,
+        invocation_id=INVOCATION_ID_2,
     )
     assert len(invocation_2.executions) == 1
     assert invocation_2.executions[0].execution_id == EXECUTION_ID_2
@@ -483,11 +512,15 @@ def test_update_execution_status(data_store: DataStore) -> None:
     assert execution_2.worker_status == WorkerStatus.PENDING
     assert execution_2.worker_details is None
 
-    executions_in_pending_status = data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
+    executions_in_pending_status = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.PENDING}
+    )
     assert len(executions_in_pending_status) == 1
     assert executions_in_pending_status[0].execution_id == EXECUTION_ID_2
 
-    executions_in_running_status = data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
+    executions_in_running_status = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.RUNNING}
+    )
     assert len(executions_in_running_status) == 1
     assert executions_in_running_status[0].execution_id == EXECUTION_ID_1
     assert executions_in_running_status[0].worker_details == WORKER_DETAILS
@@ -571,7 +604,9 @@ def test_update_execution_start_time(data_store: DataStore) -> None:
     )
     assert execution.execution_start_time == LATER_TIME
 
-    all_executions = data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
+    all_executions = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.RUNNING}
+    )
     assert len(all_executions) == 1
     assert all_executions[0].execution_start_time == LATER_TIME
 
@@ -594,7 +629,9 @@ def test_update_execution_start_time(data_store: DataStore) -> None:
     assert invocation.executions[0].execution_start_time == LATER_TIME
 
 
-def test_update_execution_start_time_failing_because_execution_has_already_started(data_store: DataStore) -> None:
+def test_update_execution_start_time_failing_because_execution_has_already_started(
+    data_store: DataStore,
+) -> None:
     data_store.executions.create(
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,
@@ -681,7 +718,9 @@ def test_update_execution_results(data_store: DataStore) -> None:
     assert execution.output == OUTPUT_1
     assert execution.error_message == ERROR_MESSAGE
 
-    all_executions = data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
+    all_executions = data_store.executions.list_all(
+        worker_statuses={WorkerStatus.RUNNING}
+    )
     assert len(all_executions) == 1
     assert all_executions[0].execution_finish_time == LATER_TIME
     assert all_executions[0].outcome == ExecutionOutcome.FAILED
@@ -713,7 +752,9 @@ def test_update_execution_results(data_store: DataStore) -> None:
     assert invocation.executions[0].error_message == ERROR_MESSAGE
 
 
-def test_update_execution_results_failing_because_execution_not_yet_started(data_store: DataStore) -> None:
+def test_update_execution_results_failing_because_execution_not_yet_started(
+    data_store: DataStore,
+) -> None:
     data_store.executions.create(
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,
@@ -759,7 +800,9 @@ def test_update_execution_results_failing_because_execution_not_yet_started(data
     assert execution.execution_finish_time is None
 
 
-def test_update_execution_results_failing_because_execution_already_finished(data_store: DataStore) -> None:
+def test_update_execution_results_failing_because_execution_already_finished(
+    data_store: DataStore,
+) -> None:
     data_store.executions.create(
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,

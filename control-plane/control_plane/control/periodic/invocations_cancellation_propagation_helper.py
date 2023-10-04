@@ -26,15 +26,22 @@ def classify_invocations_for_cancellation_propagation(
     for invocation in sorted_invocations:
         if not invocation.cancellation_requested:
             if invocation.parent_invocation is not None:
-                parent_cancelled_in_previous_pass = invocation.parent_invocation.cancellation_requested
+                parent_cancelled_in_previous_pass = (
+                    invocation.parent_invocation.cancellation_requested
+                )
                 parent_cancelled_in_this_pass = (
-                    _construct_identifier_of_parent(invocation) in invocations_cancelled_in_this_pass
+                    _construct_identifier_of_parent(invocation)
+                    in invocations_cancelled_in_this_pass
                 )
 
-                parent_cancelled = parent_cancelled_in_previous_pass or parent_cancelled_in_this_pass
+                parent_cancelled = (
+                    parent_cancelled_in_previous_pass or parent_cancelled_in_this_pass
+                )
                 if parent_cancelled:
                     invocations_to_set_cancellation_requested.append(invocation)
-                    invocations_cancelled_in_this_pass.add(_construct_identifier(invocation))
+                    invocations_cancelled_in_this_pass.add(
+                        _construct_identifier(invocation)
+                    )
                     continue
 
         # Default:

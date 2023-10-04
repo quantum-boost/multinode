@@ -1,4 +1,6 @@
-from control_plane.entrypoints.utils.environment import get_mandatory_environment_variable
+from control_plane.entrypoints.utils.environment import (
+    get_mandatory_environment_variable,
+)
 from control_plane.user_management.simple_authenticator import SimpleAuthenticator
 
 CONTROL_PLANE_API_KEY_ENV = "CONTROL_PLANE_API_KEY"

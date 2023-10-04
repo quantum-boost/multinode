@@ -107,7 +107,9 @@ class ExecutionsTable:
         :raises InvocationDoesNotExist:
         :raises ExecutionAlreadyExists:
         """
-        raise_error_if_invocation_does_not_exist(project_name, version_id, function_name, invocation_id, self._pool)
+        raise_error_if_invocation_does_not_exist(
+            project_name, version_id, function_name, invocation_id, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             try:
@@ -123,7 +125,9 @@ class ExecutionsTable:
                         invocation_id,
                         execution_id,
                         worker_status.value,
-                        worker_details.model_dump_json() if worker_details is not None else None,
+                        worker_details.model_dump_json()
+                        if worker_details is not None
+                        else None,
                         termination_signal_sent,
                         outcome.value if outcome is not None else None,
                         output,
@@ -172,7 +176,9 @@ class ExecutionsTable:
         :raises ExecutionHasNotFinished:
         :raises ExecutionHasAlreadyFinished:
         """
-        raise_error_if_invocation_does_not_exist(project_name, version_id, function_name, invocation_id, self._pool)
+        raise_error_if_invocation_does_not_exist(
+            project_name, version_id, function_name, invocation_id, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             set_statement_clauses: list[str] = []
@@ -219,18 +225,26 @@ class ExecutionsTable:
 
             if should_already_have_started is not None:
                 if should_already_have_started:
-                    extra_where_statement_clauses.append("execution_start_time IS NOT NULL")
+                    extra_where_statement_clauses.append(
+                        "execution_start_time IS NOT NULL"
+                    )
                 else:
                     extra_where_statement_clauses.append("execution_start_time IS NULL")
 
             if should_already_have_finished is not None:
                 if should_already_have_finished:
-                    extra_where_statement_clauses.append("execution_finish_time IS NOT NULL")
+                    extra_where_statement_clauses.append(
+                        "execution_finish_time IS NOT NULL"
+                    )
                 else:
-                    extra_where_statement_clauses.append("execution_finish_time IS NULL")
+                    extra_where_statement_clauses.append(
+                        "execution_finish_time IS NULL"
+                    )
 
             if len(extra_where_statement_clauses) > 0:
-                extra_where_statement = " AND " + " AND ".join(extra_where_statement_clauses)
+                extra_where_statement = " AND " + " AND ".join(
+                    extra_where_statement_clauses
+                )
             else:
                 extra_where_statement = ""
 
@@ -245,14 +259,24 @@ class ExecutionsTable:
                   AND execution_id = %s
                   {extra_where_statement};
                 """,
-                set_statement_args + [project_name, version_id, function_name, invocation_id, execution_id],
+                set_statement_args
+                + [
+                    project_name,
+                    version_id,
+                    function_name,
+                    invocation_id,
+                    execution_id,
+                ],
             )
 
             if cursor.rowcount == 0:
                 # We need to diagnose the reason why no row matched the WHERE statement.
                 # It could be that the execution_id doesn't exist.
                 # But it could also be that we have violated conditions on having already started/finished.
-                if should_already_have_started is not None or should_already_have_finished is not None:
+                if (
+                    should_already_have_started is not None
+                    or should_already_have_finished is not None
+                ):
                     cursor.execute(
                         f"""
                         SELECT execution_start_time, execution_finish_time
@@ -263,7 +287,13 @@ class ExecutionsTable:
                           AND invocation_id = %s
                           AND execution_id = %s;
                         """,
-                        [project_name, version_id, function_name, invocation_id, execution_id],
+                        [
+                            project_name,
+                            version_id,
+                            function_name,
+                            invocation_id,
+                            execution_id,
+                        ],
                     )
 
                     row = cursor.fetchone()
@@ -281,16 +311,28 @@ class ExecutionsTable:
                                 raise ExecutionHasAlreadyStarted
 
                         if should_already_have_finished is not None:
-                            if not has_already_finished and should_already_have_finished:
+                            if (
+                                not has_already_finished
+                                and should_already_have_finished
+                            ):
                                 raise ExecutionHasNotFinished
-                            if has_already_finished and not should_already_have_finished:
+                            if (
+                                has_already_finished
+                                and not should_already_have_finished
+                            ):
                                 raise ExecutionHasAlreadyFinished
 
                 # Default reason why update didn't happen:
                 raise ExecutionDoesNotExist
 
     def get(
-        self, *, project_name: str, version_id: str, function_name: str, invocation_id: str, execution_id: str
+        self,
+        *,
+        project_name: str,
+        version_id: str,
+        function_name: str,
+        invocation_id: str,
+        execution_id: str,
     ) -> ExecutionInfo:
         """
         :raises ProjectDoesNotExist:
@@ -299,7 +341,9 @@ class ExecutionsTable:
         :raises InvocationDoesNotExist:
         :raises ExecutionDoesNotExist:
         """
-        raise_error_if_invocation_does_not_exist(project_name, version_id, function_name, invocation_id, self._pool)
+        raise_error_if_invocation_does_not_exist(
+            project_name, version_id, function_name, invocation_id, self._pool
+        )
 
         with self._pool.cursor() as cursor:
             cursor.execute(
@@ -347,7 +391,12 @@ class ExecutionsTable:
             return _construct_execution_info_from_row(row)
 
     def list_for_invocation(
-        self, *, project_name: str, version_id: str, function_name: str, invocation_id: str
+        self,
+        *,
+        project_name: str,
+        version_id: str,
+        function_name: str,
+        invocation_id: str,
     ) -> ExecutionsListForInvocation:
         """
         :raises ProjectDoesNotExist:
@@ -355,7 +404,9 @@ class ExecutionsTable:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        raise_error_if_invocation_does_not_exist(project_name, version_id, function_name, invocation_id, self._pool)
+        raise_error_if_invocation_does_not_exist(
+            project_name, version_id, function_name, invocation_id, self._pool
+        )
 
         # Again, write out the ORDER BY in a way that explicitly encourages use of the index.
         # The intention is to sort by creation_time, using execution_id as a tie-breaker.
@@ -392,7 +443,11 @@ class ExecutionsTable:
                 ExecutionSummary(
                     execution_id=row[0],
                     worker_status=WorkerStatus(row[1]),
-                    worker_details=(WorkerDetails.model_validate_json(row[2]) if row[2] is not None else None),
+                    worker_details=(
+                        WorkerDetails.model_validate_json(row[2])
+                        if row[2] is not None
+                        else None
+                    ),
                     termination_signal_sent=row[3],
                     outcome=(ExecutionOutcome(row[4]) if row[4] is not None else None),
                     output=row[5],
@@ -475,10 +530,14 @@ def _construct_execution_info_from_row(row: Tuple[Any, ...]) -> ExecutionInfo:
         execution_spec=ExecutionSpec.model_validate_json(row[8]),
         function_status=FunctionStatus(row[9]),
         prepared_function_details=(
-            PreparedFunctionDetails.model_validate_json(row[10]) if row[10] is not None else None
+            PreparedFunctionDetails.model_validate_json(row[10])
+            if row[10] is not None
+            else None
         ),
         worker_status=WorkerStatus(row[11]),
-        worker_details=(WorkerDetails.model_validate_json(row[12]) if row[12] is not None else None),
+        worker_details=(
+            WorkerDetails.model_validate_json(row[12]) if row[12] is not None else None
+        ),
         termination_signal_sent=row[13],
         outcome=(ExecutionOutcome(row[14]) if row[14] is not None else None),
         output=row[15],

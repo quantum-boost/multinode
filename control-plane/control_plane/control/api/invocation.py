@@ -44,7 +44,9 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises ParentInvocationDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         invocation_id = generate_random_id("inv")
 
@@ -74,7 +76,13 @@ class InvocationApiHandler:
         )
 
     def cancel_invocation(
-        self, *, project_name: str, version_ref: VersionReference, function_name: str, invocation_id: str, time: int
+        self,
+        *,
+        project_name: str,
+        version_ref: VersionReference,
+        function_name: str,
+        invocation_id: str,
+        time: int,
     ) -> InvocationInfo:
         """
         :raises ProjectDoesNotExist:
@@ -82,7 +90,9 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         self._data_store.invocations.update(
             project_name=project_name,
@@ -106,7 +116,12 @@ class InvocationApiHandler:
         )
 
     def get_invocation(
-        self, *, project_name: str, version_ref: VersionReference, function_name: str, invocation_id: str
+        self,
+        *,
+        project_name: str,
+        version_ref: VersionReference,
+        function_name: str,
+        invocation_id: str,
     ) -> InvocationInfo:
         """
         :raises ProjectDoesNotExist:
@@ -114,7 +129,9 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         return self._data_store.invocations.get(
             project_name=project_name,
@@ -140,7 +157,9 @@ class InvocationApiHandler:
         :raises FunctionDoesNotExist:
         :raises OffsetIsInvalid:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         if max_results is None or max_results >= 50:
             sanitised_max_results = 50

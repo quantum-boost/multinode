@@ -22,7 +22,9 @@ class FunctionsLifecycleActions:
         """
         Prepare cloud resources so that it's possible to provision workers that execute these functions.
         """
-        pending_functions = self._data_store.functions.list_all(statuses={FunctionStatus.PENDING})
+        pending_functions = self._data_store.functions.list_all(
+            statuses={FunctionStatus.PENDING}
+        )
 
         for function in pending_functions:
             try:

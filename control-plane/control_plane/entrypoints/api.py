@@ -13,12 +13,18 @@ from starlette.responses import JSONResponse
 from control_plane.control.api.all import ApiHandler
 from control_plane.control.utils.version_reference import parse_version_reference
 from control_plane.data.data_store import DataStore
-from control_plane.entrypoints.utils.authenticator_setup import authenticator_from_environment_variables
+from control_plane.entrypoints.utils.authenticator_setup import (
+    authenticator_from_environment_variables,
+)
 from control_plane.entrypoints.utils.cli_arguments import parse_cli_arguments
 from control_plane.entrypoints.utils.current_time import current_time
 from control_plane.entrypoints.utils.documentation import document_possible_errors
-from control_plane.entrypoints.utils.provisioner_setup import provisioner_from_environment_variables
-from control_plane.entrypoints.utils.sql_setup import datastore_from_environment_variables
+from control_plane.entrypoints.utils.provisioner_setup import (
+    provisioner_from_environment_variables,
+)
+from control_plane.entrypoints.utils.sql_setup import (
+    datastore_from_environment_variables,
+)
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import (
     ProjectInfo,
@@ -53,14 +59,27 @@ from control_plane.types.errortypes import (
     ParentFunctionNameIsMissing,
     ParentInvocationIdIsMissing,
 )
-from control_plane.types.parent_invocation_helper import parse_parent_invocation_definition
-from control_plane.user_management.authenticator import AbstractAuthenticator, AuthResult
+from control_plane.types.parent_invocation_helper import (
+    parse_parent_invocation_definition,
+)
+from control_plane.user_management.authenticator import (
+    AbstractAuthenticator,
+    AuthResult,
+)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
+# Turn off formatting so we can see path and the method definition without scrolling.
+# Otherwise black would create too many lines inbetween due to possible errors formatting.
 # fmt: off
-def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authenticator: AbstractAuthenticator) -> FastAPI:
+def build_app(
+    data_store: DataStore,
+    provisioner: AbstractProvisioner,
+    authenticator: AbstractAuthenticator,
+) -> FastAPI:
     api_handler = ApiHandler(data_store, provisioner)
 
     app = FastAPI()
@@ -68,13 +87,12 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
 
     security = HTTPBearer()
 
-    def authenticate(authorization: HTTPAuthorizationCredentials = Depends(security)) -> AuthResult:
+    def authenticate(
+        authorization: HTTPAuthorizationCredentials = Depends(security),
+    ) -> AuthResult:
         return authenticator.authenticate(authorization.credentials)
 
-    @app.get(
-        path="/",
-        responses=document_possible_errors([])
-    )
+    @app.get(path="/", responses=document_possible_errors([]))
     def health_check() -> HealthStatus:
         return HealthStatus(status="healthy")
 
@@ -84,20 +102,23 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         path="/projects/{project_name}",
         responses=document_possible_errors([ProjectAlreadyExists, ApiKeyIsInvalid]),
     )
-    def create_project(project_name: str, auth_info: AuthResult = Depends(authenticate)) -> ProjectInfo:
-        return api_handler.registration.create_project(project_name=project_name, time=current_time())
+    def create_project(
+        project_name: str, auth_info: AuthResult = Depends(authenticate)
+    ) -> ProjectInfo:
+        return api_handler.registration.create_project(
+            project_name=project_name, time=current_time()
+        )
 
     @app.get(
         path="/projects/{project_name}",
-        responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid])
+        responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
     )
-    def get_project(project_name: str, auth_info: AuthResult = Depends(authenticate)) -> ProjectInfo:
+    def get_project(
+        project_name: str, auth_info: AuthResult = Depends(authenticate)
+    ) -> ProjectInfo:
         return api_handler.registration.get_project(project_name=project_name)
 
-    @app.get(
-        path="/projects",
-        responses=document_possible_errors([ApiKeyIsInvalid])
-    )
+    @app.get(path="/projects", responses=document_possible_errors([ApiKeyIsInvalid]))
     def list_projects(auth_info: AuthResult = Depends(authenticate)) -> ProjectsList:
         return api_handler.registration.list_projects()
 
@@ -106,25 +127,30 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
     )
     def create_project_version(
-        project_name: str, version_definition: VersionDefinition, auth_info: AuthResult = Depends(authenticate)
+        project_name: str,
+        version_definition: VersionDefinition,
+        auth_info: AuthResult = Depends(authenticate),
     ) -> VersionInfo:
         return api_handler.registration.create_project_version(
             project_name=project_name,
             version_definition=version_definition,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}",
-        responses=document_possible_errors([ProjectDoesNotExist, VersionDoesNotExist, ApiKeyIsInvalid]),
+        responses=document_possible_errors(
+            [ProjectDoesNotExist, VersionDoesNotExist, ApiKeyIsInvalid]
+        ),
     )
     def get_project_version(
-        project_name: str, version_ref_str: str, auth_info: AuthResult = Depends(authenticate)
+        project_name: str,
+        version_ref_str: str,
+        auth_info: AuthResult = Depends(authenticate),
     ) -> VersionInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.registration.get_project_version(
-            project_name=project_name,
-            version_ref=version_ref
+            project_name=project_name, version_ref=version_ref
         )
 
     @app.get(
@@ -132,8 +158,7 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
     )
     def list_project_versions(
-            project_name: str,
-            auth_info: AuthResult = Depends(authenticate)
+        project_name: str, auth_info: AuthResult = Depends(authenticate)
     ) -> VersionsListForProject:
         return api_handler.registration.list_project_versions(project_name=project_name)
 
@@ -141,12 +166,10 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
 
     @app.post(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/invocations",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, ParentInvocationDoesNotExist,
-                ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            ParentInvocationDoesNotExist, ApiKeyIsInvalid,
+        ]),
     )
     def create_invocation(
         project_name: str,
@@ -161,17 +184,16 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             version_ref=version_ref,
             function_name=function_name,
             invocation_definition=invocation_def,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.put(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}/cancel",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, InvocationDoesNotExist, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ApiKeyIsInvalid,
+        ]),
     )
     def cancel_invocation(
         project_name: str,
@@ -186,17 +208,16 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             version_ref=version_ref,
             function_name=function_name,
             invocation_id=invocation_id,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, InvocationDoesNotExist, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ApiKeyIsInvalid,
+        ]),
     )
     def get_invocation(
         project_name: str,
@@ -210,17 +231,16 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             project_name=project_name,
             version_ref=version_ref,
             function_name=function_name,
-            invocation_id=invocation_id
+            invocation_id=invocation_id,
         )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/invocations",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, OffsetIsInvalid,
-                ParentFunctionNameIsMissing, ParentInvocationIdIsMissing, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            OffsetIsInvalid, ParentFunctionNameIsMissing, ParentInvocationIdIsMissing,
+            ApiKeyIsInvalid,
+        ]),
     )
     def list_invocations(
         project_name: str,
@@ -234,7 +254,9 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         auth_info: AuthResult = Depends(authenticate),
     ) -> InvocationsListForFunction:
         version_ref = parse_version_reference(version_ref_str)
-        parent_invocation = parse_parent_invocation_definition(parent_function_name, parent_invocation_id)
+        parent_invocation = parse_parent_invocation_definition(
+            parent_function_name, parent_invocation_id
+        )
         return api_handler.invocation.list_invocations(
             project_name=project_name,
             version_ref=version_ref,
@@ -242,7 +264,7 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             max_results=max_results,
             initial_offset=initial_offset,
             status=status,
-            parent_invocation=parent_invocation
+            parent_invocation=parent_invocation,
         )
 
     # Execution endpoints - called by workers running the functions
@@ -250,12 +272,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     @app.put(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}/executions/{execution_id}/start",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, InvocationDoesNotExist,
-                ExecutionDoesNotExist, ExecutionHasAlreadyStarted, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasAlreadyStarted,
+            ApiKeyIsInvalid,
+        ]),
     )
     def start_execution(
         project_name: str,
@@ -272,18 +293,17 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             function_name=function_name,
             invocation_id=invocation_id,
             execution_id=execution_id,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.put(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
-        "invocations/{invocation_id}/executions/{execution_id}/update",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, InvocationDoesNotExist,
-                ExecutionDoesNotExist, ExecutionHasNotStarted, ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
-            ]
-        ),
+             "invocations/{invocation_id}/executions/{execution_id}/update",
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasNotStarted,
+            ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
+        ]),
     )
     def update_execution(
         project_name: str,
@@ -302,18 +322,17 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             invocation_id=invocation_id,
             execution_id=execution_id,
             temporary_result_payload=temp_result,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.put(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}/executions/{execution_id}/finish",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist, InvocationDoesNotExist,
-                ExecutionDoesNotExist, ExecutionHasNotStarted, ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasNotStarted,
+            ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
+        ]),
     )
     def finish_execution(
         project_name: str,
@@ -332,18 +351,16 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             invocation_id=invocation_id,
             execution_id=execution_id,
             final_result_payload=final_result,
-            time=current_time()
+            time=current_time(),
         )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}/executions/{execution_id}",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
-                InvocationDoesNotExist, ExecutionDoesNotExist, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ExecutionDoesNotExist, ApiKeyIsInvalid,
+        ]),
     )
     def get_execution(
         project_name: str,
@@ -359,7 +376,7 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             version_ref=version_ref,
             function_name=function_name,
             invocation_id=invocation_id,
-            execution_id=execution_id
+            execution_id=execution_id,
         )
 
     # Logs endpoint
@@ -367,12 +384,10 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/"
              "invocations/{invocation_id}/executions/{execution_id}/logs",
-        responses=document_possible_errors(
-            [
-                ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
-                InvocationDoesNotExist, ExecutionDoesNotExist, ApiKeyIsInvalid,
-            ]
-        ),
+        responses=document_possible_errors([
+            ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
+            InvocationDoesNotExist, ExecutionDoesNotExist, ApiKeyIsInvalid,
+        ]),
     )
     def get_execution_logs(
         project_name: str,
@@ -392,14 +407,16 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             invocation_id=invocation_id,
             execution_id=execution_id,
             max_lines=max_lines,
-            initial_offset=initial_offset
+            initial_offset=initial_offset,
         )
 
     # Error handling
 
     @app.exception_handler(ApiError)
     def handle_worker_does_not_exist(request: Request, exc: ApiError) -> JSONResponse:
-        return JSONResponse(status_code=exc.error_code(), content=exc.response().model_dump())
+        return JSONResponse(
+            status_code=exc.error_code(), content=exc.response().model_dump()
+        )
 
     return app
 # fmt: on

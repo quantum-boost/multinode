@@ -41,7 +41,9 @@ FUNCTION_NAME_2 = "function-2"
 DOCKER_IMAGE = "image"
 RESOURCE_SPEC = ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=5)
 EXECUTION_SPEC = ExecutionSpec(timeout_seconds=300, max_retries=8)
-PREPARED_FUNCTION_DETAILS = PreparedFunctionDetails(type=WorkerType.TEST, identifier="def")
+PREPARED_FUNCTION_DETAILS = PreparedFunctionDetails(
+    type=WorkerType.TEST, identifier="def"
+)
 
 TIME = 0
 
@@ -53,8 +55,12 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
 
     # Set up each test with the project and versions already inserted.
     data_store.projects.create(project_name=PROJECT_NAME, creation_time=TIME)
-    data_store.project_versions.create(project_name=PROJECT_NAME, version_id=VERSION_ID_1, creation_time=TIME)
-    data_store.project_versions.create(project_name=PROJECT_NAME, version_id=VERSION_ID_2, creation_time=TIME)
+    data_store.project_versions.create(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1, creation_time=TIME
+    )
+    data_store.project_versions.create(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_2, creation_time=TIME
+    )
 
     try:
         yield data_store
@@ -77,7 +83,9 @@ def test_create_two_functions(data_store: DataStore) -> None:
     ).functions
     assert len(functions_for_version) == 0
 
-    version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_1)
+    version = data_store.project_versions.get(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1
+    )
     assert len(version.functions) == 0
 
     # Create first function
@@ -101,7 +109,9 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert function.version_id == VERSION_ID_1
     assert function.function_name == FUNCTION_NAME_1
     assert function.docker_image == DOCKER_IMAGE
-    assert function.resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC.virtual_cpus, 1.0e-5)
+    assert function.resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC.virtual_cpus, 1.0e-5
+    )
     assert function.execution_spec == EXECUTION_SPEC
     assert function.function_status == FunctionStatus.PENDING
     assert function.prepared_function_details is None
@@ -112,7 +122,9 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert all_functions[0].version_id == VERSION_ID_1
     assert all_functions[0].function_name == FUNCTION_NAME_1
     assert all_functions[0].docker_image == DOCKER_IMAGE
-    assert all_functions[0].resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC.virtual_cpus, 1.0e-5)
+    assert all_functions[0].resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC.virtual_cpus, 1.0e-5
+    )
     assert all_functions[0].execution_spec == EXECUTION_SPEC
     assert all_functions[0].function_status == FunctionStatus.PENDING
     assert all_functions[0].prepared_function_details is None
@@ -123,16 +135,22 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert len(functions_for_version) == 1
     assert functions_for_version[0].function_name == FUNCTION_NAME_1
     assert functions_for_version[0].docker_image == DOCKER_IMAGE
-    assert functions_for_version[0].resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC.virtual_cpus, 1.0e-5)
+    assert functions_for_version[0].resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC.virtual_cpus, 1.0e-5
+    )
     assert functions_for_version[0].execution_spec == EXECUTION_SPEC
     assert functions_for_version[0].function_status == FunctionStatus.PENDING
     assert functions_for_version[0].prepared_function_details is None
 
-    version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_1)
+    version = data_store.project_versions.get(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1
+    )
     assert len(version.functions) == 1
     assert version.functions[0].function_name == FUNCTION_NAME_1
     assert version.functions[0].docker_image == DOCKER_IMAGE
-    assert version.functions[0].resource_spec.virtual_cpus == pytest.approx(RESOURCE_SPEC.virtual_cpus, 1.0e-5)
+    assert version.functions[0].resource_spec.virtual_cpus == pytest.approx(
+        RESOURCE_SPEC.virtual_cpus, 1.0e-5
+    )
     assert version.functions[0].execution_spec == EXECUTION_SPEC
     assert version.functions[0].function_status == FunctionStatus.PENDING
     assert version.functions[0].prepared_function_details is None
@@ -142,7 +160,9 @@ def test_create_two_functions(data_store: DataStore) -> None:
     ).functions
     assert len(functions_for_other_version) == 0
 
-    other_version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_2)
+    other_version = data_store.project_versions.get(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_2
+    )
     assert len(other_version.functions) == 0
 
     # Create second function
@@ -187,7 +207,9 @@ def test_create_two_functions(data_store: DataStore) -> None:
         FUNCTION_NAME_2,
     }
 
-    version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_1)
+    version = data_store.project_versions.get(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1
+    )
     assert len(version.functions) == 2
     assert {function.function_name for function in version.functions} == {
         FUNCTION_NAME_1,
@@ -283,23 +305,33 @@ def test_update_function(data_store: DataStore) -> None:
     ).functions
     assert (
         functions_for_version[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
-        or functions_for_version[1].prepared_function_details == PREPARED_FUNCTION_DETAILS
+        or functions_for_version[1].prepared_function_details
+        == PREPARED_FUNCTION_DETAILS
     )
 
-    version = data_store.project_versions.get(project_name=PROJECT_NAME, version_id=VERSION_ID_1)
+    version = data_store.project_versions.get(
+        project_name=PROJECT_NAME, version_id=VERSION_ID_1
+    )
     assert (
         version.functions[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
         or version.functions[1].prepared_function_details == PREPARED_FUNCTION_DETAILS
     )
 
-    functions_in_pending_status = data_store.functions.list_all(statuses={FunctionStatus.PENDING})
+    functions_in_pending_status = data_store.functions.list_all(
+        statuses={FunctionStatus.PENDING}
+    )
     assert len(functions_in_pending_status) == 1
     assert functions_in_pending_status[0].function_name == FUNCTION_NAME_2
 
-    functions_in_ready_status = data_store.functions.list_all(statuses={FunctionStatus.READY})
+    functions_in_ready_status = data_store.functions.list_all(
+        statuses={FunctionStatus.READY}
+    )
     assert len(functions_in_ready_status) == 1
     assert functions_in_ready_status[0].function_name == FUNCTION_NAME_1
-    assert functions_in_ready_status[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
+    assert (
+        functions_in_ready_status[0].prepared_function_details
+        == PREPARED_FUNCTION_DETAILS
+    )
 
 
 def test_update_when_function_does_not_exist(data_store: DataStore) -> None:
@@ -343,7 +375,9 @@ def test_methods_when_project_version_does_not_exist(data_store: DataStore) -> N
         )
 
     with pytest.raises(VersionDoesNotExist):
-        data_store.functions.list_for_project_version(project_name=PROJECT_NAME, version_id=NONEXISTENT_VERSION_ID)
+        data_store.functions.list_for_project_version(
+            project_name=PROJECT_NAME, version_id=NONEXISTENT_VERSION_ID
+        )
 
 
 def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
@@ -376,4 +410,6 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
         )
 
     with pytest.raises(ProjectDoesNotExist):
-        data_store.functions.list_for_project_version(project_name=NONEXISTENT_PROJECT_NAME, version_id=VERSION_ID_1)
+        data_store.functions.list_for_project_version(
+            project_name=NONEXISTENT_PROJECT_NAME, version_id=VERSION_ID_1
+        )

@@ -126,7 +126,9 @@ class FunctionsTable:
 
             if new_prepared_function_details is not None:
                 set_statement_clauses.append("prepared_function_details = %s")
-                set_statement_args.append(new_prepared_function_details.model_dump_json())
+                set_statement_args.append(
+                    new_prepared_function_details.model_dump_json()
+                )
 
             set_statement = "SET " + ", ".join(set_statement_clauses)
 
@@ -143,7 +145,9 @@ class FunctionsTable:
             if cursor.rowcount == 0:
                 raise FunctionDoesNotExist
 
-    def get(self, *, project_name: str, version_id: str, function_name: str) -> FunctionInfo:
+    def get(
+        self, *, project_name: str, version_id: str, function_name: str
+    ) -> FunctionInfo:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
@@ -176,7 +180,9 @@ class FunctionsTable:
 
             return _construct_function_info_from_row(row)
 
-    def list_for_project_version(self, *, project_name: str, version_id: str) -> FunctionsListForVersion:
+    def list_for_project_version(
+        self, *, project_name: str, version_id: str
+    ) -> FunctionsListForVersion:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
@@ -209,7 +215,9 @@ class FunctionsTable:
                     execution_spec=ExecutionSpec.model_validate_json(row[3]),
                     function_status=FunctionStatus(row[4]),
                     prepared_function_details=(
-                        PreparedFunctionDetails.model_validate_json(row[5]) if row[5] is not None else None
+                        PreparedFunctionDetails.model_validate_json(row[5])
+                        if row[5] is not None
+                        else None
                     ),
                 )
                 for row in rows
@@ -258,5 +266,9 @@ def _construct_function_info_from_row(row: Tuple[Any, ...]) -> FunctionInfo:
         resource_spec=ResourceSpec.model_validate_json(row[4]),
         execution_spec=ExecutionSpec.model_validate_json(row[5]),
         function_status=FunctionStatus(row[6]),
-        prepared_function_details=(PreparedFunctionDetails.model_validate_json(row[7]) if row[7] is not None else None),
+        prepared_function_details=(
+            PreparedFunctionDetails.model_validate_json(row[7])
+            if row[7] is not None
+            else None
+        ),
     )

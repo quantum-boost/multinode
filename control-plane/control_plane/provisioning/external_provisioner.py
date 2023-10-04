@@ -4,7 +4,12 @@ from pydantic import BaseModel
 
 from control_plane.provisioning.http_helper import HttpRequestHandler
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
-from control_plane.types.datatypes import ResourceSpec, PreparedFunctionDetails, WorkerDetails, WorkerStatus
+from control_plane.types.datatypes import (
+    ResourceSpec,
+    PreparedFunctionDetails,
+    WorkerDetails,
+    WorkerStatus,
+)
 
 # Current convention:
 # Every request is POST /{verb}, with details in request body.
@@ -106,10 +111,18 @@ class ExternalProvisioner(AbstractProvisioner):
     """
 
     def __init__(self, provisioner_api_url: str, provisioner_api_key: str):
-        self._http_handler = HttpRequestHandler(base_url=provisioner_api_url, bearer_token=provisioner_api_key)
+        self._http_handler = HttpRequestHandler(
+            base_url=provisioner_api_url, bearer_token=provisioner_api_key
+        )
 
     def prepare_function(
-        self, *, project_name: str, version_id: str, function_name: str, docker_image: str, resource_spec: ResourceSpec
+        self,
+        *,
+        project_name: str,
+        version_id: str,
+        function_name: str,
+        docker_image: str,
+        resource_spec: ResourceSpec,
     ) -> PreparedFunctionDetails:
         request_body = PrepareFunctionRequest(
             project_name=project_name,
@@ -120,7 +133,9 @@ class ExternalProvisioner(AbstractProvisioner):
         )
 
         response_body = self._http_handler.post(
-            path=PREPARE_PATH, request_body=request_body, response_body_type=PrepareFunctionResponse
+            path=PREPARE_PATH,
+            request_body=request_body,
+            response_body_type=PrepareFunctionResponse,
         )
 
         return response_body.prepared_function_details
@@ -147,34 +162,54 @@ class ExternalProvisioner(AbstractProvisioner):
         )
 
         response_body = self._http_handler.post(
-            path=PROVISION_PATH, request_body=request_body, response_body_type=ProvisionWorkerResponse
+            path=PROVISION_PATH,
+            request_body=request_body,
+            response_body_type=ProvisionWorkerResponse,
         )
 
         return response_body.worker_details
 
-    def send_termination_signal_to_worker(self, *, worker_details: WorkerDetails) -> None:
+    def send_termination_signal_to_worker(
+        self, *, worker_details: WorkerDetails
+    ) -> None:
         request_body = TerminateWorkerRequest(worker_details=worker_details)
 
         self._http_handler.post(
-            path=TERMINATE_PATH, request_body=request_body, response_body_type=TerminateWorkerResponse
+            path=TERMINATE_PATH,
+            request_body=request_body,
+            response_body_type=TerminateWorkerResponse,
         )
 
     def check_worker_status(self, *, worker_details: WorkerDetails) -> WorkerStatus:
         request_body = CheckWorkerStatusRequest(worker_details=worker_details)
 
         response_body = self._http_handler.post(
-            path=CHECK_STATUS_PATH, request_body=request_body, response_body_type=CheckWorkerStatusResponse
+            path=CHECK_STATUS_PATH,
+            request_body=request_body,
+            response_body_type=CheckWorkerStatusResponse,
         )
 
         return response_body.worker_status
 
     def get_worker_logs(
-        self, *, worker_details: WorkerDetails, max_lines: int, initial_offset: Optional[str]
+        self,
+        *,
+        worker_details: WorkerDetails,
+        max_lines: int,
+        initial_offset: Optional[str],
     ) -> LogsResult:
-        request_body = GetLogsRequest(worker_details=worker_details, max_lines=max_lines, initial_offset=initial_offset)
-
-        response_body = self._http_handler.post(
-            path=GET_LOGS_PATH, request_body=request_body, response_body_type=GetLogsResponse
+        request_body = GetLogsRequest(
+            worker_details=worker_details,
+            max_lines=max_lines,
+            initial_offset=initial_offset,
         )
 
-        return LogsResult(log_lines=response_body.log_lines, next_offset=response_body.next_offset)
+        response_body = self._http_handler.post(
+            path=GET_LOGS_PATH,
+            request_body=request_body,
+            response_body_type=GetLogsResponse,
+        )
+
+        return LogsResult(
+            log_lines=response_body.log_lines, next_offset=response_body.next_offset
+        )

@@ -2,7 +2,12 @@ import time
 from typing import Optional
 
 from control_plane.provisioning.external_provisioner import ExternalProvisioner
-from control_plane.types.datatypes import ResourceSpec, WorkerStatus, WorkerDetails, WorkerType
+from control_plane.types.datatypes import (
+    ResourceSpec,
+    WorkerStatus,
+    WorkerDetails,
+    WorkerType,
+)
 
 PROJECT_NAME = "project"
 VERSION_ID = "version"
@@ -17,14 +22,18 @@ NUM_LOG_LINES_PER_PAGE = 3
 MIN_LOG_PAGES_WITH_AT_LEAST_ONE_LINE = 2
 
 # Change to match your external provisioner
-PROVISIONER_API_URL = "https://ro2p3s7gg6c5l5fwu44iwqvd6i0zypiw.lambda-url.eu-west-2.on.aws/"
+PROVISIONER_API_URL = (
+    "https://ro2p3s7gg6c5l5fwu44iwqvd6i0zypiw.lambda-url.eu-west-2.on.aws/"
+)
 PROVISIONER_API_KEY = "lemonandherb"
 
 # Be careful with interrupting this!!! You may leave tasks running in our AWS account, which will cost money.
 
 
 def main() -> None:
-    provisioner = ExternalProvisioner(provisioner_api_url=PROVISIONER_API_URL, provisioner_api_key=PROVISIONER_API_KEY)
+    provisioner = ExternalProvisioner(
+        provisioner_api_url=PROVISIONER_API_URL, provisioner_api_key=PROVISIONER_API_KEY
+    )
 
     prepared_function_details = provisioner.prepare_function(
         project_name=PROJECT_NAME,
@@ -57,11 +66,16 @@ def main() -> None:
 
     num_logs_pages_containing_at_least_one_line = 0
 
-    while num_logs_pages_containing_at_least_one_line < MIN_LOG_PAGES_WITH_AT_LEAST_ONE_LINE:
+    while (
+        num_logs_pages_containing_at_least_one_line
+        < MIN_LOG_PAGES_WITH_AT_LEAST_ONE_LINE
+    ):
         time.sleep(15)
 
         logs_page = provisioner.get_worker_logs(
-            worker_details=worker_details, max_lines=NUM_LOG_LINES_PER_PAGE, initial_offset=current_logs_offset
+            worker_details=worker_details,
+            max_lines=NUM_LOG_LINES_PER_PAGE,
+            initial_offset=current_logs_offset,
         )
 
         print("Logs page:", logs_page)
@@ -84,13 +98,17 @@ def main() -> None:
     # Also check that if a worker has already been erased from ECS, then we report it as terminated.
     nonexistent_worker_details = WorkerDetails(
         type=WorkerType.AWS_ECS,
-        identifier=worker_details.identifier[:-1] + ("a" if worker_details.identifier[-1] != "a" else "b"),
+        identifier=worker_details.identifier[:-1]
+        + ("a" if worker_details.identifier[-1] != "a" else "b"),
         logs_identifier=(
-            worker_details.logs_identifier[:-1] + ("a" if worker_details.logs_identifier[-1] != "a" else "b")
+            worker_details.logs_identifier[:-1]
+            + ("a" if worker_details.logs_identifier[-1] != "a" else "b")
         ),
     )
 
-    status_of_nonexistent_worker = provisioner.check_worker_status(worker_details=nonexistent_worker_details)
+    status_of_nonexistent_worker = provisioner.check_worker_status(
+        worker_details=nonexistent_worker_details
+    )
     print("Status of non-existent worker:", status_of_nonexistent_worker)
 
     assert status_of_nonexistent_worker == WorkerStatus.TERMINATED

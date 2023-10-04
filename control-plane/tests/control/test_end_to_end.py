@@ -19,7 +19,10 @@ from control_plane.types.datatypes import (
     InvocationStatus,
     ParentInvocationDefinition,
 )
-from control_plane.control.utils.version_reference import VersionReferenceType, VersionReference
+from control_plane.control.utils.version_reference import (
+    VersionReferenceType,
+    VersionReference,
+)
 from tests.provisioning.dummy_provisioner import DummyProvisioner
 
 
@@ -43,10 +46,14 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
 
 
 PROJECT_NAME = "project"
-LATEST_VERSION = VersionReference(type=VersionReferenceType.LATEST, named_version_id=None)
+LATEST_VERSION = VersionReference(
+    type=VersionReferenceType.LATEST, named_version_id=None
+)
 
 STANDARD_FUNCTION = "standard-function"  # max concurrency = 100, max_retries = 0
-CONCURRENCY_LIMITED_FUNCTION = "concurrency-limit-function"  # max concurrency = 1, max retries = 0
+CONCURRENCY_LIMITED_FUNCTION = (
+    "concurrency-limit-function"  # max concurrency = 1, max retries = 0
+)
 RETRYABLE_FUNCTION = "retryable-function"  # max concurrency = 100, max retries = 5
 
 INPUT_1 = "input-1"
@@ -66,32 +73,48 @@ VERSION_DEFINITION = VersionDefinition(
     functions=[
         FunctionSpec(
             function_name=STANDARD_FUNCTION,
-            resource_spec=ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=100),
-            execution_spec=ExecutionSpec(timeout_seconds=TIMEOUT_SECONDS, max_retries=0),
+            resource_spec=ResourceSpec(
+                virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=100
+            ),
+            execution_spec=ExecutionSpec(
+                timeout_seconds=TIMEOUT_SECONDS, max_retries=0
+            ),
         ),
         FunctionSpec(
             function_name=CONCURRENCY_LIMITED_FUNCTION,
-            resource_spec=ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=1),
-            execution_spec=ExecutionSpec(timeout_seconds=TIMEOUT_SECONDS, max_retries=0),
+            resource_spec=ResourceSpec(
+                virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=1
+            ),
+            execution_spec=ExecutionSpec(
+                timeout_seconds=TIMEOUT_SECONDS, max_retries=0
+            ),
         ),
         FunctionSpec(
             function_name=RETRYABLE_FUNCTION,
-            resource_spec=ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=100),
-            execution_spec=ExecutionSpec(timeout_seconds=TIMEOUT_SECONDS, max_retries=5),
+            resource_spec=ResourceSpec(
+                virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=100
+            ),
+            execution_spec=ExecutionSpec(
+                timeout_seconds=TIMEOUT_SECONDS, max_retries=5
+            ),
         ),
     ],
 )
 
 
 @pytest.mark.timeout(5)
-def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing(data_store: DataStore) -> None:
+def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing(
+    data_store: DataStore,
+) -> None:
     provisioner = DummyProvisioner()
 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # The invoker creates two invocations of the function that can run multiple workers concurrently.
     invocation_1 = api.invocation.create_invocation(
@@ -228,7 +251,9 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
         function_name=STANDARD_FUNCTION,
         invocation_id=invocation_1_id,
         execution_id=execution_1_id,
-        temporary_result_payload=ExecutionTemporaryResultPayload(latest_output=TEMPORARY_OUTPUT),
+        temporary_result_payload=ExecutionTemporaryResultPayload(
+            latest_output=TEMPORARY_OUTPUT
+        ),
         time=TIME,
     )
 
@@ -251,7 +276,9 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
         function_name=STANDARD_FUNCTION,
         invocation_id=invocation_1_id,
         execution_id=execution_1_id,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT
+        ),
         time=TIME,
     )
 
@@ -274,7 +301,9 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
         function_name=STANDARD_FUNCTION,
         invocation_id=invocation_2_id,
         execution_id=execution_2_id,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE
+        ),
         time=TIME,
     )
 
@@ -360,7 +389,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # The parent invocation is created.
     parent_invocation = api.invocation.create_invocation(
@@ -472,8 +503,12 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     for _ in range(10):
         loop.run_once(TIME)
 
-    assert not provisioner.worker_has_received_termination_signal(parent_execution.worker_details)
-    assert not provisioner.worker_has_received_termination_signal(child_execution.worker_details)
+    assert not provisioner.worker_has_received_termination_signal(
+        parent_execution.worker_details
+    )
+    assert not provisioner.worker_has_received_termination_signal(
+        child_execution.worker_details
+    )
 
     # The invoker sends a cancellation request for the parent invocation.
     api.invocation.cancel_invocation(
@@ -485,7 +520,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     )
 
     # Wait until the worker for the parent invocation receives a termination signal.
-    while not provisioner.worker_has_received_termination_signal(parent_execution.worker_details):
+    while not provisioner.worker_has_received_termination_signal(
+        parent_execution.worker_details
+    ):
         loop.run_once(TIME)
 
     # As some point, the termination request should be propagated from the parent to the child.
@@ -498,7 +535,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
         loop.run_once(TIME)
 
     # Wait until the worker for the child invocation also receives a termination signal.
-    while not provisioner.worker_has_received_termination_signal(child_execution.worker_details):
+    while not provisioner.worker_has_received_termination_signal(
+        child_execution.worker_details
+    ):
         loop.run_once(TIME)
 
     # Both workers clean up gracefully and terminate.
@@ -508,7 +547,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
         function_name=STANDARD_FUNCTION,
         invocation_id=parent_invocation_id,
         execution_id=parent_execution_id,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.ABORTED
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(parent_execution.worker_details)
@@ -519,7 +560,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
         function_name=STANDARD_FUNCTION,
         invocation_id=child_invocation_id,
         execution_id=child_execution_id,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.ABORTED
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(child_execution.worker_details)
@@ -565,7 +608,9 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # The invocation is created.
     invocation = api.invocation.create_invocation(
@@ -621,7 +666,9 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
     # Meanwhile, the clock is ticking. Eventually, the invocation times out, resulting in a termination signal
     # being sent to the worker.
     time = TIME
-    while not provisioner.worker_has_received_termination_signal(execution.worker_details):
+    while not provisioner.worker_has_received_termination_signal(
+        execution.worker_details
+    ):
         loop.run_once(time)
         time += 1
 
@@ -634,7 +681,9 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
         function_name=STANDARD_FUNCTION,
         invocation_id=invocation_id,
         execution_id=execution_id,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.ABORTED
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(execution.worker_details)
@@ -671,7 +720,9 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # The invocation is created.
     invocation = api.invocation.create_invocation(
@@ -724,7 +775,9 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
 
     # The invocation times out, resulting in a termination signal being sent to the worker.
     time = TIME
-    while not provisioner.worker_has_received_termination_signal(execution.worker_details):
+    while not provisioner.worker_has_received_termination_signal(
+        execution.worker_details
+    ):
         loop.run_once(time)
         time += 1
 
@@ -755,14 +808,18 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
 
 
 @pytest.mark.timeout(5)
-def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: DataStore) -> None:
+def test_invocation_being_cancelled_before_worker_is_provisioned(
+    data_store: DataStore,
+) -> None:
     provisioner = DummyProvisioner()
 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # An invocation is created. The function we're using has a concurrency limit of 1.
     invocation_1 = api.invocation.create_invocation(
@@ -852,14 +909,18 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: Dat
 
 
 @pytest.mark.timeout(5)
-def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStore) -> None:
+def test_invocation_timing_out_before_worker_is_provisioned(
+    data_store: DataStore,
+) -> None:
     provisioner = DummyProvisioner()
 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # An invocation is created. The function we're using has a concurrency limit of 1.
     invocation_1 = api.invocation.create_invocation(
@@ -934,14 +995,18 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
 
 
 @pytest.mark.timeout(5)
-def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: DataStore) -> None:
+def test_invocation_being_retried_due_to_error_being_thrown_in_code(
+    data_store: DataStore,
+) -> None:
     provisioner = DummyProvisioner()
 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # An invocation is created. The function we're using allows for retries.
     invocation = api.invocation.create_invocation(
@@ -999,7 +1064,9 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
         function_name=RETRYABLE_FUNCTION,
         invocation_id=invocation_id,
         execution_id=execution_id_1,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(execution_1.worker_details)
@@ -1025,14 +1092,17 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
         invocation_id=invocation_id,
     )
     executions_not_in_terminated_status = [
-        execution for execution in invocation.executions if execution.worker_status != WorkerStatus.TERMINATED
+        execution
+        for execution in invocation.executions
+        if execution.worker_status != WorkerStatus.TERMINATED
     ]
     assert len(executions_not_in_terminated_status) == 1
     execution_id_2 = executions_not_in_terminated_status[0].execution_id
 
     # Wait till the second execution reaches RUNNING status.
     while not any(
-        execution.worker_status == WorkerStatus.RUNNING and execution.execution_id == execution_id_2
+        execution.worker_status == WorkerStatus.RUNNING
+        and execution.execution_id == execution_id_2
         for execution in api.invocation.get_invocation(
             project_name=PROJECT_NAME,
             version_ref=LATEST_VERSION,
@@ -1069,7 +1139,9 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
         function_name=RETRYABLE_FUNCTION,
         invocation_id=invocation_id,
         execution_id=execution_id_2,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(execution_2.worker_details)
@@ -1095,20 +1167,33 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
         invocation_id=invocation_id,
     )
     assert len(invocation.executions) == 2
-    assert all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions)
-    assert any(execution.outcome == ExecutionOutcome.FAILED for execution in invocation.executions)
-    assert any(execution.outcome == ExecutionOutcome.SUCCEEDED for execution in invocation.executions)
+    assert all(
+        execution.worker_status == WorkerStatus.TERMINATED
+        for execution in invocation.executions
+    )
+    assert any(
+        execution.outcome == ExecutionOutcome.FAILED
+        for execution in invocation.executions
+    )
+    assert any(
+        execution.outcome == ExecutionOutcome.SUCCEEDED
+        for execution in invocation.executions
+    )
 
 
 @pytest.mark.timeout(5)
-def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore) -> None:
+def test_invocation_being_retried_due_to_hardware_failure(
+    data_store: DataStore,
+) -> None:
     provisioner = DummyProvisioner()
 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
-    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
 
     # An invocation is created. The function we're using allows for retries.
     invocation = api.invocation.create_invocation(
@@ -1183,13 +1268,16 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
         invocation_id=invocation_id,
     )
     executions_not_in_terminated_status = [
-        execution for execution in invocation.executions if execution.worker_status != WorkerStatus.TERMINATED
+        execution
+        for execution in invocation.executions
+        if execution.worker_status != WorkerStatus.TERMINATED
     ]
     execution_id_2 = executions_not_in_terminated_status[0].execution_id
 
     # Wait till the second execution reaches RUNNING status.
     while not any(
-        execution.worker_status == WorkerStatus.RUNNING and execution.execution_id == execution_id_2
+        execution.worker_status == WorkerStatus.RUNNING
+        and execution.execution_id == execution_id_2
         for execution in api.invocation.get_invocation(
             project_name=PROJECT_NAME,
             version_ref=LATEST_VERSION,
@@ -1226,7 +1314,9 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
         function_name=RETRYABLE_FUNCTION,
         invocation_id=invocation_id,
         execution_id=execution_id_2,
-        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT
+        ),
         time=TIME,
     )
     provisioner.mock_worker_termination(execution_2.worker_details)
@@ -1252,6 +1342,12 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
         invocation_id=invocation_id,
     )
     assert len(invocation.executions) == 2
-    assert all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions)
+    assert all(
+        execution.worker_status == WorkerStatus.TERMINATED
+        for execution in invocation.executions
+    )
     assert any(execution.outcome is None for execution in invocation.executions)
-    assert any(execution.outcome == ExecutionOutcome.SUCCEEDED for execution in invocation.executions)
+    assert any(
+        execution.outcome == ExecutionOutcome.SUCCEEDED
+        for execution in invocation.executions
+    )

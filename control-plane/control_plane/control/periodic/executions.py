@@ -26,7 +26,9 @@ class ExecutionsLifecycleActions:
         """
         A worker should be provisioned, and the worker status should be set to RUNNING.
         """
-        pending_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.PENDING})
+        pending_executions = self._data_store.executions.list_all(
+            worker_statuses={WorkerStatus.PENDING}
+        )
 
         for execution in pending_executions:
             assert execution.prepared_function_details is not None
@@ -77,13 +79,17 @@ class ExecutionsLifecycleActions:
         The worker may have died (e.g. due to execution finishing naturally, due to a sigterm signal or due to
         a hardware failure). If so, then the worker status should be set to TERMINATED.
         """
-        running_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
+        running_executions = self._data_store.executions.list_all(
+            worker_statuses={WorkerStatus.RUNNING}
+        )
 
         for execution in running_executions:
             assert execution.worker_details is not None
 
             try:
-                worker_status = self._provisioner.check_worker_status(worker_details=execution.worker_details)
+                worker_status = self._provisioner.check_worker_status(
+                    worker_details=execution.worker_details
+                )
             except Exception as ex:
                 logging.error("Error on checking worker status", exc_info=True)
                 continue
@@ -108,7 +114,9 @@ class ExecutionsLifecycleActions:
             # For development version only: Need mechanism of mocking worker termination after execution completes
             # In production version, this step is a no-op.
             if execution.outcome is not None:
-                self._provisioner.notify_of_execution_completion(worker_details=execution.worker_details)
+                self._provisioner.notify_of_execution_completion(
+                    worker_details=execution.worker_details
+                )
 
     def handle_running_executions_requiring_termination_signal(self, time: int) -> None:
         """
@@ -118,7 +126,9 @@ class ExecutionsLifecycleActions:
         => we should send a termination signal to the worker to abort the execution,
            and set termination_signal_sent = True
         """
-        running_executions = self._data_store.executions.list_all(worker_statuses={WorkerStatus.RUNNING})
+        running_executions = self._data_store.executions.list_all(
+            worker_statuses={WorkerStatus.RUNNING}
+        )
 
         classification = classify_running_executions(running_executions, time)
 
@@ -126,9 +136,13 @@ class ExecutionsLifecycleActions:
             assert execution.worker_details is not None
 
             try:
-                self._provisioner.send_termination_signal_to_worker(worker_details=execution.worker_details)
+                self._provisioner.send_termination_signal_to_worker(
+                    worker_details=execution.worker_details
+                )
             except Exception as ex:
-                logging.error("Error on sending termination signal to worker", exc_info=True)
+                logging.error(
+                    "Error on sending termination signal to worker", exc_info=True
+                )
                 continue
 
             self._data_store.executions.update(

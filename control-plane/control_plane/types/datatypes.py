@@ -273,7 +273,9 @@ class VersionDefinition(BaseModel):
 
     @model_validator(mode="after")
     def check_no_duplicate_function_names(self) -> "VersionDefinition":
-        distinct_function_names = set(function.function_name for function in self.functions)
+        distinct_function_names = set(
+            function.function_name for function in self.functions
+        )
         if len(distinct_function_names) < len(self.functions):
             raise ValueError("function_name values must be distinct")
 

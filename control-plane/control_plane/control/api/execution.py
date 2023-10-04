@@ -39,7 +39,9 @@ class ExecutionApiHandler:
         :raises InvocationDoesNotExist*:
         :raises ExecutionDoesNotExist:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         return self._data_store.executions.get(
             project_name=project_name,
@@ -67,7 +69,9 @@ class ExecutionApiHandler:
         :raises ExecutionDoesNotExist:
         :raises ExecutionHasAlreadyStarted:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         self._data_store.executions.update(
             project_name=project_name,
@@ -113,7 +117,9 @@ class ExecutionApiHandler:
         :raises ExecutionHasNotStarted:
         :raises ExecutionHasAlreadyFinished:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         self._data_store.executions.update(
             project_name=project_name,
@@ -160,7 +166,9 @@ class ExecutionApiHandler:
         :raises ExecutionHasNotStarted:
         :raises ExecutionHasAlreadyFinished:
         """
-        version_id = resolve_version_reference(project_name, version_ref, self._data_store)
+        version_id = resolve_version_reference(
+            project_name, version_ref, self._data_store
+        )
 
         self._data_store.executions.update(
             project_name=project_name,

@@ -25,8 +25,18 @@ def test_get_mandatory_when_doesnt_exist() -> None:
 
 
 def test_get_optional_with_default_when_exists() -> None:
-    assert get_optional_environment_variable_with_default(DUMMY_KEY_1, default=DEFAULT_VALUE) == DUMMY_VALUE_1
+    assert (
+        get_optional_environment_variable_with_default(
+            DUMMY_KEY_1, default=DEFAULT_VALUE
+        )
+        == DUMMY_VALUE_1
+    )
 
 
 def test_get_optional_with_default_when_doesnt_exist() -> None:
-    assert get_optional_environment_variable_with_default(DUMMY_KEY_2, default=DEFAULT_VALUE) == DEFAULT_VALUE
+    assert (
+        get_optional_environment_variable_with_default(
+            DUMMY_KEY_2, default=DEFAULT_VALUE
+        )
+        == DEFAULT_VALUE
+    )

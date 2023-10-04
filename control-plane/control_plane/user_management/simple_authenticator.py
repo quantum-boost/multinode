@@ -1,5 +1,8 @@
 from control_plane.types.errortypes import ApiKeyIsInvalid
-from control_plane.user_management.authenticator import AbstractAuthenticator, AuthResult
+from control_plane.user_management.authenticator import (
+    AbstractAuthenticator,
+    AuthResult,
+)
 
 
 class SimpleAuthenticator(AbstractAuthenticator):
