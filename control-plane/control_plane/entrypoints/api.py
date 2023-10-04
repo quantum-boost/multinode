@@ -85,14 +85,14 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         responses=document_possible_errors([ProjectAlreadyExists, ApiKeyIsInvalid]),
     )
     def create_project(project_name: str, auth_info: AuthResult = Depends(authenticate)) -> ProjectInfo:
-        return api_handler.registration.create_project(project_name, current_time())
+        return api_handler.registration.create_project(project_name=project_name, time=current_time())
 
     @app.get(
         path="/projects/{project_name}",
         responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid])
     )
     def get_project(project_name: str, auth_info: AuthResult = Depends(authenticate)) -> ProjectInfo:
-        return api_handler.registration.get_project(project_name)
+        return api_handler.registration.get_project(project_name=project_name)
 
     @app.get(
         path="/projects",
@@ -108,7 +108,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     def create_project_version(
         project_name: str, version_definition: VersionDefinition, auth_info: AuthResult = Depends(authenticate)
     ) -> VersionInfo:
-        return api_handler.registration.create_project_version(project_name, version_definition, current_time())
+        return api_handler.registration.create_project_version(
+            project_name=project_name,
+            version_definition=version_definition,
+            time=current_time()
+        )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}",
@@ -118,7 +122,10 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         project_name: str, version_ref_str: str, auth_info: AuthResult = Depends(authenticate)
     ) -> VersionInfo:
         version_ref = parse_version_reference(version_ref_str)
-        return api_handler.registration.get_project_version(project_name, version_ref)
+        return api_handler.registration.get_project_version(
+            project_name=project_name,
+            version_ref=version_ref
+        )
 
     @app.get(
         path="/projects/{project_name}/versions",
@@ -128,7 +135,7 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
             project_name: str,
             auth_info: AuthResult = Depends(authenticate)
     ) -> VersionsListForProject:
-        return api_handler.registration.list_project_versions(project_name)
+        return api_handler.registration.list_project_versions(project_name=project_name)
 
     # Invocation endpoints - called by internal/external code invoking the functions
 
@@ -150,7 +157,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> InvocationInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.invocation.create_invocation(
-            project_name, version_ref, function_name, invocation_def, current_time()
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_definition=invocation_def,
+            time=current_time()
         )
 
     @app.put(
@@ -171,7 +182,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> InvocationInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.invocation.cancel_invocation(
-            project_name, version_ref, function_name, invocation_id, current_time()
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            time=current_time()
         )
 
     @app.get(
@@ -191,7 +206,12 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         auth_info: AuthResult = Depends(authenticate),
     ) -> InvocationInfo:
         version_ref = parse_version_reference(version_ref_str)
-        return api_handler.invocation.get_invocation(project_name, version_ref, function_name, invocation_id)
+        return api_handler.invocation.get_invocation(
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id
+        )
 
     @app.get(
         path="/projects/{project_name}/versions/{version_ref_str}/functions/{function_name}/invocations",
@@ -216,7 +236,13 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
         version_ref = parse_version_reference(version_ref_str)
         parent_invocation = parse_parent_invocation_definition(parent_function_name, parent_invocation_id)
         return api_handler.invocation.list_invocations(
-            project_name, version_ref, function_name, max_results, initial_offset, status, parent_invocation
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            max_results=max_results,
+            initial_offset=initial_offset,
+            status=status,
+            parent_invocation=parent_invocation
         )
 
     # Execution endpoints - called by workers running the functions
@@ -241,7 +267,12 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> ExecutionInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.execution.mark_execution_as_started(
-            project_name, version_ref, function_name, invocation_id, execution_id, current_time()
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id,
+            time=current_time()
         )
 
     @app.put(
@@ -265,7 +296,13 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> ExecutionInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.execution.upload_temporary_execution_result(
-            project_name, version_ref, function_name, invocation_id, execution_id, temp_result, current_time()
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id,
+            temporary_result_payload=temp_result,
+            time=current_time()
         )
 
     @app.put(
@@ -289,7 +326,13 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> ExecutionInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.execution.set_final_execution_result(
-            project_name, version_ref, function_name, invocation_id, execution_id, final_result, current_time()
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id,
+            final_result_payload=final_result,
+            time=current_time()
         )
 
     @app.get(
@@ -312,7 +355,11 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> ExecutionInfo:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.execution.get_execution(
-            project_name, version_ref, function_name, invocation_id, execution_id
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id
         )
 
     # Logs endpoint
@@ -339,7 +386,13 @@ def build_app(data_store: DataStore, provisioner: AbstractProvisioner, authentic
     ) -> ExecutionLogs:
         version_ref = parse_version_reference(version_ref_str)
         return api_handler.logs.get_execution_logs(
-            project_name, version_ref, function_name, invocation_id, execution_id, max_lines, initial_offset
+            project_name=project_name,
+            version_ref=version_ref,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id,
+            max_lines=max_lines,
+            initial_offset=initial_offset
         )
 
     # Error handling

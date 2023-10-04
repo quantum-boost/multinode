@@ -90,17 +90,25 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # The invoker creates two invocations of the function that can run multiple workers concurrently.
     invocation_1 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_1_id = invocation_1.invocation_id
 
     invocation_2 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, InvocationDefinition(input=INPUT_2), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_2),
+        time=TIME,
     )
     invocation_2_id = invocation_2.invocation_id
 
@@ -108,7 +116,10 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_1_id,
         ).executions
     ):
         loop.run_once(TIME)
@@ -116,16 +127,29 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_2_id,
         ).executions
     ):
         loop.run_once(TIME)
 
-    invocation_1 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert invocation_1.executions[0].execution_start_time is None
     assert invocation_1.executions[0].execution_finish_time is None
 
-    invocation_2 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id)
+    invocation_2 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+    )
     assert invocation_2.executions[0].execution_start_time is None
     assert invocation_2.executions[0].execution_finish_time is None
 
@@ -133,10 +157,18 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     execution_2_id = invocation_2.executions[0].execution_id
 
     execution_1 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id, execution_1_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
     )
     execution_2 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id, execution_2_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+        execution_id=execution_2_id,
     )
 
     assert execution_1.worker_details is not None
@@ -154,34 +186,59 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
 
     # The two workers signal that they are starting their executions.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id, execution_1_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+        time=TIME,
     )
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id, execution_2_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+        execution_id=execution_2_id,
+        time=TIME,
     )
 
     # The invoker should be able to see that the workers have started their executions
-    invocation_1 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert invocation_1.executions[0].execution_start_time == TIME
     assert invocation_1.executions[0].execution_finish_time is None
 
-    invocation_2 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id)
+    invocation_2 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+    )
     assert invocation_2.executions[0].execution_start_time == TIME
     assert invocation_2.executions[0].execution_finish_time is None
 
     # The first worker supplies a temporary output (i.e. a progress update).
     api.execution.upload_temporary_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        invocation_1_id,
-        execution_1_id,
-        ExecutionTemporaryResultPayload(latest_output=TEMPORARY_OUTPUT),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+        temporary_result_payload=ExecutionTemporaryResultPayload(latest_output=TEMPORARY_OUTPUT),
+        time=TIME,
     )
 
     # The invoker should be able to see this temporary output.
-    invocation_1 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert invocation_1.executions[0].outcome is None
     assert invocation_1.executions[0].output == TEMPORARY_OUTPUT
     assert invocation_1.executions[0].execution_start_time == TIME
@@ -189,17 +246,22 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
 
     # The first worker supplies the final output.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        invocation_1_id,
-        execution_1_id,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        time=TIME,
     )
 
     # The invoker should be able to see this SUCCEEDED status and this final output.
-    invocation_1 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert invocation_1.executions[0].outcome == ExecutionOutcome.SUCCEEDED
     assert invocation_1.executions[0].output == FINAL_OUTPUT
     assert invocation_1.executions[0].execution_start_time == TIME
@@ -207,17 +269,22 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
 
     # The second worker throws an error.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        invocation_2_id,
-        execution_2_id,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+        execution_id=execution_2_id,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
+        time=TIME,
     )
 
     # The invoker should be able to see this FAILED status and this error message
-    invocation_2 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id)
+    invocation_2 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+    )
     assert invocation_2.executions[0].outcome == ExecutionOutcome.FAILED
     assert invocation_2.executions[0].error_message == ERROR_MESSAGE
     assert invocation_2.executions[0].execution_start_time == TIME
@@ -232,7 +299,10 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     # Wait till both invocations are terminated
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_1_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -240,23 +310,42 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
 
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_2_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
         loop.run_once(TIME)
 
-    invocation_1 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert len(invocation_1.executions) == 1
     assert invocation_1.executions[0].worker_status == WorkerStatus.TERMINATED
 
-    invocation_2 = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_1_id)
+    invocation_2 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
     assert len(invocation_2.executions) == 1
     assert invocation_2.executions[0].worker_status == WorkerStatus.TERMINATED
 
     # The logs from the executions should be accessible
     logs = api.logs.get_execution_logs(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_2_id, execution_2_id, None, None
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+        execution_id=execution_2_id,
+        max_lines=None,
+        initial_offset=None,
     )
     assert isinstance(logs.log_lines, list)
 
@@ -270,12 +359,16 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # The parent invocation is created.
     parent_invocation = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     parent_invocation_id = parent_invocation.invocation_id
 
@@ -283,17 +376,27 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=parent_invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
     parent_invocation = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
     )
     parent_execution_id = parent_invocation.executions[0].execution_id
     parent_execution = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id, parent_execution_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
+        execution_id=parent_execution_id,
     )
 
     assert parent_execution.input == INPUT_1
@@ -301,22 +404,27 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 
     # The worker starts the parent execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id, parent_execution_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
+        execution_id=parent_execution_id,
+        time=TIME,
     )
 
     # This worker creates a child invocation.
     # This child invocation can execute in parallel with the parent invocation.
     child_invocation = api.invocation.create_invocation(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        InvocationDefinition(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(
             input=INPUT_2,
             parent_invocation=ParentInvocationDefinition(
                 function_name=STANDARD_FUNCTION, invocation_id=parent_invocation_id
             ),
         ),
-        TIME,
+        time=TIME,
     )
     child_invocation_id = child_invocation.invocation_id
 
@@ -324,17 +432,27 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=child_invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
     child_invocation = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=child_invocation_id,
     )
     child_execution_id = child_invocation.executions[0].execution_id
     child_execution = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id, child_execution_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=child_invocation_id,
+        execution_id=child_execution_id,
     )
 
     assert child_execution.input == INPUT_2
@@ -342,7 +460,12 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 
     # The worker starts the child execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id, child_execution_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=child_invocation_id,
+        execution_id=child_execution_id,
+        time=TIME,
     )
 
     # Because no cancellation requests have been sent, the workers will not receive a termination request.
@@ -353,7 +476,13 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     assert not provisioner.worker_has_received_termination_signal(child_execution.worker_details)
 
     # The invoker sends a cancellation request for the parent invocation.
-    api.invocation.cancel_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id, TIME)
+    api.invocation.cancel_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
+        time=TIME,
+    )
 
     # Wait until the worker for the parent invocation receives a termination signal.
     while not provisioner.worker_has_received_termination_signal(parent_execution.worker_details):
@@ -361,7 +490,10 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 
     # As some point, the termination request should be propagated from the parent to the child.
     while not api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=child_invocation_id,
     ).cancellation_requested:
         loop.run_once(TIME)
 
@@ -371,37 +503,43 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 
     # Both workers clean up gracefully and terminate.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        parent_invocation_id,
-        parent_execution_id,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
+        execution_id=parent_execution_id,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        time=TIME,
     )
     provisioner.mock_worker_termination(parent_execution.worker_details)
 
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        child_invocation_id,
-        child_execution_id,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=child_invocation_id,
+        execution_id=child_execution_id,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        time=TIME,
     )
     provisioner.mock_worker_termination(child_execution.worker_details)
 
     # The ABORTED outcome should be visible to the invoker.
     parent_invocation = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=parent_invocation_id,
     )
     assert parent_invocation.executions[0].outcome == ExecutionOutcome.ABORTED
 
     # Eventually, both invocations are reach TERMINATED status
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, parent_invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=parent_invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -409,7 +547,10 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, child_invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=child_invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -423,12 +564,16 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # The invocation is created.
     invocation = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id = invocation.invocation_id
 
@@ -436,22 +581,39 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+    )
     execution_id = invocation.executions[0].execution_id
     execution = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id, execution_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
     )
 
     assert execution.worker_details is not None
 
     # The worker starts the execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id, execution_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
+        time=TIME,
     )
 
     # But the worker takes a long time to execute.
@@ -467,24 +629,32 @@ def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) 
 
     # The worker gracefully cleans up and terminates.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        STANDARD_FUNCTION,
-        invocation_id,
-        execution_id,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.ABORTED),
+        time=TIME,
     )
     provisioner.mock_worker_termination(execution.worker_details)
 
     # The ABORTED outcome should be visible to the invoker.
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+    )
     assert invocation.executions[0].outcome == ExecutionOutcome.ABORTED
 
     # Eventually, the invocation reaches TERMINATED status
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -500,12 +670,16 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # The invocation is created.
     invocation = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id = invocation.invocation_id
 
@@ -513,22 +687,39 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+    )
     execution_id = invocation.executions[0].execution_id
     execution = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id, execution_id
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
     )
 
     assert execution.worker_details is not None
 
     # The worker starts the execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id, execution_id, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
+        time=TIME,
     )
 
     # The invocation times out, resulting in a termination signal being sent to the worker.
@@ -544,14 +735,22 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
     # Eventually, the invocation reaches TERMINATED status
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
         loop.run_once(TIME)
 
     # However, the execution does not reach any outcome (not even an ABORTED outcome).
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, STANDARD_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+    )
     assert invocation.executions[0].outcome is None
 
 
@@ -562,12 +761,16 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: Dat
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # An invocation is created. The function we're using has a concurrency limit of 1.
     invocation_1 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id_1 = invocation_1.invocation_id
 
@@ -575,7 +778,10 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: Dat
     while (
         not len(
             api.invocation.get_invocation(
-                PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_1
+                project_name=PROJECT_NAME,
+                version_ref=LATEST_VERSION,
+                function_name=CONCURRENCY_LIMITED_FUNCTION,
+                invocation_id=invocation_id_1,
             ).executions
         )
         == 1
@@ -585,7 +791,11 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: Dat
     # A second invocation is created for the same function. But since the concurrency limit for this function is 1,
     # no execution will be created for this second invocation.
     invocation_2 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, InvocationDefinition(input=INPUT_2), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_2),
+        time=TIME,
     )
     invocation_id_2 = invocation_2.invocation_id
 
@@ -593,32 +803,50 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(data_store: Dat
         loop.run_once(TIME)
 
     invocation_2 = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_2,
     )
     assert len(invocation_2.executions) == 0
     assert invocation_2.invocation_status == InvocationStatus.RUNNING
 
     # The second invocation receives a cancellation request.
-    api.invocation.cancel_invocation(PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2, TIME)
+    api.invocation.cancel_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_2,
+        time=TIME,
+    )
 
     # As a result, the second invocation reaches TERMINATED status, without an execution being created.
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=CONCURRENCY_LIMITED_FUNCTION,
+            invocation_id=invocation_id_2,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
         loop.run_once(TIME)
 
     invocation_2 = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_2,
     )
     assert invocation_2.invocation_status == InvocationStatus.TERMINATED
     assert len(invocation_2.executions) == 0
 
     # Meanwhile, invocation 1 stays in RUNNING status
     invocation_1 = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_1
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_1,
     )
     assert invocation_1.invocation_status == InvocationStatus.RUNNING
 
@@ -630,12 +858,16 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # An invocation is created. The function we're using has a concurrency limit of 1.
     invocation_1 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id_1 = invocation_1.invocation_id
 
@@ -643,7 +875,10 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
     while (
         not len(
             api.invocation.get_invocation(
-                PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_1
+                project_name=PROJECT_NAME,
+                version_ref=LATEST_VERSION,
+                function_name=CONCURRENCY_LIMITED_FUNCTION,
+                invocation_id=invocation_id_1,
             ).executions
         )
         == 1
@@ -653,7 +888,11 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
     # A second invocation is created for the same function. But since the concurrency limit for this function is 1,
     # no execution will be created for this second invocation.
     invocation_2 = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, InvocationDefinition(input=INPUT_2), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_2),
+        time=TIME,
     )
     invocation_id_2 = invocation_2.invocation_id
 
@@ -661,7 +900,10 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
         loop.run_once(TIME)
 
     invocation_2 = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_2,
     )
     assert len(invocation_2.executions) == 0
     assert invocation_2.invocation_status == InvocationStatus.RUNNING
@@ -670,7 +912,10 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
     time = TIME
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=CONCURRENCY_LIMITED_FUNCTION,
+            invocation_id=invocation_id_2,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -678,7 +923,10 @@ def test_invocation_timing_out_before_worker_is_provisioned(data_store: DataStor
         time += 1
 
     invocation_2 = api.invocation.get_invocation(
-        PROJECT_NAME, LATEST_VERSION, CONCURRENCY_LIMITED_FUNCTION, invocation_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=CONCURRENCY_LIMITED_FUNCTION,
+        invocation_id=invocation_id_2,
     )
     assert invocation_2.invocation_status == InvocationStatus.TERMINATED
     assert len(invocation_2.executions) == 0
@@ -692,12 +940,16 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # An invocation is created. The function we're using allows for retries.
     invocation = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id = invocation.invocation_id
 
@@ -705,46 +957,73 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     execution_id_1 = invocation.executions[0].execution_id
     execution_1 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_1
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_1,
     )
 
     assert execution_1.worker_details is not None
 
     # The worker signals that it has started execution
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_1, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_1,
+        time=TIME,
     )
 
     # The worker throws an error and terminates
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        RETRYABLE_FUNCTION,
-        invocation_id,
-        execution_id_1,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_1,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.FAILED, error_message=ERROR_MESSAGE),
+        time=TIME,
     )
     provisioner.mock_worker_termination(execution_1.worker_details)
 
     # At some point, a second execution will be created for this invocation.
     while (
         not len(
-            api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id).executions
+            api.invocation.get_invocation(
+                project_name=PROJECT_NAME,
+                version_ref=LATEST_VERSION,
+                function_name=RETRYABLE_FUNCTION,
+                invocation_id=invocation_id,
+            ).executions
         )
         == 2
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     executions_not_in_terminated_status = [
         execution for execution in invocation.executions if execution.worker_status != WorkerStatus.TERMINATED
     ]
@@ -755,38 +1034,53 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
     while not any(
         execution.worker_status == WorkerStatus.RUNNING and execution.execution_id == execution_id_2
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
     execution_2 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
     )
 
     assert execution_2.worker_details is not None
 
     # The second worker signals that it has started execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_2, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
+        time=TIME,
     )
 
     # The second worker completes successfully and terminates.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        RETRYABLE_FUNCTION,
-        invocation_id,
-        execution_id_2,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        time=TIME,
     )
     provisioner.mock_worker_termination(execution_2.worker_details)
 
     # Wait for the invocation to reach TERMINATED status
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -794,7 +1088,12 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(data_store: 
 
     # Both executions should be visible to the invoker.
     # The first execution should have a FAILED outcome. The second execution should have a SUCCEEDED outcome.
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     assert len(invocation.executions) == 2
     assert all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions)
     assert any(execution.outcome == ExecutionOutcome.FAILED for execution in invocation.executions)
@@ -808,12 +1107,16 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
     api = ApiHandler(data_store, provisioner)
     loop = LifecycleActions(data_store, provisioner)
 
-    api.registration.create_project(PROJECT_NAME, TIME)
-    api.registration.create_project_version(PROJECT_NAME, VERSION_DEFINITION, TIME)
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME)
 
     # An invocation is created. The function we're using allows for retries.
     invocation = api.invocation.create_invocation(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, InvocationDefinition(input=INPUT_1), TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
     )
     invocation_id = invocation.invocation_id
 
@@ -821,22 +1124,39 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
     while not any(
         execution.worker_status == WorkerStatus.RUNNING
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     execution_id_1 = invocation.executions[0].execution_id
     execution_1 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_1
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_1,
     )
 
     assert execution_1.worker_details is not None
 
     # The worker signals that it has started execution
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_1, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_1,
+        time=TIME,
     )
 
     # The worker suffers a hardware failure, and terminates abruptly.
@@ -845,13 +1165,23 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
     # A second execution will be created for this invocation.
     while (
         not len(
-            api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id).executions
+            api.invocation.get_invocation(
+                project_name=PROJECT_NAME,
+                version_ref=LATEST_VERSION,
+                function_name=RETRYABLE_FUNCTION,
+                invocation_id=invocation_id,
+            ).executions
         )
         == 2
     ):
         loop.run_once(TIME)
 
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     executions_not_in_terminated_status = [
         execution for execution in invocation.executions if execution.worker_status != WorkerStatus.TERMINATED
     ]
@@ -861,38 +1191,53 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
     while not any(
         execution.worker_status == WorkerStatus.RUNNING and execution.execution_id == execution_id_2
         for execution in api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).executions
     ):
         loop.run_once(TIME)
 
     execution_2 = api.execution.get_execution(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_2
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
     )
 
     assert execution_2.worker_details is not None
 
     # The second worker signals that it has started execution.
     api.execution.mark_execution_as_started(
-        PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id, execution_id_2, TIME
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
+        time=TIME,
     )
 
     # The second worker completes successfully and terminates.
     api.execution.set_final_execution_result(
-        PROJECT_NAME,
-        LATEST_VERSION,
-        RETRYABLE_FUNCTION,
-        invocation_id,
-        execution_id_2,
-        ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
-        TIME,
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+        execution_id=execution_id_2,
+        final_result_payload=ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output=FINAL_OUTPUT),
+        time=TIME,
     )
     provisioner.mock_worker_termination(execution_2.worker_details)
 
     # Wait for the invocation to reach TERMINATED status
     while (
         not api.invocation.get_invocation(
-            PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=RETRYABLE_FUNCTION,
+            invocation_id=invocation_id,
         ).invocation_status
         == InvocationStatus.TERMINATED
     ):
@@ -900,7 +1245,12 @@ def test_invocation_being_retried_due_to_hardware_failure(data_store: DataStore)
 
     # Both executions should be visible to the invoker.
     # The first execution should have no outcome; the second execution should have a SUCCEEDED outcome
-    invocation = api.invocation.get_invocation(PROJECT_NAME, LATEST_VERSION, RETRYABLE_FUNCTION, invocation_id)
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=RETRYABLE_FUNCTION,
+        invocation_id=invocation_id,
+    )
     assert len(invocation.executions) == 2
     assert all(execution.worker_status == WorkerStatus.TERMINATED for execution in invocation.executions)
     assert any(execution.outcome is None for execution in invocation.executions)
