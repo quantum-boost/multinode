@@ -1,14 +1,13 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
 from control_plane.types.datatypes import (
     PreparedFunctionDetails,
     ResourceSpec,
-    WorkerType,
     WorkerDetails,
     WorkerStatus,
+    WorkerType,
 )
-
 
 TOTAL_LOG_LINES = 100
 

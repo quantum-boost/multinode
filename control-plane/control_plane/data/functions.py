@@ -1,22 +1,22 @@
-from typing import Optional, Any, Tuple
+from typing import Any, Optional, Tuple
 
 import psycopg2
 
 from control_plane.data.error_helpers import raise_error_if_version_does_not_exist
 from control_plane.data.sql_connection import SqlConnectionPool
-from control_plane.types.datatypes import (
-    FunctionInfo,
-    FunctionsListForVersion,
-    FunctionStatus,
-    PreparedFunctionDetails,
-    ResourceSpec,
-    ExecutionSpec,
-    FunctionInfoForVersion,
-)
 from control_plane.types.api_errors import (
     FunctionAlreadyExists,
     FunctionDoesNotExist,
     VersionDoesNotExist,
+)
+from control_plane.types.datatypes import (
+    ExecutionSpec,
+    FunctionInfo,
+    FunctionInfoForVersion,
+    FunctionsListForVersion,
+    FunctionStatus,
+    PreparedFunctionDetails,
+    ResourceSpec,
 )
 
 

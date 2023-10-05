@@ -3,7 +3,7 @@ from typing import TypeVar
 
 import requests
 from pydantic import BaseModel, ValidationError
-from requests import RequestException, JSONDecodeError, Response
+from requests import JSONDecodeError, RequestException, Response
 
 T = TypeVar("T", bound=BaseModel)
 

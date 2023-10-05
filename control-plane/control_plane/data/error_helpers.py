@@ -1,9 +1,9 @@
 from control_plane.data.sql_connection import SqlConnectionPool
 from control_plane.types.api_errors import (
-    ProjectDoesNotExist,
-    VersionDoesNotExist,
     FunctionDoesNotExist,
     InvocationDoesNotExist,
+    ProjectDoesNotExist,
+    VersionDoesNotExist,
 )
 
 

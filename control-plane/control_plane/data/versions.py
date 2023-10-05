@@ -2,20 +2,20 @@ import psycopg2
 
 from control_plane.data.error_helpers import raise_error_if_project_does_not_exist
 from control_plane.data.sql_connection import SqlConnectionPool
-from control_plane.types.datatypes import (
-    VersionInfo,
-    VersionsListForProject,
-    VersionInfoForProject,
-    FunctionInfoForVersion,
-    ResourceSpec,
-    ExecutionSpec,
-    FunctionStatus,
-    PreparedFunctionDetails,
-)
 from control_plane.types.api_errors import (
+    ProjectDoesNotExist,
     VersionAlreadyExists,
     VersionDoesNotExist,
-    ProjectDoesNotExist,
+)
+from control_plane.types.datatypes import (
+    ExecutionSpec,
+    FunctionInfoForVersion,
+    FunctionStatus,
+    PreparedFunctionDetails,
+    ResourceSpec,
+    VersionInfo,
+    VersionInfoForProject,
+    VersionsListForProject,
 )
 
 

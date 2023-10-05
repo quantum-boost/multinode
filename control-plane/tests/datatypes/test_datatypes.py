@@ -2,10 +2,10 @@ import pytest
 from pydantic import ValidationError
 
 from control_plane.types.datatypes import (
-    ResourceSpec,
     ExecutionSpec,
-    VersionDefinition,
     FunctionSpec,
+    ResourceSpec,
+    VersionDefinition,
 )
 
 

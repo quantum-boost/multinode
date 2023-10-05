@@ -7,22 +7,19 @@ from control_plane.control.periodic.all import LifecycleActions
 from control_plane.data.data_store import DataStore
 from control_plane.data.sql_connection import SqlConnectionPool
 from control_plane.types.datatypes import (
-    VersionDefinition,
-    FunctionSpec,
-    ResourceSpec,
-    ExecutionSpec,
-    InvocationDefinition,
-    WorkerStatus,
-    ExecutionTemporaryResultPayload,
     ExecutionFinalResultPayload,
     ExecutionOutcome,
+    ExecutionSpec,
+    ExecutionTemporaryResultPayload,
+    FunctionSpec,
+    InvocationDefinition,
     InvocationStatus,
     ParentInvocationDefinition,
+    ResourceSpec,
+    VersionDefinition,
+    WorkerStatus,
 )
-from control_plane.types.version_reference import (
-    VersionReferenceType,
-    VersionReference,
-)
+from control_plane.types.version_reference import VersionReference, VersionReferenceType
 from tests.provisioning.dummy_provisioner import DummyProvisioner
 
 

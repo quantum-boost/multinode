@@ -1,11 +1,11 @@
 # Sometimes, information is passed in query parameters, so our API code has to do some parsing
 from typing import Optional
 
-from control_plane.types.datatypes import ParentInvocationDefinition
 from control_plane.types.api_errors import (
     ParentFunctionNameIsMissing,
     ParentInvocationIdIsMissing,
 )
+from control_plane.types.datatypes import ParentInvocationDefinition
 
 
 def parse_parent_invocation_definition(
