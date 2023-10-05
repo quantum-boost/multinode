@@ -1,11 +1,6 @@
 import logging
 from typing import Optional
 
-from control_plane.types.random_ids import generate_random_id
-from control_plane.types.version_reference import (
-    resolve_version_reference,
-    VersionReference,
-)
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
     InvocationDefinition,
@@ -13,6 +8,11 @@ from control_plane.types.datatypes import (
     InvocationsListForFunction,
     InvocationStatus,
     ParentInvocationDefinition,
+)
+from control_plane.types.random_ids import generate_random_id
+from control_plane.types.version_reference import (
+    VersionReference,
+    resolve_version_reference,
 )
 
 

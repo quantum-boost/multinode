@@ -5,10 +5,10 @@ from control_plane.control.periodic.executions_helper import (
     classify_running_executions,
 )
 from control_plane.types.datatypes import (
-    ResourceSpec,
-    ExecutionSpec,
     ExecutionInfo,
+    ExecutionSpec,
     FunctionStatus,
+    ResourceSpec,
     WorkerStatus,
 )
 

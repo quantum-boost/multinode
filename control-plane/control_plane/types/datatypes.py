@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Optional, Literal
+from typing import Literal, Optional
 
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class StrEnum(str, Enum):

@@ -1,6 +1,6 @@
 from control_plane.types.version_reference import (
-    parse_version_reference,
     VersionReferenceType,
+    parse_version_reference,
 )
 
 

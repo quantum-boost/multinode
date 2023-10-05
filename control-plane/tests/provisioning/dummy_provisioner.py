@@ -3,11 +3,11 @@ from typing import Optional
 from control_plane.provisioning.dev_provisioner import create_identifier
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
 from control_plane.types.datatypes import (
+    PreparedFunctionDetails,
     ResourceSpec,
     WorkerDetails,
-    PreparedFunctionDetails,
-    WorkerType,
     WorkerStatus,
+    WorkerType,
 )
 
 

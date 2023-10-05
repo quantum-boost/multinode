@@ -1,11 +1,11 @@
 from control_plane.provisioning.dev_provisioner import (
-    DevelopmentProvisioner,
     TOTAL_LOG_LINES,
+    DevelopmentProvisioner,
 )
 from control_plane.types.datatypes import (
     ResourceSpec,
-    WorkerStatus,
     WorkerDetails,
+    WorkerStatus,
     WorkerType,
 )
 

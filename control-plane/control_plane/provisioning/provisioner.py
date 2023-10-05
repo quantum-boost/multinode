@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional, NamedTuple
+from typing import NamedTuple, Optional
 
 from control_plane.types.datatypes import (
-    ResourceSpec,
     PreparedFunctionDetails,
+    ResourceSpec,
     WorkerDetails,
     WorkerStatus,
 )

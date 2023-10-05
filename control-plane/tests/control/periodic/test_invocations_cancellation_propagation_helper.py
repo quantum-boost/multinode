@@ -1,16 +1,16 @@
-from typing import Optional, NamedTuple
+from typing import NamedTuple, Optional
 
 from control_plane.control.periodic.invocations_cancellation_propagation_helper import (
     InvocationsClassificationForCancellationPropagation,
     classify_invocations_for_cancellation_propagation,
 )
 from control_plane.types.datatypes import (
-    InvocationInfo,
-    ParentInvocationInfo,
-    InvocationStatus,
-    ResourceSpec,
     ExecutionSpec,
     FunctionStatus,
+    InvocationInfo,
+    InvocationStatus,
+    ParentInvocationInfo,
+    ResourceSpec,
 )
 
 PROJECT_NAME = "project"
