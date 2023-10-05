@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "multinode"
+version = "0.0.2"
+description = "Multinode's Python client"
+authors = ["Kacper Kielak <kacper@multinode.dev>"]
+readme = "README.md"
+packages = [{include = "multinode"}]
+
+[tool.poetry.scripts]
+multinode = 'multinode.main:cli'
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+click = "^8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
+black = "^23.9.1"
+flake8 = "^6.1.0"
+flake8-bugbear = "^23.9.16"
+flake8-pyproject = "^1.2.3"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 88
+select = ["C", "E" , "F", "W", "B","B950"]
+extend-ignore = ["E203", "E501"]
+exclude = [".venv"]
