@@ -6,8 +6,8 @@ from control_plane.data.data_store import DataStore
 from control_plane.data.sql_connection import SqlConnectionPool
 from control_plane.entrypoints.utils.cli_arguments import CliArguments
 from control_plane.entrypoints.utils.environment import (
-    get_optional_environment_variable_with_default,
     get_mandatory_environment_variable,
+    get_optional_environment_variable_with_default,
 )
 
 POSTGRES_HOST_ENV = "POSTGRES_HOST"

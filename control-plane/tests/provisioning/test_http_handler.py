@@ -1,11 +1,11 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests  # noqa
 from pydantic import BaseModel
 from requests import JSONDecodeError, Timeout
 
-from control_plane.provisioning.http_helper import HttpRequestHandler, HttpHandlingError
+from control_plane.provisioning.http_helper import HttpHandlingError, HttpRequestHandler
 
 
 class DummyRequestBody(BaseModel):

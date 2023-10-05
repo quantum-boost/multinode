@@ -4,8 +4,8 @@ from typing import Optional
 from control_plane.provisioning.external_provisioner import ExternalProvisioner
 from control_plane.types.datatypes import (
     ResourceSpec,
-    WorkerStatus,
     WorkerDetails,
+    WorkerStatus,
     WorkerType,
 )
 

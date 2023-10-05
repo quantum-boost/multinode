@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from control_plane.provisioning.http_helper import HttpRequestHandler
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
 from control_plane.types.datatypes import (
-    ResourceSpec,
     PreparedFunctionDetails,
+    ResourceSpec,
     WorkerDetails,
     WorkerStatus,
 )
