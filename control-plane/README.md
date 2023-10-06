@@ -49,7 +49,7 @@ curl -X GET http://localhost:5000/projects -H "Authorization: Bearer butterflybu
 Auto-generating a schema and saving it to `../api-schemas/control-plane.json`. (NB this folder is gitignored)
 ```commandline
 mkdir ../api-schemas
-curl -X GET http://localhost:5000/openapi.json | jq '.' > ../api-schemas/control-plane.json
+poetry run generate-schema --output ../api-schemas/control-plane.json
 ```
 
 ### Data structure
