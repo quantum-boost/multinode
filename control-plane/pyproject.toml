@@ -26,6 +26,7 @@ isort = "^5.12.0"
 [tool.poetry.scripts]
 api = "control_plane.entrypoints.api:main"
 loop = "control_plane.entrypoints.loop:main"
+generate-schema = "control_plane.entrypoints.generate_schema:main"
 
 [tool.pytest.ini_options]
 addopts = "--verbose"
