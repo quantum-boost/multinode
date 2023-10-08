@@ -24,6 +24,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
+    # Setup
     - name: Check out git repo
       uses: actions/checkout@v3
     - name: Set up Python 3.11
@@ -34,6 +35,8 @@ jobs:
       run: curl -sSL https://install.python-poetry.org | python -
     - name: Install dependencies
       run: poetry install
+
+    # Lint & test
     - name: Run mypy
       run: poetry run mypy .
     - name: Run black
@@ -42,6 +45,17 @@ jobs:
       run: poetry run isort --check-only .
     - name: Run unit tests
       run: poetry run pytest
+
+    # Generate & upload API schema
+    - name: Generate API schema
+      run: mkdir ../api-schemas && poetry run generate-schema --output ../api-schemas/control-plane.json
+    - name: Upload API schema
+      uses: actions/upload-artifact@v3
+      with:
+        name: control-plane-api-schema
+        path: api-schemas/control-plane.json
+
+    # Build & upload docker image
     - name: Build wheel
       run: poetry build --format wheel
     - name: Build Docker image
@@ -62,6 +76,7 @@ jobs:
         AWS_DEFAULT_REGION: 'eu-west-2'
 
   python-client:
+    needs: control-plane
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,13 +92,16 @@ jobs:
         run: curl -sSL https://install.python-poetry.org | python -
       - name: Install dependencies
         run: poetry install
-      - name: Run mypy
-        run: poetry run mypy .
-      - name: Run black
-        run: poetry run black --check .
-      - name: Run isort
-        run: poetry run isort --check-only .
-      - name: Run flake8
-        run: poetry run flake8 .
+      - name: Download API schema
+        uses: actions/download-artifact@v3
+        with:
+          name: control-plane-api-schema
+      - name: Move API schema
+        run: mkdir ../api-schemas && mv ../control-plane.json ../api-schemas/control-plane.json
+      - name: Generate API client
+        run: bash scripts/generate_client.sh
+
+      - name: Run linters
+        run: bash scripts/lint.sh
       - name: Build wheel
         run: poetry build --format wheel

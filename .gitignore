@@ -8,3 +8,6 @@ build/*
 *.pyc
 dist/*
 api-schemas/*
+
+python-client/multinode/api_client/
+python-client/.openapi-generator/
