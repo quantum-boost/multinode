@@ -9,5 +9,13 @@ build/*
 dist/*
 api-schemas/*
 
+**.terraform.lock.hcl
+**/.terraform/*
+**/terraform.tfstate
+**/terraform.tfstate.backup
+
+*.zip
+
 python-client/multinode/api_client/
 python-client/.openapi-generator/
+

@@ -46,7 +46,7 @@ TERMINATED_STATUS = "TERMINATED"
 PROVISIONER_API_KEY_ENV = "PROVISIONER_API_KEY"
 CONTROL_PLANE_API_URL_ENV = "CONTROL_PLANE_API_URL"
 CONTROL_PLANE_API_KEY_ENV = "CONTROL_PLANE_API_KEY"
-AWS_REGION_ENV = "AWS_REGION"
+AWS_REGION_ENV = "AWS_REGION"  # AWS Lambda automatically injects this environment variable
 CLUSTER_NAME_ENV = "CLUSTER_NAME"
 SUBNET_IDS_ENV = "SUBNET_IDS"
 SECURITY_GROUP_IDS_ENV = "SECURITY_GROUP_IDS"
@@ -136,7 +136,7 @@ def lambda_handler(event, context):
         # But it's hard to tell which errors are AWS's fault vs the client's fault.
         return {
             "statusCode": 400,
-            "body": {"detail": ex.response.get("Error", {}).get("Code", "")}
+            "body": {"detail": str(ex)}
         }
 
 
