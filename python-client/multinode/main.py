@@ -45,7 +45,7 @@ def login(ctx: click.Context):
     # Check if the API key is valid
     api_client = get_authenticated_client(config)
     try:
-        api_client.list_projects_projects_get()
+        api_client.list_projects()
     except ForbiddenException:
         click.secho("API key is invalid.", fg="red")
         ctx.exit(code=1)

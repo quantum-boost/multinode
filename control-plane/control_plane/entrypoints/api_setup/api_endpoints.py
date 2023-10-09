@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import Depends, FastAPI
+from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -399,5 +400,17 @@ def build_app(
             status_code=exc.error_code(), content=exc.response().model_dump()
         )
 
+    use_route_names_as_operation_ids(app)
     return app
 # fmt: on
+
+
+def use_route_names_as_operation_ids(app: FastAPI) -> None:
+    """
+    Simplify operation IDs so that generated API clients have simpler function names.
+
+    See: https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#using-the-path-operation-function-name-as-the-operationid
+    """
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            route.operation_id = route.name  # in this case, 'read_items'
