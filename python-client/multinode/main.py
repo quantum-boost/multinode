@@ -1,19 +1,13 @@
 from getpass import getpass
+from pathlib import Path
 
 import click
 
-from multinode.api_client import ApiClient, Configuration, DefaultApi
 from multinode.api_client.exceptions import ForbiddenException
 from multinode.config import load_config, save_config
-
-API_KEY_MISSING_MSG = click.style(
-    "You are not logged in. Run `multinode login` first.", fg="red"
-)
-
-INVALID_API_KEY_MSG = click.style("API key is invalid.", fg="red")
-SUCCESSFUL_LOGIN_MSG = click.style("You have successfully logged in!", fg="green")
-
-SUCCESSFUL_LOGOUT_MSG = "You have successfully logged out."
+from multinode.utils.api import deploy_multinode, get_authenticated_client
+from multinode.utils.errors import ProjectAlreadyExists
+from multinode.utils.imports import import_multinode_object_from_file
 
 
 @click.group()
@@ -27,15 +21,15 @@ def cli(ctx: click.Context):
     # Otherwise, check if user is logged in
     config = load_config()
     if config.api_key is None:
-        click.echo(API_KEY_MISSING_MSG)
+        click.secho("You are not logged in. Run `multinode login` first.", fg="red")
         ctx.exit(code=1)
 
 
 @cli.command()
 @click.pass_context
 def login(ctx: click.Context):
-    multinode_config = load_config()
-    if multinode_config.api_key is not None:
+    config = load_config()
+    if config.api_key is not None:
         click.echo(
             "You are already logged in. If you want to log in with "
             "a different account, run `multinode logout` first."
@@ -46,20 +40,18 @@ def login(ctx: click.Context):
     # redirecting to an authenticated web session or exchanging username/password for
     # an API key. Both require additional work and are not necessary for the MVP.
     api_key = getpass("Enter your API key:")
-    multinode_config.api_key = api_key
+    config.api_key = api_key
 
     # Check if the API key is valid
-    client_config = Configuration(host=multinode_config.api_url, access_token=api_key)
-    client = ApiClient(client_config)
-    api = DefaultApi(client)
+    api_client = get_authenticated_client(config)
     try:
-        api.list_projects_projects_get()
+        api_client.list_projects_projects_get()
     except ForbiddenException:
-        click.echo(INVALID_API_KEY_MSG)
+        click.secho("API key is invalid.", fg="red")
         ctx.exit(code=1)
 
-    save_config(multinode_config)
-    click.echo(SUCCESSFUL_LOGIN_MSG)
+    save_config(config)
+    click.secho("You have successfully logged in!", fg="green")
 
 
 @cli.command()
@@ -67,12 +59,39 @@ def logout():
     config = load_config()
     config.api_key = None
     save_config(config)
-    click.echo(SUCCESSFUL_LOGOUT_MSG)
+    click.echo("You have successfully logged out!")
 
 
 @cli.command()
-def deploy():
-    raise NotImplementedError
+@click.argument("filepath", type=click.Path(exists=True))
+@click.option("--project-name", type=str, required=True)
+@click.pass_context
+def deploy(ctx: click.Context, filepath: Path, project_name: str):
+    config = load_config()
+    api_client = get_authenticated_client(config)
+    try:
+        multinode_obj = import_multinode_object_from_file(filepath)
+    except ImportError as e:
+        click.secho(e.msg, fg="red")
+        ctx.exit(1)
+        return  # for mypy
+
+    try:
+        version = deploy_multinode(api_client, project_name, multinode_obj)
+    except ProjectAlreadyExists:
+        click.secho(
+            f'Project with name "{project_name}" already exists. '
+            f"Please choose a different name or run `multinode upgrade` instead.",
+            fg="red",
+        )
+        ctx.exit(1)
+        return  # for mypy
+
+    click.secho(
+        f"Project {version.project_name} has been successfully deployed! "
+        f"Version id = {version.version_id}",
+        fg="green",
+    )
 
 
 @cli.command()

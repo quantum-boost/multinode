@@ -3,4 +3,5 @@
 
 .openapi-generator/
 multinode/api_client_README.md
+multinode/__init__.py
 
