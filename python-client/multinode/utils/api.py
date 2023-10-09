@@ -30,7 +30,7 @@ def deploy_multinode(
     :raises ProjectAlreadyExists: if the with given `project_name` project already exists.
     """
     try:
-        project = api_client.create_project_projects_project_name_put(project_name)
+        project = api_client.create_project(project_name)
     except ApiException as e:
         if e.status == 409:
             raise ProjectAlreadyExists
@@ -42,7 +42,7 @@ def deploy_multinode(
     version_def = VersionDefinition(
         default_docker_image="nginx:latest", functions=functions
     )
-    version = api_client.create_project_version_projects_project_name_versions_post(
+    version = api_client.create_project_version(
         project_name=project.project_name, version_definition=version_def
     )
     return version
