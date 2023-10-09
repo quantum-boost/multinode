@@ -1,0 +1,2 @@
+class ProjectAlreadyExists(Exception):
+    pass
