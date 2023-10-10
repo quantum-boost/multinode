@@ -9,7 +9,6 @@ from control_plane.entrypoints.utils.environment import (
 )
 from control_plane.provisioning.dev_provisioner import DevelopmentProvisioner
 from control_plane.provisioning.ecs_provisioner import EcsProvisioner
-from control_plane.provisioning.external_provisioner import ExternalProvisioner
 from control_plane.provisioning.provisioner import AbstractProvisioner
 
 PROVISIONER_API_URL_ENV = "PROVISIONER_API_URL"
@@ -31,17 +30,6 @@ def provisioner_from_environment_variables(
     if cli_args.provisioner_type == ProvisionerType.DEV:
         logging.info("Using dev provisioner")
         return DevelopmentProvisioner(lag_cycles=5)
-
-    elif cli_args.provisioner_type == ProvisionerType.EXTERNAL:
-        logging.info("Using external provisioner")
-        return ExternalProvisioner(
-            provisioner_api_url=get_mandatory_environment_variable(
-                PROVISIONER_API_URL_ENV
-            ),
-            provisioner_api_key=get_mandatory_environment_variable(
-                PROVISIONER_API_KEY_ENV
-            ),
-        )
 
     elif cli_args.provisioner_type == ProvisionerType.ECS:
         logging.info("Using ECS provisioner")
