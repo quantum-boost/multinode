@@ -8,9 +8,8 @@ from multinode.api_client import (
     VersionDefinition,
     VersionInfo,
 )
-from multinode.api_client.exceptions import NotFoundException
 from multinode.config import Config
-from multinode.utils.errors import ProjectAlreadyExists, ProjectDoesNotExist
+from multinode.utils.errors import ProjectAlreadyExists
 
 
 def get_authenticated_client(multinode_config: Config) -> DefaultApi:
@@ -43,11 +42,7 @@ def create_project_version(
     version_def = VersionDefinition(
         default_docker_image="nginx:latest", functions=functions
     )
-    try:
-        version = api_client.create_project_version(
-            project_name=project_name, version_definition=version_def
-        )
-    except NotFoundException:
-        raise ProjectDoesNotExist
-
+    version = api_client.create_project_version(
+        project_name=project_name, version_definition=version_def
+    )
     return version
