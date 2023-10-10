@@ -5,8 +5,12 @@ import click
 
 from multinode.api_client.exceptions import ForbiddenException
 from multinode.config import load_config, save_config
-from multinode.utils.api import deploy_multinode, get_authenticated_client
-from multinode.utils.errors import ProjectAlreadyExists
+from multinode.utils.api import (
+    create_project,
+    create_project_version,
+    get_authenticated_client,
+)
+from multinode.utils.errors import ProjectAlreadyExists, ProjectDoesNotExist
 from multinode.utils.imports import import_multinode_object_from_file
 
 
@@ -64,9 +68,18 @@ def logout():
 
 @cli.command()
 @click.argument("filepath", type=click.Path(exists=True))
-@click.option("--project-name", type=str, required=True)
+@click.option(
+    "--project-name",
+    type=str,
+    required=True,
+    help=(
+        "Name that will be assigned to the deployed project. "
+        "The command will fail if a project with the same name already exists."
+    ),
+)
 @click.pass_context
 def deploy(ctx: click.Context, filepath: Path, project_name: str):
+    """Deploy a Multinode project based on the code in FILEPATH."""
     config = load_config()
     api_client = get_authenticated_client(config)
     try:
@@ -77,18 +90,19 @@ def deploy(ctx: click.Context, filepath: Path, project_name: str):
         return  # for mypy
 
     try:
-        version = deploy_multinode(api_client, project_name, multinode_obj)
+        project = create_project(api_client, project_name)
     except ProjectAlreadyExists:
         click.secho(
-            f'Project with name "{project_name}" already exists. '
+            f'Project "{project_name}" already exists. '
             f"Please choose a different name or run `multinode upgrade` instead.",
             fg="red",
         )
         ctx.exit(1)
         return  # for mypy
 
+    version = create_project_version(api_client, project.project_name, multinode_obj)
     click.secho(
-        f"Project {version.project_name} has been successfully deployed! "
+        f'Project "{version.project_name}" has been successfully deployed! '
         f"Version id = {version.version_id}",
         fg="green",
     )
@@ -100,8 +114,51 @@ def undeploy():
 
 
 @cli.command()
-def upgrade():
-    raise NotImplementedError
+@click.argument("filepath", type=click.Path(exists=True))
+@click.option(
+    "--project-name",
+    type=str,
+    required=True,
+    help="Name of the project that should be upgraded.",
+)
+@click.option(
+    "--deploy",
+    is_flag=True,
+    default=False,
+    help="If a project with this name does not exist, deploy it.",
+)
+@click.pass_context
+def upgrade(ctx: click.Context, filepath: Path, project_name: str, deploy: bool):
+    """Upgrade a Multinode project based on the code in FILEPATH."""
+    config = load_config()
+    api_client = get_authenticated_client(config)
+    try:
+        multinode_obj = import_multinode_object_from_file(filepath)
+    except ImportError as e:
+        click.secho(e.msg, fg="red")
+        ctx.exit(1)
+        return  # for mypy
+
+    if deploy:
+        try:
+            project = create_project(api_client, project_name)
+            project_name = project.project_name
+            click.echo(f'Project "{project_name}" does not exist. Deploying...')
+        except ProjectAlreadyExists:
+            click.echo(f'Project "{project_name}" already exists. Upgrading...')
+
+    try:
+        version = create_project_version(api_client, project_name, multinode_obj)
+    except ProjectDoesNotExist:
+        click.secho(f'Project "{project_name}" does not exist. ', fg="red")
+        ctx.exit(1)
+        return  # for mypy
+
+    click.secho(
+        f'Project "{version.project_name}" has been successfully upgraded! '
+        f"New version id = {version.version_id}",
+        fg="green",
+    )
 
 
 @cli.command()
