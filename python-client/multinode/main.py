@@ -5,14 +5,14 @@ from typing import List
 import click
 
 from multinode.api_client import ProjectInfo
-from multinode.api_client.exceptions import ForbiddenException
+from multinode.api_client.exceptions import ForbiddenException, NotFoundException
 from multinode.config import load_config, save_config
 from multinode.utils.api import (
     create_project,
     create_project_version,
     get_authenticated_client,
 )
-from multinode.utils.errors import ProjectAlreadyExists, ProjectDoesNotExist
+from multinode.utils.errors import ProjectAlreadyExists
 from multinode.utils.imports import import_multinode_object_from_file
 
 
@@ -111,8 +111,30 @@ def deploy(ctx: click.Context, filepath: Path, project_name: str):
 
 
 @cli.command()
-def undeploy():
-    raise NotImplementedError
+@click.option(
+    "--project-name",
+    type=str,
+    required=True,
+)
+@click.pass_context
+def undeploy(ctx: click.Context, project_name: str):
+    """Undeploy a Multinode project.
+
+    In-flight functions will be cancelled before the project is deleted.
+    """
+    config = load_config()
+    api_client = get_authenticated_client(config)
+    try:
+        api_client.delete_project(project_name)
+    except NotFoundException:
+        click.secho(f'Project "{project_name}" does not exist.', fg="red")
+        ctx.exit(1)
+        return  # for mypy
+
+    click.secho(
+        f'Project "{project_name}" has been successfully marked for deletion.',
+        fg="green",
+    )
 
 
 @cli.command()
@@ -151,7 +173,7 @@ def upgrade(ctx: click.Context, filepath: Path, project_name: str, deploy: bool)
 
     try:
         version = create_project_version(api_client, project_name, multinode_obj)
-    except ProjectDoesNotExist:
+    except NotFoundException:
         click.secho(f'Project "{project_name}" does not exist. ', fg="red")
         ctx.exit(1)
         return  # for mypy
@@ -175,7 +197,13 @@ def list():
 
     click.echo("Deployed projects:")
     for p in projects:
-        click.echo(f"\t{p.project_name}")
+        fg = "reset"
+        deletion_suffix = ""
+        if p.deletion_requested:
+            deletion_suffix = " (marked for deletion)"
+            fg = "red"
+
+        click.secho(f"\t{p.project_name}{deletion_suffix}", fg=fg)
 
 
 @cli.command()
