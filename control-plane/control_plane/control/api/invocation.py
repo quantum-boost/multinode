@@ -1,6 +1,9 @@
 import logging
 from typing import Optional
 
+from control_plane.control.api.utils.version_reference_resolution import (
+    resolve_version_reference,
+)
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
     InvocationDefinition,
@@ -10,10 +13,7 @@ from control_plane.types.datatypes import (
     ParentInvocationDefinition,
 )
 from control_plane.types.random_ids import generate_random_id
-from control_plane.types.version_reference import (
-    VersionReference,
-    resolve_version_reference,
-)
+from control_plane.types.version_reference import VersionReference
 
 
 class InvocationApiHandler:

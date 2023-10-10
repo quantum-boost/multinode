@@ -37,8 +37,12 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
     data_store.create_tables()
 
     # Set up each test with the projects already inserted.
-    data_store.projects.create(project_name=PROJECT_NAME_1, creation_time=TIME)
-    data_store.projects.create(project_name=PROJECT_NAME_2, creation_time=TIME)
+    data_store.projects.create(
+        project_name=PROJECT_NAME_1, deletion_requested=False, creation_time=TIME
+    )
+    data_store.projects.create(
+        project_name=PROJECT_NAME_2, deletion_requested=False, creation_time=TIME
+    )
 
     try:
         yield data_store

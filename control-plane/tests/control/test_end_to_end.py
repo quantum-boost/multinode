@@ -1348,3 +1348,136 @@ def test_invocation_being_retried_due_to_hardware_failure(
         execution.outcome == ExecutionOutcome.SUCCEEDED
         for execution in invocation.executions
     )
+
+
+@pytest.mark.timeout(5)
+def test_with_project_deletion(
+    data_store: DataStore,
+) -> None:
+    provisioner = DummyProvisioner()
+
+    api = ApiHandler(data_store, provisioner)
+    loop = LifecycleActions(data_store, provisioner)
+
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
+
+    # Create one invocation
+    invocation_1 = api.invocation.create_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
+    )
+    invocation_1_id = invocation_1.invocation_id
+
+    # Wait till invocation has RUNNING execution
+    while not any(
+        execution.worker_status == WorkerStatus.RUNNING
+        for execution in api.invocation.get_invocation(
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_1_id,
+        ).executions
+    ):
+        loop.run_once(TIME)
+
+    invocation_1 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+    )
+
+    execution_1_id = invocation_1.executions[0].execution_id
+    execution_1 = api.execution.get_execution(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+    )
+    assert execution_1.worker_details is not None
+
+    # The worker starts work on the first execution.
+    api.execution.mark_execution_as_started(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+        time=TIME,
+    )
+
+    # Request deletion of the project
+    api.registration.delete_project(project_name=PROJECT_NAME, time=TIME)
+
+    # Also create a second invocation
+    invocation_2 = api.invocation.create_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_2),
+        time=TIME,
+    )
+    invocation_2_id = invocation_2.invocation_id
+
+    # Since the project has already been cancelled, the control loop should terminate
+    # the second invocation without creating any executions for it.
+
+    while (
+        api.invocation.get_invocation(
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_2_id,
+        ).invocation_status
+        != InvocationStatus.TERMINATED
+    ):
+        loop.run_once(TIME)
+
+    invocation_2 = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_2_id,
+    )
+
+    assert len(invocation_2.executions) == 0
+
+    # Meanwhile, the first invocation is still RUNNING.
+    # This means that the project cannot yet be deleted from the DB
+    for _ in range(5):
+        api.registration.get_project(
+            project_name=PROJECT_NAME
+        )  # should not throw error
+        loop.run_once(TIME)
+
+    # The execution for the first invocation should receive a termination signal
+    while not provisioner.worker_has_received_termination_signal(
+        worker_details=execution_1.worker_details
+    ):
+        loop.run_once(TIME)
+
+    # The worker gracefully terminates the execution of the first invocation
+    api.execution.set_final_execution_result(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_1_id,
+        execution_id=execution_1_id,
+        final_result_payload=ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.ABORTED
+        ),
+        time=TIME,
+    )
+
+    provisioner.mock_worker_termination(worker_details=execution_1.worker_details)
+
+    # Wait for the project to be deleted
+    while len(api.registration.list_projects().projects) > 0:
+        loop.run_once(TIME)

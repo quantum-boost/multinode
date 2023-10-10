@@ -1,6 +1,8 @@
 import logging
 
-from control_plane.control.periodic.executions_helper import classify_running_executions
+from control_plane.control.periodic.executions_termination_signals_helper import (
+    classify_running_executions_for_termination_signals,
+)
 from control_plane.data.data_store import DataStore
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import WorkerStatus
@@ -19,7 +21,7 @@ class ExecutionsLifecycleActions:
     def run_all(self, time: int) -> None:
         self.handle_pending_executions(time)
         self.handle_running_executions(time)
-        self.handle_running_executions_requiring_termination_signal(time)
+        self.handle_running_executions_requiring_termination_signals(time)
         self.handle_executions_stuck_in_provisioning(time)
 
     def handle_pending_executions(self, time: int) -> None:
@@ -118,7 +120,9 @@ class ExecutionsLifecycleActions:
                     worker_details=execution.worker_details
                 )
 
-    def handle_running_executions_requiring_termination_signal(self, time: int) -> None:
+    def handle_running_executions_requiring_termination_signals(
+        self, time: int
+    ) -> None:
         """
         Case:
           - associated with an invocation which has cancellation_requested = True OR has timed out
@@ -130,7 +134,9 @@ class ExecutionsLifecycleActions:
             worker_statuses={WorkerStatus.RUNNING}
         )
 
-        classification = classify_running_executions(running_executions, time)
+        classification = classify_running_executions_for_termination_signals(
+            running_executions, time
+        )
 
         for execution in classification.executions_requiring_termination_signal:
             assert execution.worker_details is not None

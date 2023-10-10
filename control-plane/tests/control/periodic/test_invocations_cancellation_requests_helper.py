@@ -1,8 +1,8 @@
-from typing import NamedTuple, Optional
+from typing import Optional
 
-from control_plane.control.periodic.invocations_cancellation_propagation_helper import (
-    InvocationsClassificationForCancellationPropagation,
-    classify_invocations_for_cancellation_propagation,
+from control_plane.control.periodic.invocations_cancellation_requests_helper import (
+    InvocationsClassificationForCancellationRequests,
+    classify_invocations_for_cancellation_requests,
 )
 from control_plane.types.datatypes import (
     ExecutionSpec,
@@ -10,10 +10,12 @@ from control_plane.types.datatypes import (
     InvocationInfo,
     InvocationStatus,
     ParentInvocationInfo,
+    ProjectInfo,
     ResourceSpec,
 )
 
 PROJECT_NAME = "project"
+PROJECT_UNDERGOING_DELETION_NAME = "project-undergoing-deletion"
 VERSION_ID = "version"
 FUNCTION_NAME = "function"
 INPUT = "input"
@@ -23,12 +25,25 @@ RESOURCE_SPEC = ResourceSpec(virtual_cpus=1.0, memory_gbs=4.0, max_concurrency=2
 EXECUTION_SPEC = ExecutionSpec(max_retries=5, timeout_seconds=100)
 
 
+PROJECTS = [
+    ProjectInfo(
+        project_name=PROJECT_NAME, deletion_requested=False, creation_time=TIME
+    ),
+    ProjectInfo(
+        project_name=PROJECT_UNDERGOING_DELETION_NAME,
+        deletion_requested=True,
+        creation_time=TIME,
+    ),
+]
+
+
 def create_invocation(
     invocation_id: str,
     parent: Optional[InvocationInfo],
     cancellation_requested: bool,
     creation_time: int = TIME,
     invocation_status: InvocationStatus = InvocationStatus.RUNNING,
+    project_name: str = PROJECT_NAME,
 ) -> InvocationInfo:
     if parent is not None:
         parent_invocation_summary = ParentInvocationInfo(
@@ -43,7 +58,7 @@ def create_invocation(
         parent_invocation_summary = None
 
     return InvocationInfo(
-        project_name=PROJECT_NAME,
+        project_name=project_name,
         version_id=VERSION_ID,
         function_name=FUNCTION_NAME,
         invocation_id=invocation_id,
@@ -62,7 +77,7 @@ def create_invocation(
 
 
 def assert_results(
-    classification: InvocationsClassificationForCancellationPropagation,
+    classification: InvocationsClassificationForCancellationRequests,
     expected_ids_to_set_cancellation_requested: Optional[set[str]] = None,
     expected_ids_to_leave_untouched: Optional[set[str]] = None,
 ) -> None:
@@ -102,8 +117,8 @@ def test_when_parent_is_cancelled_and_has_not_yet_been_cancelled_itself() -> Non
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     assert_results(
@@ -128,8 +143,8 @@ def test_with_two_invocation_with_one_cancelled_but_with_no_parent_child_relatio
 
     running_invocations = [invocation_1, invocation_2]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     assert_results(
@@ -151,8 +166,8 @@ def test_when_parent_is_cancelled_but_has_already_been_cancelled_itself() -> Non
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     assert_results(
@@ -174,8 +189,8 @@ def test_when_parent_is_not_cancelled() -> None:
 
     running_invocations = [parent_invocation, invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     assert_results(
@@ -193,8 +208,8 @@ def test_with_no_parent() -> None:
 
     running_invocations = [invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     assert_results(classification, expected_ids_to_leave_untouched={invocation_id})
@@ -217,8 +232,8 @@ def test_with_parent_cancelled_and_already_terminated() -> None:
     # Parent is TERMINATED, so don't include in list of running invocations
     running_invocations = [invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(
-        running_invocations
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
     )
 
     # Should still cancel the child
@@ -256,7 +271,9 @@ def test_with_double_propagation_with_some_random_ordering() -> None:
     # happens in a single loop iteration, leading to optimal user experience.
     invocations = [invocation, parent_invocation, grandparent_invocation]
 
-    classification = classify_invocations_for_cancellation_propagation(invocations)
+    classification = classify_invocations_for_cancellation_requests(
+        invocations, PROJECTS
+    )
 
     assert_results(
         classification,
@@ -266,3 +283,47 @@ def test_with_double_propagation_with_some_random_ordering() -> None:
         },
         expected_ids_to_leave_untouched={grandparent_invocation_id},
     )
+
+
+def test_when_project_is_undergoing_deletion_and_invocation_has_not_yet_been_cancelled() -> (
+    None
+):
+    invocation_id = "inv"
+
+    invocation = create_invocation(
+        invocation_id,
+        parent=None,
+        cancellation_requested=False,
+        project_name=PROJECT_UNDERGOING_DELETION_NAME,
+    )
+
+    running_invocations = [invocation]
+
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
+    )
+
+    assert_results(
+        classification, expected_ids_to_set_cancellation_requested={invocation_id}
+    )
+
+
+def test_when_project_is_undergoing_deletion_but_invocation_has_already_been_cancelled() -> (
+    None
+):
+    invocation_id = "inv"
+
+    invocation = create_invocation(
+        invocation_id,
+        parent=None,
+        cancellation_requested=True,
+        project_name=PROJECT_UNDERGOING_DELETION_NAME,
+    )
+
+    running_invocations = [invocation]
+
+    classification = classify_invocations_for_cancellation_requests(
+        running_invocations, PROJECTS
+    )
+
+    assert_results(classification, expected_ids_to_leave_untouched={invocation_id})

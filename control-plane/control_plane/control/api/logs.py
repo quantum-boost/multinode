@@ -1,12 +1,12 @@
 from typing import Optional
 
+from control_plane.control.api.utils.version_reference_resolution import (
+    resolve_version_reference,
+)
 from control_plane.data.data_store import DataStore
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.types.datatypes import ExecutionLogs
-from control_plane.types.version_reference import (
-    VersionReference,
-    resolve_version_reference,
-)
+from control_plane.types.version_reference import VersionReference
 
 
 class LogsApiHandler:

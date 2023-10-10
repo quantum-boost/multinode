@@ -28,7 +28,7 @@ class VersionsTable:
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS project_versions (
-                  project_name TEXT NOT NULL REFERENCES projects(project_name) ON DELETE RESTRICT ON UPDATE RESTRICT,
+                  project_name TEXT NOT NULL REFERENCES projects(project_name) ON DELETE CASCADE ON UPDATE CASCADE,
                   version_id TEXT NOT NULL,
                   creation_time INTEGER NOT NULL,
                   PRIMARY KEY (project_name, version_id)
@@ -76,8 +76,7 @@ class VersionsTable:
             except psycopg2.errors.UniqueViolation:
                 raise VersionAlreadyExists
             except psycopg2.errors.ForeignKeyViolation:
-                # Future-proofing, in case we ever implement project deletions.
-                # If so, then there is an extremely rare race condition that needs to be handled.
+                # Handle rare race condition in case a project deletion is happening concurrently.
                 raise ProjectDoesNotExist
 
     def get_id_of_latest_version(self, *, project_name: str) -> str:

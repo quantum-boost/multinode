@@ -1,8 +1,8 @@
 from typing import Optional
 
-from control_plane.control.periodic.executions_helper import (
+from control_plane.control.periodic.executions_termination_signals_helper import (
     RunningExecutionsClassification,
-    classify_running_executions,
+    classify_running_executions_for_termination_signals,
 )
 from control_plane.types.datatypes import (
     ExecutionInfo,
@@ -87,7 +87,9 @@ def test_classify_in_standard_case() -> None:
     execution_id = "exe-1"
     executions = [create_execution(execution_id)]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(classification, expected_ids_to_leave_untouched={execution_id})
 
@@ -96,7 +98,9 @@ def test_classify_with_cancellation_request() -> None:
     execution_id = "exe-1"
     executions = [create_execution(execution_id, cancellation_requested=True)]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(
         classification, expected_ids_requiring_termination_signal={execution_id}
@@ -115,7 +119,9 @@ def test_classify_with_cancellation_request_but_termination_signal_already_sent(
         )
     ]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(classification, expected_ids_to_leave_untouched={execution_id})
 
@@ -129,7 +135,9 @@ def test_classify_when_timed_out() -> None:
         )
     ]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(
         classification, expected_ids_requiring_termination_signal={execution_id}
@@ -146,7 +154,9 @@ def test_classify_when_timed_out_but_termination_signal_already_sent() -> None:
         )
     ]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(classification, expected_ids_to_leave_untouched={execution_id})
 
@@ -159,7 +169,9 @@ def test_classify_with_more_than_one_execution_in_list() -> None:
         create_execution(execution_id_2, cancellation_requested=True),
     ]
 
-    classification = classify_running_executions(executions, TIME)
+    classification = classify_running_executions_for_termination_signals(
+        executions, TIME
+    )
 
     assert_results(
         classification,

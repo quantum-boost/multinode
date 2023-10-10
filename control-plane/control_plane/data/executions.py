@@ -54,7 +54,7 @@ class ExecutionsTable:
                   PRIMARY KEY (project_name, version_id, function_name, invocation_id, execution_id),
                   FOREIGN KEY (project_name, version_id, function_name, invocation_id)
                     REFERENCES invocations(project_name, version_id, function_name, invocation_id)
-                    ON DELETE RESTRICT ON UPDATE RESTRICT
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 );
                 """
             )
@@ -141,8 +141,7 @@ class ExecutionsTable:
             except psycopg2.errors.UniqueViolation:
                 raise ExecutionAlreadyExists
             except psycopg2.errors.ForeignKeyViolation:
-                # Future-proofing, in case we ever implement invocation deletions.
-                # If so, then there is an extremely rare race condition that needs to be handled.
+                # Handle rare race condition in case a project deletion is happening concurrently.
                 raise InvocationDoesNotExist
 
     def update(

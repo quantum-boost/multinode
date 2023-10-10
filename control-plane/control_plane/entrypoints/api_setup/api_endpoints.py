@@ -26,6 +26,7 @@ from control_plane.types.api_errors import (
     ParentInvocationIdIsMissing,
     ProjectAlreadyExists,
     ProjectDoesNotExist,
+    ProjectIsBeingDeleted,
     VersionDoesNotExist,
 )
 from control_plane.types.datatypes import (
@@ -91,6 +92,17 @@ def build_app(
             project_name=project_name, time=current_time()
         )
 
+    @app.delete(
+        path="/projects/{project_name}",
+        responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
+    )
+    def delete_project(
+            project_name: str, auth_info: AuthResult = Depends(authenticate)
+    ) -> ProjectInfo:
+        return api_handler.registration.delete_project(
+            project_name=project_name, time=current_time()
+        )
+
     @app.get(
         path="/projects/{project_name}",
         responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
@@ -106,7 +118,7 @@ def build_app(
 
     @app.post(
         path="/projects/{project_name}/versions",
-        responses=document_possible_errors([ProjectDoesNotExist, ApiKeyIsInvalid]),
+        responses=document_possible_errors([ProjectDoesNotExist, ProjectIsBeingDeleted, ApiKeyIsInvalid]),
     )
     def create_project_version(
             project_name: str,

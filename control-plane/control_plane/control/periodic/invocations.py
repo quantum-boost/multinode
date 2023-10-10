@@ -1,7 +1,7 @@
 import logging
 
-from control_plane.control.periodic.invocations_cancellation_propagation_helper import (
-    classify_invocations_for_cancellation_propagation,
+from control_plane.control.periodic.invocations_cancellation_requests_helper import (
+    classify_invocations_for_cancellation_requests,
 )
 from control_plane.control.periodic.invocations_helper import (
     classify_running_invocations,
@@ -25,16 +25,24 @@ class InvocationsLifecycleActions:
         # since it reduces the chance of an execution being created for a child invocation
         # when its parent has already been cancelled.
 
-        self.propagate_cancellation_requests_from_parents(time)
+        self.handle_running_invocations_requiring_cancellation_requests(time)
         self.handle_running_invocations(time)
 
-    def propagate_cancellation_requests_from_parents(self, time: int) -> None:
+    def handle_running_invocations_requiring_cancellation_requests(
+        self, time: int
+    ) -> None:
         """
         If an invocation:
           - is in RUNNING status
           - does not have cancellation_requested = True
           - has a parent with cancellation_requested = True
         then we should set cancellation_requested = True on this invocation.
+
+        Also, if an invocation:
+          - is in RUNNING status
+          - does not have cancellation_requested = True
+          - belongs to a project with deletion_requested = True
+        then we should set cancellation_requested = True on this invocation
         """
         # It's more efficient to iterate over the possible children, rather than iterating over the possible parents.
         # This is because the possible children have status = RUNNING, so there shouldn't be too many
@@ -43,8 +51,10 @@ class InvocationsLifecycleActions:
             statuses={InvocationStatus.RUNNING}
         )
 
-        classification = classify_invocations_for_cancellation_propagation(
-            running_invocations
+        projects = self._data_store.projects.list().projects
+
+        classification = classify_invocations_for_cancellation_requests(
+            running_invocations, projects
         )
 
         for invocation in classification.invocations_to_set_cancellation_requested:
@@ -80,6 +90,7 @@ class InvocationsLifecycleActions:
           - the max_retries limit has been reached
               OR the cancellation_requested flag is set to true
               OR the invocation has timed out
+              OR the project is in the process of being deleted
         => the invocation should be put in TERMINATED status
 
         Case 3:
@@ -87,6 +98,7 @@ class InvocationsLifecycleActions:
           - max_retries limit has not yet been reached
               AND the cancellation_requested flag set to false
               AND the invocation has not timed out
+              AND the project is not in the process of being deleted
           - the function is in READY status
               AND creating a new execution for this function will not exceed the function's resource limits
         => the invocation should remain in RUNNING status

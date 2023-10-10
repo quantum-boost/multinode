@@ -58,6 +58,19 @@ class ParentFunctionNameIsMissing(ApiError):
         return 400
 
 
+# Errors thrown in API code
+
+
+class ProjectIsBeingDeleted(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The project is being deleted"
+
+    @staticmethod
+    def error_code() -> int:
+        return 400
+
+
 # Errors from the database
 
 

@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from control_plane.types.datatypes import (
     ExecutionOutcome,
     FunctionInfo,
-    FunctionStatus,
     InvocationInfo,
     WorkerStatus,
 )
@@ -38,6 +37,11 @@ def classify_running_invocations(
         initial_capacities, running_invocations
     )
 
+    # {function id: function info}
+    functions_by_id: dict[
+        FunctionId, FunctionInfo
+    ] = _construct_dict_of_functions_by_id(functions_in_ready_status)
+
     invocations_to_terminate: list[InvocationInfo] = []
     invocations_to_create_executions_for: list[InvocationInfo] = []
     invocations_to_leave_untouched: list[InvocationInfo] = []
@@ -49,7 +53,7 @@ def classify_running_invocations(
             function_name=invocation.function_name,
         )
 
-        if function_id not in remaining_capacities.keys():
+        if function_id not in functions_by_id.keys():
             # If function is not in ready status, we should leave the invocation as is
             invocations_to_leave_untouched.append(invocation)
         elif not all(
@@ -66,11 +70,15 @@ def classify_running_invocations(
             invocations_to_terminate.append(invocation)
         elif (
             invocation.cancellation_requested
-            or has_timed_out(invocation, time)
-            or has_reached_retries_limit(invocation)
+            or _has_timed_out(invocation, time)
+            or _has_reached_retries_limit(invocation)
         ):
             # If invocation was cancelled, has timed out, or has reached retries limit;
             # we should terminate it
+            invocations_to_terminate.append(invocation)
+        elif functions_by_id[function_id].project_deletion_requested:
+            # If the project is in the process of being deleted,
+            # then we should terminate the invocation
             invocations_to_terminate.append(invocation)
         elif remaining_capacities[function_id] >= 1:
             # If none of the above apply and the function has remaining capacity,
@@ -124,13 +132,28 @@ def subtract_running_invocations_from_capacities(
     return remaining_function_capacities
 
 
-def has_timed_out(invocation: InvocationInfo, time: int) -> bool:
+def _construct_dict_of_functions_by_id(
+    functions_in_ready_status: list[FunctionInfo],
+) -> dict[FunctionId, FunctionInfo]:
+    functions_by_id: dict[FunctionId, FunctionInfo] = dict()
+    for function in functions_in_ready_status:
+        function_id = FunctionId(
+            project_name=function.project_name,
+            version_id=function.version_id,
+            function_name=function.function_name,
+        )
+        functions_by_id[function_id] = function
+
+    return functions_by_id
+
+
+def _has_timed_out(invocation: InvocationInfo, time: int) -> bool:
     timeout_seconds = invocation.execution_spec.timeout_seconds
     time_elapsed = time - invocation.creation_time
     return time_elapsed > timeout_seconds
 
 
-def has_reached_retries_limit(invocation: InvocationInfo) -> bool:
+def _has_reached_retries_limit(invocation: InvocationInfo) -> bool:
     # Convention in software engineering:
     # If max_retries = N, then you can run the function up to (N + 1) times.
     max_attempts = invocation.execution_spec.max_retries + 1
