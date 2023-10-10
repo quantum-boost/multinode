@@ -1,8 +1,10 @@
 from getpass import getpass
 from pathlib import Path
+from typing import List
 
 import click
 
+from multinode.api_client import ProjectInfo
 from multinode.api_client.exceptions import ForbiddenException
 from multinode.config import load_config, save_config
 from multinode.utils.api import (
@@ -163,7 +165,17 @@ def upgrade(ctx: click.Context, filepath: Path, project_name: str, deploy: bool)
 
 @cli.command()
 def list():
-    raise NotImplementedError
+    """List all deployed projects."""
+    config = load_config()
+    api_client = get_authenticated_client(config)
+    projects: List[ProjectInfo] = api_client.list_projects().projects
+    if len(projects) == 0:
+        click.echo("You have not deployed any projects yet.")
+        return
+
+    click.echo("Deployed projects:")
+    for p in projects:
+        click.echo(f"\t{p.project_name}")
 
 
 @cli.command()
