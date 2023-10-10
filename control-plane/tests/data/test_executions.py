@@ -92,7 +92,9 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
     # Set up each test with the project, version, functions and invocations already inserted.
     # Note that the two invocations are associated with different functions.
     data_store.projects.create(
-        project_name=PROJECT_NAME, creation_time=PROJECT_CREATION_TIME
+        project_name=PROJECT_NAME,
+        deletion_requested=False,
+        creation_time=PROJECT_CREATION_TIME,
     )
 
     data_store.project_versions.create(

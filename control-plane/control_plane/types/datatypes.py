@@ -259,6 +259,7 @@ class FunctionInfo(BaseModel):
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
     prepared_function_details: Optional[PreparedFunctionDetails]
+    project_deletion_requested: bool
 
 
 class FunctionsListForVersion(BaseModel):
@@ -303,6 +304,7 @@ class VersionsListForProject(BaseModel):
 
 class ProjectInfo(BaseModel):
     project_name: str
+    deletion_requested: bool
     creation_time: int
 
 

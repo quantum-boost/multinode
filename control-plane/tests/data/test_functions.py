@@ -54,7 +54,9 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
     data_store.create_tables()
 
     # Set up each test with the project and versions already inserted.
-    data_store.projects.create(project_name=PROJECT_NAME, creation_time=TIME)
+    data_store.projects.create(
+        project_name=PROJECT_NAME, deletion_requested=False, creation_time=TIME
+    )
     data_store.project_versions.create(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1, creation_time=TIME
     )
@@ -115,6 +117,7 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert function.execution_spec == EXECUTION_SPEC
     assert function.function_status == FunctionStatus.PENDING
     assert function.prepared_function_details is None
+    assert function.project_deletion_requested == False
 
     all_functions = data_store.functions.list_all(statuses={FunctionStatus.PENDING})
     assert len(all_functions) == 1
@@ -128,6 +131,7 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert all_functions[0].execution_spec == EXECUTION_SPEC
     assert all_functions[0].function_status == FunctionStatus.PENDING
     assert all_functions[0].prepared_function_details is None
+    assert all_functions[0].project_deletion_requested == False
 
     functions_for_version = data_store.functions.list_for_project_version(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1

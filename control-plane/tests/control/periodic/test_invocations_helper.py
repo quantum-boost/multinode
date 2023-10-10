@@ -20,6 +20,7 @@ from control_plane.types.datatypes import (
 from control_plane.types.random_ids import generate_random_id
 
 PROJECT_NAME = "project"
+PROJECT_UNDERGOING_DELETION_NAME = "project-undergoing-deletion"
 VERSION_ID = "version"
 FUNCTION_NAME = "function"
 NOT_READY_FUNCTION_NAME = "other_function"
@@ -41,7 +42,21 @@ READY_FUNCTIONS: list[FunctionInfo] = [
         prepared_function_details=PreparedFunctionDetails(
             type=WorkerType.TEST, identifier=""
         ),
-    )
+        project_deletion_requested=False,
+    ),
+    FunctionInfo(
+        project_name=PROJECT_UNDERGOING_DELETION_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME,
+        docker_image="image:latest",
+        resource_spec=RESOURCE_SPEC,
+        execution_spec=EXECUTION_SPEC,
+        function_status=FunctionStatus.READY,
+        prepared_function_details=PreparedFunctionDetails(
+            type=WorkerType.TEST, identifier=""
+        ),
+        project_deletion_requested=True,
+    ),
 ]
 
 
@@ -76,6 +91,7 @@ def create_invocation(
     num_aborted_terminated_executions: int = 0,
     num_failed_terminated_executions: int = 0,
     num_terminated_executions_without_outcome: int = 0,
+    project_name: str = PROJECT_NAME,
 ) -> InvocationInfo:
     executions: list[ExecutionSummary] = []
 
@@ -104,7 +120,7 @@ def create_invocation(
         executions.append(create_execution(WorkerStatus.TERMINATED, None))
 
     return InvocationInfo(
-        project_name=PROJECT_NAME,
+        project_name=project_name,
         version_id=VERSION_ID,
         function_name=function_name,
         invocation_id=invocation_id,
@@ -237,6 +253,20 @@ def test_classify_with_no_existing_executions() -> None:
     assert_results(
         classification, expected_ids_to_create_executions_for={invocation_id}
     )
+
+
+def test_classify_when_project_is_undergoing_deletion() -> None:
+    invocation_id = "inv-1"
+    running_invocations = [
+        create_invocation(
+            invocation_id, FUNCTION_NAME, project_name=PROJECT_UNDERGOING_DELETION_NAME
+        )
+    ]
+
+    classification = classify_running_invocations(
+        running_invocations, READY_FUNCTIONS, TIME
+    )
+    assert_results(classification, expected_ids_to_terminate={invocation_id})
 
 
 def test_classify_with_execution_failing_but_not_reaching_retries_limit() -> None:

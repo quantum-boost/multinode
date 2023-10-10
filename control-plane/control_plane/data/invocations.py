@@ -52,10 +52,10 @@ class InvocationsTable:
                   PRIMARY KEY (project_name, version_id, function_name, invocation_id),
                   FOREIGN KEY (project_name, version_id, function_name)
                     REFERENCES functions(project_name, version_id, function_name)
-                    ON DELETE RESTRICT ON UPDATE RESTRICT,
+                    ON DELETE CASCADE ON UPDATE CASCADE,
                   FOREIGN KEY (project_name, version_id, parent_function_name, parent_invocation_id)
                     REFERENCES invocations(project_name, version_id, function_name, invocation_id)
-                    ON DELETE RESTRICT ON UPDATE RESTRICT
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 );
                 """
             )
@@ -151,8 +151,7 @@ class InvocationsTable:
                 if "parent" in str(ex):
                     raise ParentInvocationDoesNotExist
                 else:
-                    # Future-proofing, in case we ever implement function deletions.
-                    # If so, then there is an extremely rare race condition that needs to be handled.
+                    # Handle rare race condition in case a project deletion is happening concurrently.
                     raise FunctionDoesNotExist
 
     def update(

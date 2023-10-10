@@ -1,15 +1,15 @@
 import logging
 
+from control_plane.control.api.utils.version_reference_resolution import (
+    resolve_version_reference,
+)
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
     ExecutionFinalResultPayload,
     ExecutionInfo,
     ExecutionTemporaryResultPayload,
 )
-from control_plane.types.version_reference import (
-    VersionReference,
-    resolve_version_reference,
-)
+from control_plane.types.version_reference import VersionReference
 
 
 class ExecutionApiHandler:

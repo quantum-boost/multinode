@@ -1,5 +1,11 @@
 import logging
 
+from control_plane.control.api.utils.project_deletion_requests import (
+    check_project_is_not_being_deleted,
+)
+from control_plane.control.api.utils.version_reference_resolution import (
+    resolve_version_reference,
+)
 from control_plane.data.data_store import DataStore
 from control_plane.types.datatypes import (
     FunctionStatus,
@@ -10,10 +16,7 @@ from control_plane.types.datatypes import (
     VersionsListForProject,
 )
 from control_plane.types.random_ids import generate_random_id
-from control_plane.types.version_reference import (
-    VersionReference,
-    resolve_version_reference,
-)
+from control_plane.types.version_reference import VersionReference
 
 
 class RegistrationApiHandler:
@@ -29,8 +32,23 @@ class RegistrationApiHandler:
         """
         :raises ProjectAlreadyExists:
         """
-        self._data_store.projects.create(project_name=project_name, creation_time=time)
+        self._data_store.projects.create(
+            project_name=project_name, deletion_requested=False, creation_time=time
+        )
         logging.info(f"Created project ({project_name}).")
+
+        return self._data_store.projects.get(project_name=project_name)
+
+    def delete_project(self, *, project_name: str, time: int) -> ProjectInfo:
+        """
+        :raises ProjectDoesNotExist:
+        """
+        self._data_store.projects.update(
+            project_name=project_name, set_deletion_requested=True
+        )
+        logging.info(
+            f"Updated project ({project_name})." f" - set deletion requested flag"
+        )
 
         return self._data_store.projects.get(project_name=project_name)
 
@@ -48,7 +66,10 @@ class RegistrationApiHandler:
     ) -> VersionInfo:
         """
         :raises ProjectDoesNotExist:
+        :raises ProjectIsBeingDeleted:
         """
+        check_project_is_not_being_deleted(project_name, self._data_store)
+
         version_id = generate_random_id("ver")
 
         self._data_store.project_versions.create(

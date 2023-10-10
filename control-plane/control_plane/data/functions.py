@@ -39,7 +39,7 @@ class FunctionsTable:
                   prepared_function_details TEXT,
                   PRIMARY KEY (project_name, version_id, function_name),
                   FOREIGN KEY (project_name, version_id) REFERENCES project_versions(project_name, version_id)
-                    ON DELETE RESTRICT ON UPDATE RESTRICT
+                    ON DELETE CASCADE ON UPDATE CASCADE
                 );
                 """
             )
@@ -96,8 +96,7 @@ class FunctionsTable:
             except psycopg2.errors.UniqueViolation:
                 raise FunctionAlreadyExists
             except psycopg2.errors.ForeignKeyViolation:
-                # Future-proofing, in case we ever implement project or project version deletions.
-                # If so, then there is an extremely rare race condition that needs to be handled.
+                # Handle rare race condition in case a project deletion is happening concurrently.
                 raise VersionDoesNotExist
 
     def update(
@@ -130,6 +129,10 @@ class FunctionsTable:
                     new_prepared_function_details.model_dump_json()
                 )
 
+            if len(set_statement_clauses) == 0:
+                # Running SQL statement with no SET clauses will raise a SQL syntax error
+                return
+
             set_statement = "SET " + ", ".join(set_statement_clauses)
 
             cursor.execute(
@@ -159,15 +162,17 @@ class FunctionsTable:
             cursor.execute(
                 """
                 SELECT
-                  project_name,
-                  version_id,
-                  function_name,
-                  docker_image,
-                  resource_spec,
-                  execution_spec,
-                  function_status,
-                  prepared_function_details
-                FROM functions
+                  functions.project_name,
+                  functions.version_id,
+                  functions.function_name,
+                  functions.docker_image,
+                  functions.resource_spec,
+                  functions.execution_spec,
+                  functions.function_status,
+                  functions.prepared_function_details,
+                  projects.deletion_requested
+                FROM projects
+                INNER JOIN functions USING (project_name)
                 WHERE project_name = %s AND version_id = %s AND function_name = %s;
                 """,
                 [project_name, version_id, function_name],
@@ -238,15 +243,17 @@ class FunctionsTable:
             cursor.execute(
                 """
                 SELECT
-                  project_name,
-                  version_id,
-                  function_name,
-                  docker_image,
-                  resource_spec,
-                  execution_spec,
-                  function_status,
-                  prepared_function_details
-                FROM functions
+                  functions.project_name,
+                  functions.version_id,
+                  functions.function_name,
+                  functions.docker_image,
+                  functions.resource_spec,
+                  functions.execution_spec,
+                  functions.function_status,
+                  functions.prepared_function_details,
+                  projects.deletion_requested
+                FROM projects
+                INNER JOIN functions USING (project_name)
                 WHERE function_status IN %s;
                 """,
                 [tuple(status.value for status in statuses)],
@@ -271,4 +278,5 @@ def _construct_function_info_from_row(row: Tuple[Any, ...]) -> FunctionInfo:
             if row[7] is not None
             else None
         ),
+        project_deletion_requested=row[8],
     )
