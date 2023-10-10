@@ -1,7 +1,7 @@
 import time
 from typing import Optional
 
-from control_plane.provisioning.external_provisioner import ExternalProvisioner
+from control_plane.provisioning.ecs_provisioner import EcsProvisioner
 from control_plane.types.datatypes import (
     ResourceSpec,
     WorkerDetails,
@@ -21,18 +21,33 @@ RESOURCE_SPEC = ResourceSpec(virtual_cpus=0.25, memory_gbs=0.5, max_concurrency=
 NUM_LOG_LINES_PER_PAGE = 3
 MIN_LOG_PAGES_WITH_AT_LEAST_ONE_LINE = 2
 
-# Change to match your external provisioner
-PROVISIONER_API_URL = (
-    "https://ro2p3s7gg6c5l5fwu44iwqvd6i0zypiw.lambda-url.eu-west-2.on.aws/"
-)
-PROVISIONER_API_KEY = "lemonandherb"
+# Change to match your ECS environment
+CONTROL_PLANE_API_URL = "https://test.quantumboost-dev-environment.dev/"
+CONTROL_PLANE_API_KEY = "butterflyburger"
+AWS_REGION = "eu-west-2"
+CLUSTER_NAME = "Multinode"
+SUBNET_IDS = ["subnet-07350b22534e0f5f8"]
+SECURITY_GROUP_IDS = ["sg-0583d500dc1d94f2e"]
+ASSIGN_PUBLIC_IP = True
+TASK_ROLE_ARN = "arn:aws:iam::921216064263:role/MultinodeTaskRole"
+EXECUTION_ROLE_ARN = "arn:aws:iam::921216064263:role/ecsTaskExecutionRole"
+LOG_GROUP = "/ecs/multinode-workers"
 
 # Be careful with interrupting this!!! You may leave tasks running in our AWS account, which will cost money.
 
 
 def main() -> None:
-    provisioner = ExternalProvisioner(
-        provisioner_api_url=PROVISIONER_API_URL, provisioner_api_key=PROVISIONER_API_KEY
+    provisioner = EcsProvisioner(
+        control_plane_api_url=CONTROL_PLANE_API_URL,
+        control_plane_api_key=CONTROL_PLANE_API_KEY,
+        aws_region=AWS_REGION,
+        cluster_name=CLUSTER_NAME,
+        subnet_ids=SUBNET_IDS,
+        security_group_ids=SECURITY_GROUP_IDS,
+        assign_public_ip=ASSIGN_PUBLIC_IP,
+        task_role_arn=TASK_ROLE_ARN,
+        execution_role_arn=EXECUTION_ROLE_ARN,
+        log_group=LOG_GROUP,
     )
 
     prepared_function_details = provisioner.prepare_function(

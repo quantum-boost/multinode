@@ -6,6 +6,7 @@ from typing import NamedTuple
 class ProvisionerType(StrEnum):
     DEV = "dev"
     EXTERNAL = "external"
+    ECS = "ecs"
 
 
 class CliArguments(NamedTuple):
@@ -21,7 +22,11 @@ def parse_cli_arguments() -> CliArguments:
         "--provisioner",
         type=str,
         help="Type of provisioner",
-        choices=[str(ProvisionerType.DEV), str(ProvisionerType.EXTERNAL)],
+        choices=[
+            str(ProvisionerType.DEV),
+            str(ProvisionerType.EXTERNAL),
+            str(ProvisionerType.ECS),
+        ],
         required=True,
     )
 

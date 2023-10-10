@@ -34,11 +34,13 @@ docker run --name control-loop --env-file=environment/example-dev.env --network 
 docker run --name control-api --env-file=environment/example-dev.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=dev
 ```
 
-Running loop and API with an external provisioner
+Running loop and API with the ECS provisioner.
+(Example IAM permissions in iam_permissions/iam_policy.json.
+The AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables are not required if using an IAM role.)
 ```commandline
-docker run --name postgres --env-file=environment/example-external.env -p 5432:5432 -d postgres:15.4
-docker run --name control-loop --env-file=environment/example-external.env --network host -d control-plane:latest loop --provisioner=external --create-tables --delete-tables
-docker run --name control-api --env-file=environment/example-external.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=external
+docker run --name postgres --env-file=environment/example-ecs.env -p 5432:5432 -d postgres:15.4
+docker run --name control-loop --env-file=environment/example-ecs.env --network host -d control-plane:latest loop --provisioner=ecs --create-tables --delete-tables
+docker run --name control-api --env-file=environment/example-ecs.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=ecs
 ```
 
 Calling this API
