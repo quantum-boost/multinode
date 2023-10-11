@@ -8,6 +8,7 @@ from control_plane.types.api_errors import (
     FunctionDoesNotExist,
     InvocationAlreadyExists,
     InvocationDoesNotExist,
+    InvocationIsAlreadyTerminated,
     ParentInvocationDoesNotExist,
 )
 from control_plane.types.datatypes import (
@@ -164,12 +165,14 @@ class InvocationsTable:
         update_time: int,
         new_cancellation_request_time: Optional[int] = None,
         new_invocation_status: Optional[InvocationStatus] = None,
+        should_not_already_be_terminated: bool = False,
     ) -> None:
         """
         :raises ProjectDoesNotExist:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
+        :raises InvocationIsAlreadyTerminated:
         """
         raise_error_if_function_does_not_exist(
             project_name, version_id, function_name, self._pool
@@ -192,17 +195,61 @@ class InvocationsTable:
 
             set_statement = "SET " + ", ".join(set_statement_clauses)
 
+            extra_where_statement_clauses: list[str] = []
+            extra_where_statement_args: list[Any] = []
+
+            if should_not_already_be_terminated:
+                extra_where_statement_clauses.append("invocation_status != %s")
+                extra_where_statement_args.append(InvocationStatus.TERMINATED.value)
+
+            if len(extra_where_statement_clauses) > 0:
+                extra_where_statement = " AND " + " AND ".join(
+                    extra_where_statement_clauses
+                )
+            else:
+                extra_where_statement = ""
+
             cursor.execute(
                 f"""
                 UPDATE invocations
                 {set_statement}
-                WHERE project_name = %s AND version_id = %s AND function_name = %s AND invocation_id = %s;
+                WHERE project_name = %s AND version_id = %s AND function_name = %s AND invocation_id = %s
+                {extra_where_statement};
                 """,
                 set_statement_args
-                + [project_name, version_id, function_name, invocation_id],
+                + [project_name, version_id, function_name, invocation_id]
+                + extra_where_statement_args,
             )
 
             if cursor.rowcount == 0:
+                # We need to diagnose the reason why no row matched the WHERE statement.
+                # It could be that the invocation_id doesn't exist.
+                # But it could also be that we have violated a condition of the update.
+                if should_not_already_be_terminated:
+                    cursor.execute(
+                        f"""
+                        SELECT invocation_status
+                        FROM invocations
+                        WHERE project_name = %s
+                          AND version_id = %s
+                          AND function_name = %s
+                          AND invocation_id = %s;
+                        """,
+                        [project_name, version_id, function_name, invocation_id],
+                    )
+
+                    row = cursor.fetchone()
+
+                    # Check row is not None to protect against rare race conditions
+                    # due to concurrent deletions.
+                    if row is not None:
+                        is_terminated = (
+                            InvocationStatus(row[0]) == InvocationStatus.TERMINATED
+                        )
+
+                        if is_terminated and should_not_already_be_terminated:
+                            raise InvocationIsAlreadyTerminated
+
                 raise InvocationDoesNotExist
 
     def get(

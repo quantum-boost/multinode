@@ -8,6 +8,7 @@ from control_plane.types.api_errors import (
     FunctionDoesNotExist,
     InvocationAlreadyExists,
     InvocationDoesNotExist,
+    InvocationIsAlreadyTerminated,
     ParentInvocationDoesNotExist,
     ProjectDoesNotExist,
     VersionDoesNotExist,
@@ -502,6 +503,7 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_1,
         update_time=LATER_TIME,
         new_cancellation_request_time=LATER_TIME,
+        should_not_already_be_terminated=True,
     )
 
     invocation_1 = data_store.invocations.get(
@@ -513,6 +515,42 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
     assert invocation_1.last_update_time == LATER_TIME
     assert invocation_1.cancellation_request_time == LATER_TIME
     assert invocation_1.cancellation_requested == True
+
+
+def test_update_cancellation_requested_flag_when_already_terminated(
+    data_store: DataStore,
+) -> None:
+    data_store.invocations.create(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
+        parent_invocation=None,
+        input=INPUT_1,
+        cancellation_request_time=None,
+        invocation_status=InvocationStatus.TERMINATED,  # already terminated
+        creation_time=TIME,
+        last_update_time=TIME,
+    )
+
+    with pytest.raises(InvocationIsAlreadyTerminated):
+        data_store.invocations.update(
+            project_name=PROJECT_NAME,
+            version_id=VERSION_ID,
+            function_name=FUNCTION_NAME_1,
+            invocation_id=INVOCATION_ID_1,
+            update_time=LATER_TIME,
+            new_cancellation_request_time=LATER_TIME,
+            should_not_already_be_terminated=True,  # requires that the invocation is not already terminated
+        )
+
+    invocation_1 = data_store.invocations.get(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
+    )
+    assert invocation_1.cancellation_requested == False  # remains unchanged
 
 
 def test_update_cancellation_when_invocation_does_not_exist(

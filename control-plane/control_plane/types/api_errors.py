@@ -187,6 +187,16 @@ class InvocationDoesNotExist(ApiError):
         return 404
 
 
+class InvocationIsAlreadyTerminated(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "This invocation has already terminated"
+
+    @staticmethod
+    def error_code() -> int:
+        return 409
+
+
 class ParentInvocationDoesNotExist(ApiError):
     @staticmethod
     def error_message() -> str:
