@@ -276,7 +276,7 @@ class InvocationsTable:
                   execution_id,
                   worker_status,
                   worker_details,
-                  termination_signal_sent,
+                  termination_signal_time,
                   outcome,
                   output,
                   error_message,
@@ -494,7 +494,7 @@ class InvocationsTable:
                   executions.execution_id,
                   executions.worker_status,
                   executions.worker_details,
-                  executions.termination_signal_sent,
+                  executions.termination_signal_time,
                   executions.outcome,
                   executions.output,
                   executions.error_message,
@@ -568,7 +568,7 @@ def _construct_execution_summary_from_row(row: Tuple[Any, ...]) -> ExecutionSumm
         worker_details=(
             WorkerDetails.model_validate_json(row[2]) if row[2] is not None else None
         ),
-        termination_signal_sent=row[3],
+        termination_signal_time=row[3],
         outcome=(ExecutionOutcome(row[4]) if row[4] is not None else None),
         output=row[5],
         error_message=row[6],

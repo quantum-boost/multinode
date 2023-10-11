@@ -158,7 +158,7 @@ class ExecutionsLifecycleActions:
                 invocation_id=execution.invocation_id,
                 execution_id=execution.execution_id,
                 update_time=time,
-                set_termination_signal_sent=True,
+                new_termination_signal_time=time,
             )
 
             logging.info(

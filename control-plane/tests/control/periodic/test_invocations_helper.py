@@ -68,7 +68,7 @@ def create_execution(
         execution_id=generate_random_id("exe"),
         worker_status=worker_status,
         worker_details=None,
-        termination_signal_sent=False,
+        termination_signal_time=None,
         outcome=outcome,
         output=None,
         error_message=None,

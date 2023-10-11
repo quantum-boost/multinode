@@ -118,7 +118,7 @@ def test_delete_with_cascade(data_store: DataStore) -> None:
         execution_id=EXECUTION_ID,
         worker_status=WorkerStatus.TERMINATED,
         worker_details=WORKER_DETAILS,
-        termination_signal_sent=False,
+        termination_signal_time=None,
         outcome=ExecutionOutcome.SUCCEEDED,
         output=OUTPUT,
         error_message=None,

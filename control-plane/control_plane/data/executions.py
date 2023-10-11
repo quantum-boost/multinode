@@ -43,7 +43,7 @@ class ExecutionsTable:
                   execution_id TEXT NOT NULL,
                   worker_status TEXT NOT NULL,
                   worker_details TEXT,
-                  termination_signal_sent BOOLEAN NOT NULL,
+                  termination_signal_time INTEGER,
                   outcome TEXT,
                   output TEXT,
                   error_message TEXT,
@@ -91,7 +91,7 @@ class ExecutionsTable:
         execution_id: str,
         worker_status: WorkerStatus,
         worker_details: Optional[WorkerDetails],
-        termination_signal_sent: bool,
+        termination_signal_time: Optional[int],
         outcome: Optional[ExecutionOutcome],
         output: Optional[str],
         error_message: Optional[str],
@@ -128,7 +128,7 @@ class ExecutionsTable:
                         worker_details.model_dump_json()
                         if worker_details is not None
                         else None,
-                        termination_signal_sent,
+                        termination_signal_time,
                         outcome.value if outcome is not None else None,
                         output,
                         error_message,
@@ -155,7 +155,7 @@ class ExecutionsTable:
         update_time: int,
         new_worker_status: Optional[WorkerStatus] = None,
         new_worker_details: Optional[WorkerDetails] = None,
-        set_termination_signal_sent: bool = False,
+        new_termination_signal_time: Optional[int] = None,
         new_outcome: Optional[ExecutionOutcome] = None,
         new_output: Optional[str] = None,
         new_error_message: Optional[str] = None,
@@ -194,9 +194,9 @@ class ExecutionsTable:
                 set_statement_clauses.append("worker_details = %s")
                 set_statement_args.append(new_worker_details.model_dump_json())
 
-            if set_termination_signal_sent:
-                set_statement_clauses.append("termination_signal_sent = %s")
-                set_statement_args.append(True)
+            if new_termination_signal_time is not None:
+                set_statement_clauses.append("termination_signal_time = %s")
+                set_statement_args.append(new_termination_signal_time)
 
             if new_outcome is not None:
                 set_statement_clauses.append("outcome = %s")
@@ -361,7 +361,7 @@ class ExecutionsTable:
                   functions.prepared_function_details,
                   executions.worker_status,
                   executions.worker_details,
-                  executions.termination_signal_sent,
+                  executions.termination_signal_time,
                   executions.outcome,
                   executions.output,
                   executions.error_message,
@@ -416,7 +416,7 @@ class ExecutionsTable:
                   execution_id,
                   worker_status,
                   worker_details,
-                  termination_signal_sent,
+                  termination_signal_time,
                   outcome,
                   output,
                   error_message,
@@ -447,7 +447,7 @@ class ExecutionsTable:
                         if row[2] is not None
                         else None
                     ),
-                    termination_signal_sent=row[3],
+                    termination_signal_time=row[3],
                     outcome=(ExecutionOutcome(row[4]) if row[4] is not None else None),
                     output=row[5],
                     error_message=row[6],
@@ -492,7 +492,7 @@ class ExecutionsTable:
                   functions.prepared_function_details,
                   executions.worker_status,
                   executions.worker_details,
-                  executions.termination_signal_sent,
+                  executions.termination_signal_time,
                   executions.outcome,
                   executions.output,
                   executions.error_message,
@@ -537,7 +537,7 @@ def _construct_execution_info_from_row(row: Tuple[Any, ...]) -> ExecutionInfo:
         worker_details=(
             WorkerDetails.model_validate_json(row[12]) if row[12] is not None else None
         ),
-        termination_signal_sent=row[13],
+        termination_signal_time=row[13],
         outcome=(ExecutionOutcome(row[14]) if row[14] is not None else None),
         output=row[15],
         error_message=row[16],

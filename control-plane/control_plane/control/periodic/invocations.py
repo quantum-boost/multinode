@@ -140,7 +140,7 @@ class InvocationsLifecycleActions:
                 execution_id=execution_id,
                 worker_status=WorkerStatus.PENDING,
                 worker_details=None,
-                termination_signal_sent=False,
+                termination_signal_time=None,
                 outcome=None,
                 output=None,
                 error_message=None,
