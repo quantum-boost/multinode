@@ -58,6 +58,19 @@ class ParentFunctionNameIsMissing(ApiError):
         return 400
 
 
+# Errors about path parameters
+
+
+class ProjectNameIsTooLong(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "The project name is too long"
+
+    @staticmethod
+    def error_code() -> int:
+        return 400
+
+
 # Errors thrown in API code
 
 

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -120,11 +120,32 @@ class FunctionStatus(StrEnum):
 class ExecutionTemporaryResultPayload(BaseModel):
     latest_output: str
 
+    @field_validator("latest_output")
+    @classmethod
+    def check_latest_output_length(cls, value: str) -> str:
+        if len(value) >= 16384:
+            raise ValueError("latest_output cannot exceed 16384 characters")
+        return value
+
 
 class ExecutionFinalResultPayload(BaseModel):
     outcome: ExecutionOutcome
     final_output: Optional[str] = None
     error_message: Optional[str] = None
+
+    @field_validator("final_output")
+    @classmethod
+    def check_final_output_length(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and len(value) >= 16384:
+            raise ValueError("final_output cannot exceed 16384 characters")
+        return value
+
+    @field_validator("error_message")
+    @classmethod
+    def check_error_message_length(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and len(value) >= 16384:
+            raise ValueError("error_message cannot exceed 16384 characters")
+        return value
 
 
 class ExecutionInfo(BaseModel):
@@ -239,6 +260,20 @@ class FunctionSpec(BaseModel):
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
 
+    @field_validator("function_name")
+    @classmethod
+    def check_function_name_length(cls, value: str) -> str:
+        if len(value) >= 256:
+            raise ValueError("function_name cannot exceed 256 characters")
+        return value
+
+    @field_validator("docker_image_override")
+    @classmethod
+    def check_docker_image_override_length(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and len(value) >= 256:
+            raise ValueError("docker_image_override cannot exceed 256 characters")
+        return value
+
 
 class FunctionInfoForVersion(BaseModel):
     # omit project_name and version_id, since this will be nested inside a VersionInfo object
@@ -271,6 +306,13 @@ class FunctionsListForVersion(BaseModel):
 class VersionDefinition(BaseModel):
     default_docker_image: str
     functions: list[FunctionSpec]
+
+    @field_validator("default_docker_image")
+    @classmethod
+    def check_default_docker_image_length(cls, value: str) -> str:
+        if len(value) >= 256:
+            raise ValueError("default_docker_image cannot exceed 256 characters")
+        return value
 
     @model_validator(mode="after")
     def check_no_duplicate_function_names(self) -> "VersionDefinition":
