@@ -2,6 +2,8 @@ import pytest
 from pydantic import ValidationError
 
 from control_plane.types.datatypes import (
+    ExecutionFinalResultPayload,
+    ExecutionOutcome,
     ExecutionSpec,
     FunctionSpec,
     ResourceSpec,
@@ -136,3 +138,35 @@ def test_version_definition_with_duplicate_function_names() -> None:
         )
 
     assert "function_name values must be distinct" in str(exc_info.value)
+
+
+def test_valid_final_result_payload_with_successful_outcome() -> None:
+    ExecutionFinalResultPayload(outcome=ExecutionOutcome.SUCCEEDED, final_output="123")
+
+
+def test_invalid_final_result_payload_with_successful_outcome() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.SUCCEEDED,
+            final_output="123",
+            error_message="unexpected",  # should not have an error message
+        )
+
+    assert "error_message must be left empty" in str(exc_info)
+
+
+def test_valid_final_result_payload_with_failed_outcome() -> None:
+    ExecutionFinalResultPayload(
+        outcome=ExecutionOutcome.FAILED, final_output="123", error_message="reason"
+    )
+
+
+def test_invalid_final_result_payload_with_failed_outcome() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ExecutionFinalResultPayload(
+            outcome=ExecutionOutcome.FAILED,
+            final_output="123",
+            # missing an error message
+        )
+
+    assert "error_message must be populated" in str(exc_info)
