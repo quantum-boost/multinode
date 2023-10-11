@@ -199,7 +199,7 @@ def list():
     for p in projects:
         fg = "reset"
         deletion_suffix = ""
-        if p.deletion_requested:
+        if p.deletion_request_time is not None:
             deletion_suffix = " (marked for deletion)"
             fg = "red"
 
