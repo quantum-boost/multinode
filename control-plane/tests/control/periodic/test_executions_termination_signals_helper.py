@@ -43,7 +43,7 @@ def create_execution(
         prepared_function_details=None,
         worker_status=WorkerStatus.RUNNING,
         worker_details=None,
-        termination_signal_sent=termination_signal_already_sent,
+        termination_signal_time=(TIME if termination_signal_already_sent else None),
         outcome=None,
         output=None,
         error_message=None,

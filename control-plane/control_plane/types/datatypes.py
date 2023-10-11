@@ -162,7 +162,7 @@ class ExecutionInfo(BaseModel):
     prepared_function_details: Optional[PreparedFunctionDetails]
     worker_status: WorkerStatus
     worker_details: Optional[WorkerDetails]
-    termination_signal_sent: bool
+    termination_signal_time: Optional[int]
     outcome: Optional[ExecutionOutcome]
     output: Optional[str]
     error_message: Optional[str]
@@ -176,12 +176,24 @@ class ExecutionInfo(BaseModel):
     def cancellation_requested(self) -> bool:
         return self.cancellation_request_time is not None
 
+    @property
+    def termination_signal_sent(self) -> bool:
+        return self.termination_signal_time is not None
+
+    @property
+    def started(self) -> bool:
+        return self.execution_start_time is not None
+
+    @property
+    def finished(self) -> bool:
+        return self.execution_finish_time is not None
+
 
 class ExecutionSummary(BaseModel):
     execution_id: str
     worker_status: WorkerStatus
     worker_details: Optional[WorkerDetails]
-    termination_signal_sent: bool
+    termination_signal_time: Optional[int]
     outcome: Optional[ExecutionOutcome]
     output: Optional[str]
     error_message: Optional[str]
@@ -189,6 +201,18 @@ class ExecutionSummary(BaseModel):
     last_update_time: int
     execution_start_time: Optional[int]
     execution_finish_time: Optional[int]
+
+    @property
+    def termination_signal_sent(self) -> bool:
+        return self.termination_signal_time is not None
+
+    @property
+    def started(self) -> bool:
+        return self.execution_start_time is not None
+
+    @property
+    def finished(self) -> bool:
+        return self.execution_finish_time is not None
 
 
 class ExecutionsListForInvocation(BaseModel):
