@@ -155,7 +155,7 @@ class ExecutionInfo(BaseModel):
     invocation_id: str
     execution_id: str
     input: str
-    cancellation_requested: bool
+    cancellation_request_time: Optional[int]
     resource_spec: ResourceSpec
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
@@ -171,6 +171,10 @@ class ExecutionInfo(BaseModel):
     execution_start_time: Optional[int]
     execution_finish_time: Optional[int]
     invocation_creation_time: int
+
+    @property
+    def cancellation_requested(self) -> bool:
+        return self.cancellation_request_time is not None
 
 
 class ExecutionSummary(BaseModel):
@@ -213,10 +217,14 @@ class InvocationDefinition(BaseModel):
 class ParentInvocationInfo(BaseModel):
     function_name: str
     invocation_id: str
-    cancellation_requested: bool
+    cancellation_request_time: Optional[int]
     invocation_status: InvocationStatus
     creation_time: int
     last_update_time: int
+
+    @property
+    def cancellation_requested(self) -> bool:
+        return self.cancellation_request_time is not None
 
 
 class InvocationInfo(BaseModel):
@@ -230,20 +238,28 @@ class InvocationInfo(BaseModel):
     function_status: FunctionStatus
     prepared_function_details: Optional[PreparedFunctionDetails]
     input: str
-    cancellation_requested: bool
+    cancellation_request_time: Optional[int]
     invocation_status: InvocationStatus
     creation_time: int
     last_update_time: int
     executions: list[ExecutionSummary]
 
+    @property
+    def cancellation_requested(self) -> bool:
+        return self.cancellation_request_time is not None
+
 
 class InvocationInfoForFunction(BaseModel):
     invocation_id: str
     parent_invocation: Optional[ParentInvocationDefinition]
-    cancellation_requested: bool
+    cancellation_request_time: Optional[int]
     invocation_status: InvocationStatus
     creation_time: int
     last_update_time: int
+
+    @property
+    def cancellation_requested(self) -> bool:
+        return self.cancellation_request_time is not None
 
 
 class InvocationsListForFunction(BaseModel):

@@ -64,7 +64,7 @@ class InvocationsLifecycleActions:
                 function_name=invocation.function_name,
                 invocation_id=invocation.invocation_id,
                 update_time=time,
-                set_cancellation_requested=True,
+                new_cancellation_request_time=time,
             )
 
             logging.info(

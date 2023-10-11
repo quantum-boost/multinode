@@ -45,7 +45,7 @@ class InvocationsTable:
                   parent_function_name TEXT,
                   parent_invocation_id TEXT,
                   input TEXT NOT NULL,
-                  cancellation_requested BOOLEAN NOT NULL,
+                  cancellation_request_time INTEGER,
                   invocation_status TEXT NOT NULL,
                   creation_time INTEGER NOT NULL,
                   last_update_time INTEGER NOT NULL,
@@ -104,7 +104,7 @@ class InvocationsTable:
         invocation_id: str,
         parent_invocation: Optional[ParentInvocationDefinition],
         input: str,
-        cancellation_requested: bool,
+        cancellation_request_time: Optional[int],
         invocation_status: InvocationStatus,
         creation_time: int,
         last_update_time: int,
@@ -139,7 +139,7 @@ class InvocationsTable:
                         if parent_invocation is not None
                         else None,
                         input,
-                        cancellation_requested,
+                        cancellation_request_time,
                         invocation_status.value,
                         creation_time,
                         last_update_time,
@@ -162,7 +162,7 @@ class InvocationsTable:
         function_name: str,
         invocation_id: str,
         update_time: int,
-        set_cancellation_requested: bool = False,
+        new_cancellation_request_time: Optional[int] = None,
         new_invocation_status: Optional[InvocationStatus] = None,
     ) -> None:
         """
@@ -182,9 +182,9 @@ class InvocationsTable:
             set_statement_clauses.append("last_update_time = %s")
             set_statement_args.append(update_time)
 
-            if set_cancellation_requested:
-                set_statement_clauses.append("cancellation_requested = %s")
-                set_statement_args.append(True)
+            if new_cancellation_request_time is not None:
+                set_statement_clauses.append("cancellation_request_time = %s")
+                set_statement_args.append(new_cancellation_request_time)
 
             if new_invocation_status is not None:
                 set_statement_clauses.append("invocation_status = %s")
@@ -232,7 +232,7 @@ class InvocationsTable:
                   main_invocations.invocation_id,
                   main_invocations.parent_function_name,
                   main_invocations.parent_invocation_id,
-                  parent_invocations.cancellation_requested,
+                  parent_invocations.cancellation_request_time,
                   parent_invocations.invocation_status,
                   parent_invocations.creation_time,
                   parent_invocations.last_update_time,
@@ -241,7 +241,7 @@ class InvocationsTable:
                   functions.function_status,
                   functions.prepared_function_details,
                   main_invocations.input,
-                  main_invocations.cancellation_requested,
+                  main_invocations.cancellation_request_time,
                   main_invocations.invocation_status,
                   main_invocations.creation_time,
                   main_invocations.last_update_time
@@ -374,7 +374,7 @@ class InvocationsTable:
                   invocation_id,
                   parent_function_name,
                   parent_invocation_id,
-                  cancellation_requested,
+                  cancellation_request_time,
                   invocation_status,
                   creation_time,
                   last_update_time
@@ -414,7 +414,7 @@ class InvocationsTable:
                     InvocationInfoForFunction(
                         invocation_id=row[0],
                         parent_invocation=parent_invocation_def,
-                        cancellation_requested=row[3],
+                        cancellation_request_time=row[3],
                         invocation_status=InvocationStatus(row[4]),
                         creation_time=row[5],
                         last_update_time=row[6],
@@ -455,7 +455,7 @@ class InvocationsTable:
                   main_invocations.invocation_id,
                   main_invocations.parent_function_name,
                   main_invocations.parent_invocation_id,
-                  parent_invocations.cancellation_requested,
+                  parent_invocations.cancellation_request_time,
                   parent_invocations.invocation_status,
                   parent_invocations.creation_time,
                   parent_invocations.last_update_time,
@@ -464,7 +464,7 @@ class InvocationsTable:
                   functions.function_status,
                   functions.prepared_function_details,
                   main_invocations.input,
-                  main_invocations.cancellation_requested,
+                  main_invocations.cancellation_request_time,
                   main_invocations.invocation_status,
                   main_invocations.creation_time,
                   main_invocations.last_update_time
@@ -530,7 +530,7 @@ def _construct_invocation_info_from_row(row: Tuple[Any, ...]) -> InvocationInfo:
         parent_invocation = ParentInvocationInfo(
             function_name=row[4],
             invocation_id=row[5],
-            cancellation_requested=row[6],
+            cancellation_request_time=row[6],
             invocation_status=InvocationStatus(row[7]),
             creation_time=row[8],
             last_update_time=row[9],
@@ -553,7 +553,7 @@ def _construct_invocation_info_from_row(row: Tuple[Any, ...]) -> InvocationInfo:
             else None
         ),
         input=row[14],
-        cancellation_requested=row[15],
+        cancellation_request_time=row[15],
         invocation_status=InvocationStatus(row[16]),
         creation_time=row[17],
         last_update_time=row[18],

@@ -57,7 +57,7 @@ class InvocationApiHandler:
             invocation_id=invocation_id,
             parent_invocation=invocation_definition.parent_invocation,
             input=invocation_definition.input,
-            cancellation_requested=False,
+            cancellation_request_time=None,
             invocation_status=InvocationStatus.RUNNING,
             creation_time=time,
             last_update_time=time,
@@ -100,7 +100,7 @@ class InvocationApiHandler:
             function_name=function_name,
             invocation_id=invocation_id,
             update_time=time,
-            set_cancellation_requested=True,
+            new_cancellation_request_time=time,
         )
 
         logging.info(

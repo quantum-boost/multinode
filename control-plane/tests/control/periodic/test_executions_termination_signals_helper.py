@@ -36,7 +36,7 @@ def create_execution(
         invocation_id=INVOCATION_NAME,
         execution_id=execution_id,
         input="input",
-        cancellation_requested=cancellation_requested,
+        cancellation_request_time=(TIME if cancellation_requested else None),
         resource_spec=RESOURCE_SPEC,
         execution_spec=EXECUTION_SPEC,
         function_status=FunctionStatus.READY,

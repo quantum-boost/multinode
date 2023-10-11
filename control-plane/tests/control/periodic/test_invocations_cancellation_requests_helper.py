@@ -49,7 +49,7 @@ def create_invocation(
         parent_invocation_summary = ParentInvocationInfo(
             function_name=FUNCTION_NAME,
             invocation_id=parent.invocation_id,
-            cancellation_requested=parent.cancellation_requested,
+            cancellation_request_time=(TIME if parent.cancellation_requested else None),
             invocation_status=parent.invocation_status,
             creation_time=TIME,
             last_update_time=TIME,
@@ -68,7 +68,7 @@ def create_invocation(
         function_status=FunctionStatus.READY,
         prepared_function_details=None,
         input=INPUT,
-        cancellation_requested=cancellation_requested,
+        cancellation_request_time=(TIME if cancellation_requested else None),
         invocation_status=invocation_status,
         creation_time=creation_time,
         last_update_time=TIME,

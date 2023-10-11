@@ -130,7 +130,7 @@ def create_invocation(
         function_status=function_status,
         prepared_function_details=None,
         input="input",
-        cancellation_requested=cancellation_requested,
+        cancellation_request_time=(TIME if cancellation_requested else None),
         invocation_status=InvocationStatus.RUNNING,
         creation_time=creation_time,
         last_update_time=TIME,
