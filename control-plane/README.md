@@ -38,7 +38,7 @@ docker run --name control-api --env-file=environment/example-ecs.env --network h
 
 Calling this API
 ```commandline
-curl -X GET http://localhost:5000/projects -H "Authorization: Bearer butterflyburger"
+curl -X GET http://localhost:5000/projects -H "Authorization: Bearer apikey"
 ```
 
 Auto-generating an OpenAPI schema and error type documentation.

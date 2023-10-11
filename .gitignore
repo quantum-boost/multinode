@@ -12,3 +12,8 @@ api-schemas/*
 python-client/multinode/api_client/
 python-client/multinode/shared/
 python-client/.openapi-generator/
+
+**.terraform.lock.hcl
+**/.terraform/*
+**/terraform.tfstate
+**/terraform.tfstate.backup
