@@ -68,6 +68,7 @@ class ExecutionApiHandler:
         :raises InvocationDoesNotExist:
         :raises ExecutionDoesNotExist:
         :raises ExecutionHasAlreadyStarted:
+        :raises ExecutionIsAlreadyTerminated:
         """
         version_id = resolve_version_reference(
             project_name, version_ref, self._data_store
@@ -81,7 +82,8 @@ class ExecutionApiHandler:
             execution_id=execution_id,
             update_time=time,
             new_execution_start_time=time,
-            should_already_have_started=False,
+            should_not_already_have_started=True,
+            should_not_already_be_terminated=True,
         )
 
         logging.info(
@@ -116,6 +118,7 @@ class ExecutionApiHandler:
         :raises ExecutionDoesNotExist:
         :raises ExecutionHasNotStarted:
         :raises ExecutionHasAlreadyFinished:
+        :raises ExecutionIsAlreadyTerminated:
         """
         version_id = resolve_version_reference(
             project_name, version_ref, self._data_store
@@ -130,7 +133,8 @@ class ExecutionApiHandler:
             update_time=time,
             new_output=temporary_result_payload.latest_output,
             should_already_have_started=True,
-            should_already_have_finished=False,
+            should_not_already_have_finished=True,
+            should_not_already_be_terminated=True,
         )
 
         logging.info(
@@ -165,6 +169,7 @@ class ExecutionApiHandler:
         :raises ExecutionDoesNotExist:
         :raises ExecutionHasNotStarted:
         :raises ExecutionHasAlreadyFinished:
+        :raises ExecutionIsAlreadyTerminated:
         """
         version_id = resolve_version_reference(
             project_name, version_ref, self._data_store
@@ -182,7 +187,8 @@ class ExecutionApiHandler:
             new_output=final_result_payload.final_output,
             new_error_message=final_result_payload.error_message,
             should_already_have_started=True,
-            should_already_have_finished=False,
+            should_not_already_have_finished=True,
+            should_not_already_be_terminated=True,
         )
 
         logging.info(

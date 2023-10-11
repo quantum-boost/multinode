@@ -157,6 +157,16 @@ class ExecutionHasNotFinished(ApiError):
         return 409
 
 
+class ExecutionIsAlreadyTerminated(ApiError):
+    @staticmethod
+    def error_message() -> str:
+        return "This execution has already terminated"
+
+    @staticmethod
+    def error_code() -> int:
+        return 409
+
+
 class InvocationAlreadyExists(ApiError):
     @staticmethod
     def error_message() -> str:
