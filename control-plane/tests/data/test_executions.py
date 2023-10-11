@@ -10,6 +10,7 @@ from control_plane.types.api_errors import (
     ExecutionHasAlreadyFinished,
     ExecutionHasAlreadyStarted,
     ExecutionHasNotStarted,
+    ExecutionIsAlreadyTerminated,
     FunctionDoesNotExist,
     InvocationDoesNotExist,
     ProjectDoesNotExist,
@@ -595,7 +596,8 @@ def test_update_execution_start_time(data_store: DataStore) -> None:
         execution_id=EXECUTION_ID_1,
         update_time=LATER_TIME,
         new_execution_start_time=LATER_TIME,
-        should_already_have_started=False,
+        should_not_already_have_started=True,
+        should_not_already_be_terminated=True,
     )
 
     execution = data_store.executions.get(
@@ -662,7 +664,8 @@ def test_update_execution_start_time_failing_because_execution_has_already_start
             execution_id=EXECUTION_ID_1,
             update_time=LATER_TIME,
             new_execution_start_time=LATER_TIME,
-            should_already_have_started=False,  # requires that the execution has not yet started
+            should_not_already_have_started=True,  # requires that the execution has not yet started
+            should_not_already_be_terminated=True,
         )
 
     execution = data_store.executions.get(
@@ -673,6 +676,50 @@ def test_update_execution_start_time_failing_because_execution_has_already_start
         execution_id=EXECUTION_ID_1,
     )
     assert execution.execution_start_time == TIME  # unchanged
+
+
+def test_update_execution_start_time_failing_because_execution_is_already_terminated(
+    data_store: DataStore,
+) -> None:
+    data_store.executions.create(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
+        execution_id=EXECUTION_ID_1,
+        worker_status=WorkerStatus.TERMINATED,  # already terminated
+        worker_details=WORKER_DETAILS,
+        termination_signal_time=None,
+        outcome=None,
+        output=None,
+        error_message=None,
+        creation_time=TIME,
+        last_update_time=TIME,
+        execution_start_time=None,
+        execution_finish_time=None,
+    )
+
+    with pytest.raises(ExecutionIsAlreadyTerminated):
+        data_store.executions.update(
+            project_name=PROJECT_NAME,
+            version_id=VERSION_ID,
+            function_name=FUNCTION_NAME_1,
+            invocation_id=INVOCATION_ID_1,
+            execution_id=EXECUTION_ID_1,
+            update_time=LATER_TIME,
+            new_execution_start_time=LATER_TIME,
+            should_not_already_have_started=True,
+            should_not_already_be_terminated=True,  # requires that the execution is not already terminated
+        )
+
+    execution = data_store.executions.get(
+        project_name=PROJECT_NAME,
+        version_id=VERSION_ID,
+        function_name=FUNCTION_NAME_1,
+        invocation_id=INVOCATION_ID_1,
+        execution_id=EXECUTION_ID_1,
+    )
+    assert execution.execution_start_time is None  # unchanged
 
 
 def test_update_execution_results(data_store: DataStore) -> None:
@@ -706,7 +753,8 @@ def test_update_execution_results(data_store: DataStore) -> None:
         new_output=OUTPUT_1,  # unrealistic for execution to have both output and error, but doesn't matter
         new_error_message=ERROR_MESSAGE,
         should_already_have_started=True,
-        should_already_have_finished=False,
+        should_not_already_have_finished=True,
+        should_not_already_be_terminated=True,
     )
 
     execution = data_store.executions.get(
@@ -788,7 +836,8 @@ def test_update_execution_results_failing_because_execution_not_yet_started(
             new_outcome=ExecutionOutcome.SUCCEEDED,
             new_output=OUTPUT_1,
             should_already_have_started=True,  # requires that execution has already started
-            should_already_have_finished=False,
+            should_not_already_have_finished=True,
+            should_not_already_be_terminated=True,
         )
 
     execution = data_store.executions.get(
@@ -835,7 +884,8 @@ def test_update_execution_results_failing_because_execution_already_finished(
             new_execution_finish_time=LATER_TIME,
             new_outcome=ExecutionOutcome.ABORTED,
             should_already_have_started=True,
-            should_already_have_finished=False,  # requires that execution has not already finished
+            should_not_already_have_finished=True,  # requires that execution has not already finished
+            should_not_already_be_terminated=True,
         )
 
     execution = data_store.executions.get(

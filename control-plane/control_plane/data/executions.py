@@ -11,6 +11,7 @@ from control_plane.types.api_errors import (
     ExecutionHasAlreadyStarted,
     ExecutionHasNotFinished,
     ExecutionHasNotStarted,
+    ExecutionIsAlreadyTerminated,
     InvocationDoesNotExist,
 )
 from control_plane.types.datatypes import (
@@ -161,8 +162,11 @@ class ExecutionsTable:
         new_error_message: Optional[str] = None,
         new_execution_start_time: Optional[int] = None,
         new_execution_finish_time: Optional[int] = None,
-        should_already_have_started: Optional[bool] = None,
-        should_already_have_finished: Optional[bool] = None,
+        should_already_have_started: bool = False,
+        should_not_already_have_started: bool = False,
+        should_already_have_finished: bool = False,
+        should_not_already_have_finished: bool = False,
+        should_not_already_be_terminated: bool = False,
     ) -> None:
         """
         :raises ProjectDoesNotExist:
@@ -174,6 +178,7 @@ class ExecutionsTable:
         :raises ExecutionHasAlreadyStarted:
         :raises ExecutionHasNotFinished:
         :raises ExecutionHasAlreadyFinished:
+        :raises ExecutionIsAlreadyTerminated:
         """
         raise_error_if_invocation_does_not_exist(
             project_name, version_id, function_name, invocation_id, self._pool
@@ -221,24 +226,25 @@ class ExecutionsTable:
             set_statement = "SET " + ", ".join(set_statement_clauses)
 
             extra_where_statement_clauses: list[str] = []
+            extra_where_statement_args: list[Any] = []
 
-            if should_already_have_started is not None:
-                if should_already_have_started:
-                    extra_where_statement_clauses.append(
-                        "execution_start_time IS NOT NULL"
-                    )
-                else:
-                    extra_where_statement_clauses.append("execution_start_time IS NULL")
+            if should_already_have_started:
+                extra_where_statement_clauses.append("execution_start_time IS NOT NULL")
 
-            if should_already_have_finished is not None:
-                if should_already_have_finished:
-                    extra_where_statement_clauses.append(
-                        "execution_finish_time IS NOT NULL"
-                    )
-                else:
-                    extra_where_statement_clauses.append(
-                        "execution_finish_time IS NULL"
-                    )
+            if should_not_already_have_started:
+                extra_where_statement_clauses.append("execution_start_time IS NULL")
+
+            if should_already_have_finished:
+                extra_where_statement_clauses.append(
+                    "execution_finish_time IS NOT NULL"
+                )
+
+            if should_not_already_have_finished:
+                extra_where_statement_clauses.append("execution_finish_time IS NULL")
+
+            if should_not_already_be_terminated:
+                extra_where_statement_clauses.append("worker_status != %s")
+                extra_where_statement_args.append(WorkerStatus.TERMINATED.value)
 
             if len(extra_where_statement_clauses) > 0:
                 extra_where_statement = " AND " + " AND ".join(
@@ -265,20 +271,24 @@ class ExecutionsTable:
                     function_name,
                     invocation_id,
                     execution_id,
-                ],
+                ]
+                + extra_where_statement_args,
             )
 
             if cursor.rowcount == 0:
                 # We need to diagnose the reason why no row matched the WHERE statement.
                 # It could be that the execution_id doesn't exist.
-                # But it could also be that we have violated conditions on having already started/finished.
+                # But it could also be that we have violated conditions of the update.
                 if (
-                    should_already_have_started is not None
-                    or should_already_have_finished is not None
+                    should_already_have_started
+                    or should_not_already_have_started
+                    or should_already_have_finished
+                    or should_not_already_have_finished
+                    or should_not_already_be_terminated
                 ):
                     cursor.execute(
                         f"""
-                        SELECT execution_start_time, execution_finish_time
+                        SELECT execution_start_time, execution_finish_time, worker_status
                         FROM executions
                         WHERE project_name = %s
                           AND version_id = %s
@@ -297,29 +307,27 @@ class ExecutionsTable:
 
                     row = cursor.fetchone()
 
-                    # Check row is not None to future-proof against rare race conditions
-                    # in case we ever implement execution deletions.
+                    # Check row is not None to protect against rare race conditions
+                    # due to concurrent deletions.
                     if row is not None:
                         has_already_started = row[0] is not None
                         has_already_finished = row[1] is not None
+                        is_terminated = WorkerStatus(row[2]) == WorkerStatus.TERMINATED
 
-                        if should_already_have_started is not None:
-                            if not has_already_started and should_already_have_started:
-                                raise ExecutionHasNotStarted
-                            if has_already_started and not should_already_have_started:
-                                raise ExecutionHasAlreadyStarted
+                        if not has_already_started and should_already_have_started:
+                            raise ExecutionHasNotStarted
 
-                        if should_already_have_finished is not None:
-                            if (
-                                not has_already_finished
-                                and should_already_have_finished
-                            ):
-                                raise ExecutionHasNotFinished
-                            if (
-                                has_already_finished
-                                and not should_already_have_finished
-                            ):
-                                raise ExecutionHasAlreadyFinished
+                        if has_already_started and should_not_already_have_started:
+                            raise ExecutionHasAlreadyStarted
+
+                        if not has_already_finished and should_already_have_finished:
+                            raise ExecutionHasNotFinished
+
+                        if has_already_finished and should_not_already_have_finished:
+                            raise ExecutionHasAlreadyFinished
+
+                        if is_terminated and should_not_already_be_terminated:
+                            raise ExecutionIsAlreadyTerminated
 
                 # Default reason why update didn't happen:
                 raise ExecutionDoesNotExist

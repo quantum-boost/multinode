@@ -18,6 +18,7 @@ from control_plane.types.api_errors import (
     ExecutionHasAlreadyFinished,
     ExecutionHasAlreadyStarted,
     ExecutionHasNotStarted,
+    ExecutionIsAlreadyTerminated,
     FunctionDoesNotExist,
     InvocationDoesNotExist,
     OffsetIsInvalid,
@@ -271,7 +272,7 @@ def build_app(
         responses=document_possible_errors([
             ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
             InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasAlreadyStarted,
-            ApiKeyIsInvalid,
+            ExecutionIsAlreadyTerminated, ApiKeyIsInvalid,
         ]),
     )
     def start_execution(
@@ -298,7 +299,7 @@ def build_app(
         responses=document_possible_errors([
             ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
             InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasNotStarted,
-            ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
+            ExecutionHasAlreadyFinished, ExecutionIsAlreadyTerminated, ApiKeyIsInvalid,
         ]),
     )
     def update_execution(
@@ -327,7 +328,7 @@ def build_app(
         responses=document_possible_errors([
             ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
             InvocationDoesNotExist, ExecutionDoesNotExist, ExecutionHasNotStarted,
-            ExecutionHasAlreadyFinished, ApiKeyIsInvalid,
+            ExecutionHasAlreadyFinished, ExecutionIsAlreadyTerminated, ApiKeyIsInvalid,
         ]),
     )
     def finish_execution(
