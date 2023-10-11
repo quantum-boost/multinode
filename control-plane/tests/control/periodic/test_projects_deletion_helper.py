@@ -29,13 +29,13 @@ TIME = 0
 
 PROJECTS: list[ProjectInfo] = [
     ProjectInfo(
-        project_name=PROJECT_NAME_1, deletion_requested=True, creation_time=TIME
+        project_name=PROJECT_NAME_1, deletion_request_time=TIME, creation_time=TIME
     ),
     ProjectInfo(
-        project_name=PROJECT_NAME_2, deletion_requested=True, creation_time=TIME
+        project_name=PROJECT_NAME_2, deletion_request_time=TIME, creation_time=TIME
     ),
     ProjectInfo(
-        project_name=PROJECT_NAME_3, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_3, deletion_request_time=None, creation_time=TIME
     ),
 ]
 

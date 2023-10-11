@@ -170,7 +170,7 @@ class FunctionsTable:
                   functions.execution_spec,
                   functions.function_status,
                   functions.prepared_function_details,
-                  projects.deletion_requested
+                  projects.deletion_request_time
                 FROM projects
                 INNER JOIN functions USING (project_name)
                 WHERE project_name = %s AND version_id = %s AND function_name = %s;
@@ -251,7 +251,7 @@ class FunctionsTable:
                   functions.execution_spec,
                   functions.function_status,
                   functions.prepared_function_details,
-                  projects.deletion_requested
+                  projects.deletion_request_time
                 FROM projects
                 INNER JOIN functions USING (project_name)
                 WHERE function_status IN %s;
@@ -278,5 +278,5 @@ def _construct_function_info_from_row(row: Tuple[Any, ...]) -> FunctionInfo:
             if row[7] is not None
             else None
         ),
-        project_deletion_requested=row[8],
+        project_deletion_request_time=row[8],
     )

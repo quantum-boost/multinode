@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import psycopg2
 
@@ -17,7 +17,7 @@ class ProjectsTable:
                 """
                 CREATE TABLE IF NOT EXISTS projects (
                   project_name TEXT NOT NULL PRIMARY KEY,
-                  deletion_requested BOOLEAN,
+                  deletion_request_time INTEGER,
                   creation_time INTEGER NOT NULL
                 );
                 """
@@ -45,7 +45,11 @@ class ProjectsTable:
             )
 
     def create(
-        self, *, project_name: str, deletion_requested: bool, creation_time: int
+        self,
+        *,
+        project_name: str,
+        deletion_request_time: Optional[int],
+        creation_time: int,
     ) -> None:
         """
         :raises ProjectAlreadyExists:
@@ -57,12 +61,14 @@ class ProjectsTable:
                     INSERT INTO projects
                     VALUES (%s, %s, %s);
                     """,
-                    [project_name, deletion_requested, creation_time],
+                    [project_name, deletion_request_time, creation_time],
                 )
             except psycopg2.errors.UniqueViolation:
                 raise ProjectAlreadyExists
 
-    def update(self, *, project_name: str, set_deletion_requested: bool) -> None:
+    def update(
+        self, *, project_name: str, new_deletion_request_time: Optional[int]
+    ) -> None:
         """
         :raises ProjectDoesNotExist:
         """
@@ -70,9 +76,9 @@ class ProjectsTable:
             set_statement_clauses: list[str] = []
             set_statement_args: list[Any] = []
 
-            if set_deletion_requested:
-                set_statement_clauses.append("deletion_requested = %s")
-                set_statement_args.append(True)
+            if new_deletion_request_time is not None:
+                set_statement_clauses.append("deletion_request_time = %s")
+                set_statement_args.append(new_deletion_request_time)
 
             if len(set_statement_clauses) == 0:
                 # Running SQL statement with no SET clauses will raise a SQL syntax error
@@ -102,7 +108,7 @@ class ProjectsTable:
                 """
                 SELECT
                   project_name,
-                  deletion_requested,
+                  deletion_request_time,
                   creation_time
                 FROM projects
                 WHERE project_name = %s;
@@ -116,7 +122,7 @@ class ProjectsTable:
                 raise ProjectDoesNotExist
 
             return ProjectInfo(
-                project_name=row[0], deletion_requested=row[1], creation_time=row[2]
+                project_name=row[0], deletion_request_time=row[1], creation_time=row[2]
             )
 
     def list(self) -> ProjectsList:
@@ -125,7 +131,7 @@ class ProjectsTable:
                 """
                 SELECT
                   project_name,
-                  deletion_requested,
+                  deletion_request_time,
                   creation_time
                 FROM projects
                 ORDER BY creation_time DESC, project_name ASC;
@@ -136,7 +142,9 @@ class ProjectsTable:
 
             projects = [
                 ProjectInfo(
-                    project_name=row[0], deletion_requested=row[1], creation_time=row[2]
+                    project_name=row[0],
+                    deletion_request_time=row[1],
+                    creation_time=row[2],
                 )
                 for row in rows
             ]

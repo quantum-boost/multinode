@@ -43,7 +43,7 @@ def test_create_two_projects(data_store: DataStore) -> None:
 
     # Create project-1
     data_store.projects.create(
-        project_name=PROJECT_NAME_1, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_1, deletion_request_time=None, creation_time=TIME
     )
 
     project_1 = data_store.projects.get(project_name=PROJECT_NAME_1)
@@ -59,7 +59,7 @@ def test_create_two_projects(data_store: DataStore) -> None:
 
     # Create project-2
     data_store.projects.create(
-        project_name=PROJECT_NAME_2, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_2, deletion_request_time=None, creation_time=TIME
     )
 
     project_1 = data_store.projects.get(project_name=PROJECT_NAME_1)
@@ -79,13 +79,13 @@ def test_create_two_projects(data_store: DataStore) -> None:
 
 def test_create_project_with_duplicate_name(data_store: DataStore) -> None:
     data_store.projects.create(
-        project_name=PROJECT_NAME_1, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_1, deletion_request_time=None, creation_time=TIME
     )
 
     # Try to use the same project name again
     with pytest.raises(ProjectAlreadyExists):
         data_store.projects.create(
-            project_name=PROJECT_NAME_1, deletion_requested=False, creation_time=20
+            project_name=PROJECT_NAME_1, deletion_request_time=None, creation_time=20
         )
 
     assert len(data_store.projects.list().projects) == 1
@@ -96,28 +96,32 @@ def test_create_project_with_duplicate_name(data_store: DataStore) -> None:
 def test_update_deletion_requested(data_store: DataStore) -> None:
     # Create the project that will be updated
     data_store.projects.create(
-        project_name=PROJECT_NAME_1, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_1, deletion_request_time=None, creation_time=TIME
     )
 
     # Create another project that should be left untouched by the update
     data_store.projects.create(
-        project_name=PROJECT_NAME_2, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME_2, deletion_request_time=None, creation_time=TIME
     )
 
     # Update the first project, setting deletion_requested = True
-    data_store.projects.update(project_name=PROJECT_NAME_1, set_deletion_requested=True)
+    data_store.projects.update(
+        project_name=PROJECT_NAME_1, new_deletion_request_time=TIME
+    )
 
     # The first project should be updated
     project_1 = data_store.projects.get(project_name=PROJECT_NAME_1)
+    assert project_1.deletion_request_time == TIME
     assert project_1.deletion_requested == True
 
     # The second project should be left untouched
     project_2 = data_store.projects.get(project_name=PROJECT_NAME_2)
+    assert project_2.deletion_request_time is None
     assert project_2.deletion_requested == False
 
 
 def test_update_when_project_does_not_exist(data_store: DataStore) -> None:
     with pytest.raises(ProjectDoesNotExist):
         data_store.projects.update(
-            project_name=PROJECT_NAME_1, set_deletion_requested=True
+            project_name=PROJECT_NAME_1, new_deletion_request_time=TIME
         )
