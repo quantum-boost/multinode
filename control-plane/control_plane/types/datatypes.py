@@ -147,6 +147,20 @@ class ExecutionFinalResultPayload(BaseModel):
             raise ValueError("error_message cannot exceed 16384 characters")
         return value
 
+    @model_validator(mode="after")
+    def check_compatibility_between_outcome_and_error_message(
+        self,
+    ) -> "ExecutionFinalResultPayload":
+        if self.outcome == ExecutionOutcome.FAILED and self.error_message is None:
+            raise ValueError(
+                f"error_message must be populated when outcome is {self.outcome}"
+            )
+        if self.outcome != ExecutionOutcome.FAILED and self.error_message is not None:
+            raise ValueError(
+                f"error_message must be left empty when outcome is {self.outcome}"
+            )
+        return self
+
 
 class ExecutionInfo(BaseModel):
     project_name: str
