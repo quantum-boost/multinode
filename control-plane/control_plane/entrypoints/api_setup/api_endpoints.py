@@ -48,6 +48,7 @@ from control_plane.types.datatypes import (
 from control_plane.types.parent_invocation_helper import (
     parse_parent_invocation_definition,
 )
+from control_plane.types.project_name_helper import check_project_name_length
 from control_plane.types.version_reference import parse_version_reference
 from control_plane.user_management.authenticator import (
     AbstractAuthenticator,
@@ -88,6 +89,7 @@ def build_app(
     def create_project(
             project_name: str, auth_info: AuthResult = Depends(authenticate)
     ) -> ProjectInfo:
+        check_project_name_length(project_name)
         return api_handler.registration.create_project(
             project_name=project_name, time=current_time()
         )
