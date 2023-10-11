@@ -42,7 +42,7 @@ READY_FUNCTIONS: list[FunctionInfo] = [
         prepared_function_details=PreparedFunctionDetails(
             type=WorkerType.TEST, identifier=""
         ),
-        project_deletion_requested=False,
+        project_deletion_request_time=None,
     ),
     FunctionInfo(
         project_name=PROJECT_UNDERGOING_DELETION_NAME,
@@ -55,7 +55,7 @@ READY_FUNCTIONS: list[FunctionInfo] = [
         prepared_function_details=PreparedFunctionDetails(
             type=WorkerType.TEST, identifier=""
         ),
-        project_deletion_requested=True,
+        project_deletion_request_time=TIME,
     ),
 ]
 

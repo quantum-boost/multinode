@@ -93,7 +93,7 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
     # Note that the two invocations are associated with different functions.
     data_store.projects.create(
         project_name=PROJECT_NAME,
-        deletion_requested=False,
+        deletion_request_time=None,
         creation_time=PROJECT_CREATION_TIME,
     )
 

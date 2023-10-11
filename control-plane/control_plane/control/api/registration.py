@@ -33,7 +33,7 @@ class RegistrationApiHandler:
         :raises ProjectAlreadyExists:
         """
         self._data_store.projects.create(
-            project_name=project_name, deletion_requested=False, creation_time=time
+            project_name=project_name, deletion_request_time=None, creation_time=time
         )
         logging.info(f"Created project ({project_name}).")
 
@@ -44,7 +44,7 @@ class RegistrationApiHandler:
         :raises ProjectDoesNotExist:
         """
         self._data_store.projects.update(
-            project_name=project_name, set_deletion_requested=True
+            project_name=project_name, new_deletion_request_time=time
         )
         logging.info(
             f"Updated project ({project_name})." f" - set deletion requested flag"

@@ -64,7 +64,7 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
 def test_delete_with_cascade(data_store: DataStore) -> None:
     # Create a project with a full set of resources, to check that the cascading deletion works
     data_store.projects.create(
-        project_name=PROJECT_NAME, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME, deletion_request_time=TIME, creation_time=TIME
     )
 
     data_store.project_versions.create(
@@ -130,7 +130,7 @@ def test_delete_with_cascade(data_store: DataStore) -> None:
 
     # Create another project, which should be left untouched by the deletion of the first project
     data_store.projects.create(
-        project_name=OTHER_PROJECT_NAME, deletion_requested=False, creation_time=TIME
+        project_name=OTHER_PROJECT_NAME, deletion_request_time=None, creation_time=TIME
     )
 
     # Delete the first project

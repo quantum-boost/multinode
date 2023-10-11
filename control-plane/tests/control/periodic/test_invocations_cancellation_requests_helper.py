@@ -27,11 +27,11 @@ EXECUTION_SPEC = ExecutionSpec(max_retries=5, timeout_seconds=100)
 
 PROJECTS = [
     ProjectInfo(
-        project_name=PROJECT_NAME, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME, deletion_request_time=None, creation_time=TIME
     ),
     ProjectInfo(
         project_name=PROJECT_UNDERGOING_DELETION_NAME,
-        deletion_requested=True,
+        deletion_request_time=TIME,
         creation_time=TIME,
     ),
 ]

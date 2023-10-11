@@ -75,7 +75,7 @@ def data_store(conn_pool: SqlConnectionPool) -> Iterable[DataStore]:
 
     # Set up each test with the project, version and functions already inserted.
     data_store.projects.create(
-        project_name=PROJECT_NAME, deletion_requested=False, creation_time=TIME
+        project_name=PROJECT_NAME, deletion_request_time=None, creation_time=TIME
     )
 
     data_store.project_versions.create(

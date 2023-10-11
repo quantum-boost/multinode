@@ -294,7 +294,11 @@ class FunctionInfo(BaseModel):
     execution_spec: ExecutionSpec
     function_status: FunctionStatus
     prepared_function_details: Optional[PreparedFunctionDetails]
-    project_deletion_requested: bool
+    project_deletion_request_time: Optional[int]
+
+    @property
+    def project_deletion_requested(self) -> bool:
+        return self.project_deletion_request_time is not None
 
 
 class FunctionsListForVersion(BaseModel):
@@ -346,8 +350,12 @@ class VersionsListForProject(BaseModel):
 
 class ProjectInfo(BaseModel):
     project_name: str
-    deletion_requested: bool
+    deletion_request_time: Optional[int]
     creation_time: int
+
+    @property
+    def deletion_requested(self) -> bool:
+        return self.deletion_request_time is not None
 
 
 class ProjectsList(BaseModel):
