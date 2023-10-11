@@ -21,6 +21,7 @@ from control_plane.types.api_errors import (
     ExecutionIsAlreadyTerminated,
     FunctionDoesNotExist,
     InvocationDoesNotExist,
+    InvocationIsAlreadyTerminated,
     OffsetIsInvalid,
     ParentFunctionNameIsMissing,
     ParentInvocationDoesNotExist,
@@ -189,7 +190,7 @@ def build_app(
              "invocations/{invocation_id}/cancel",
         responses=document_possible_errors([
             ProjectDoesNotExist, VersionDoesNotExist, FunctionDoesNotExist,
-            InvocationDoesNotExist, ApiKeyIsInvalid,
+            InvocationDoesNotExist, InvocationIsAlreadyTerminated, ApiKeyIsInvalid,
         ]),
     )
     def cancel_invocation(

@@ -89,6 +89,7 @@ class InvocationApiHandler:
         :raises VersionDoesNotExist:
         :raises FunctionDoesNotExist:
         :raises InvocationDoesNotExist:
+        :raises InvocationIsAlreadyTerminated:
         """
         version_id = resolve_version_reference(
             project_name, version_ref, self._data_store
@@ -101,6 +102,7 @@ class InvocationApiHandler:
             invocation_id=invocation_id,
             update_time=time,
             new_cancellation_request_time=time,
+            should_not_already_be_terminated=True,
         )
 
         logging.info(
