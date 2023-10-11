@@ -89,7 +89,7 @@ def test_delete_with_cascade(data_store: DataStore) -> None:
         invocation_id=PARENT_INVOCATION_ID,
         parent_invocation=None,
         input=INPUT,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.TERMINATED,
         creation_time=TIME,
         last_update_time=TIME,
@@ -104,7 +104,7 @@ def test_delete_with_cascade(data_store: DataStore) -> None:
             function_name=FUNCTION_NAME, invocation_id=PARENT_INVOCATION_ID
         ),
         input=INPUT,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.TERMINATED,
         creation_time=TIME,
         last_update_time=TIME,

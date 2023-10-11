@@ -138,7 +138,7 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -215,7 +215,7 @@ def test_create_two_invocations_for_different_functions(data_store: DataStore) -
         invocation_id=INVOCATION_ID_2,
         parent_invocation=None,
         input=INPUT_2,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -272,7 +272,7 @@ def test_create_invocation_with_duplicate_id(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -287,7 +287,7 @@ def test_create_invocation_with_duplicate_id(data_store: DataStore) -> None:
             invocation_id=INVOCATION_ID_1,
             parent_invocation=None,
             input=INPUT_2,
-            cancellation_requested=False,
+            cancellation_request_time=None,
             invocation_status=InvocationStatus.RUNNING,
             creation_time=TIME,
             last_update_time=TIME,
@@ -313,7 +313,7 @@ def test_create_invocations_with_parent_child_relationship(
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=True,
+        cancellation_request_time=TIME,
         invocation_status=InvocationStatus.TERMINATED,
         creation_time=TIME,
         last_update_time=TIME,
@@ -329,7 +329,8 @@ def test_create_invocations_with_parent_child_relationship(
             function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
         ),
         input=INPUT_2,
-        cancellation_requested=False,  # make all these values different from the parent
+        # make the following values different from the parent
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=LATER_TIME,
         last_update_time=LATER_TIME,
@@ -402,7 +403,7 @@ def test_create_invocations_with_nonexistent_parent(data_store: DataStore) -> No
                 function_name=FUNCTION_NAME_1, invocation_id=INVOCATION_ID_1
             ),
             input=INPUT_2,
-            cancellation_requested=False,
+            cancellation_request_time=None,
             invocation_status=InvocationStatus.RUNNING,
             creation_time=LATER_TIME,
             last_update_time=LATER_TIME,
@@ -418,7 +419,7 @@ def test_update_status(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -432,7 +433,7 @@ def test_update_status(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_2,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -488,7 +489,7 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=TIME,
         last_update_time=TIME,
@@ -500,7 +501,7 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
         function_name=FUNCTION_NAME_1,
         invocation_id=INVOCATION_ID_1,
         update_time=LATER_TIME,
-        set_cancellation_requested=True,
+        new_cancellation_request_time=LATER_TIME,
     )
 
     invocation_1 = data_store.invocations.get(
@@ -510,6 +511,7 @@ def test_update_cancellation_requested_flag(data_store: DataStore) -> None:
         invocation_id=INVOCATION_ID_1,
     )
     assert invocation_1.last_update_time == LATER_TIME
+    assert invocation_1.cancellation_request_time == LATER_TIME
     assert invocation_1.cancellation_requested == True
 
 
@@ -523,7 +525,7 @@ def test_update_cancellation_when_invocation_does_not_exist(
             function_name=FUNCTION_NAME_1,
             invocation_id=INVOCATION_ID_1,
             update_time=LATER_TIME,
-            set_cancellation_requested=True,
+            new_cancellation_request_time=LATER_TIME,
         )
 
 
@@ -538,7 +540,7 @@ def test_list_invocations_for_function_using_max_results_and_initial_offset(
         invocation_id=INVOCATION_ID_1,
         parent_invocation=None,
         input=INPUT_1,
-        cancellation_requested=True,
+        cancellation_request_time=TIME,
         invocation_status=InvocationStatus.TERMINATED,
         creation_time=TIME,
         last_update_time=TIME,
@@ -551,7 +553,7 @@ def test_list_invocations_for_function_using_max_results_and_initial_offset(
         invocation_id=INVOCATION_ID_2,
         parent_invocation=None,
         input=INPUT_2,
-        cancellation_requested=False,
+        cancellation_request_time=None,
         invocation_status=InvocationStatus.RUNNING,
         creation_time=LATER_TIME,
         last_update_time=LATER_TIME,
@@ -601,7 +603,7 @@ def test_methods_when_function_does_not_exist(data_store: DataStore) -> None:
             invocation_id=INVOCATION_ID_1,
             parent_invocation=None,
             input=INPUT_1,
-            cancellation_requested=True,
+            cancellation_request_time=TIME,
             invocation_status=InvocationStatus.TERMINATED,
             creation_time=TIME,
             last_update_time=TIME,
@@ -614,7 +616,7 @@ def test_methods_when_function_does_not_exist(data_store: DataStore) -> None:
             function_name=NONEXISTENT_FUNCTION_NAME,
             invocation_id=INVOCATION_ID_1,
             update_time=LATER_TIME,
-            set_cancellation_requested=True,
+            new_cancellation_request_time=LATER_TIME,
         )
 
     with pytest.raises(FunctionDoesNotExist):
@@ -642,7 +644,7 @@ def test_methods_when_project_version_does_not_exist(data_store: DataStore) -> N
             invocation_id=INVOCATION_ID_1,
             parent_invocation=None,
             input=INPUT_1,
-            cancellation_requested=True,
+            cancellation_request_time=TIME,
             invocation_status=InvocationStatus.TERMINATED,
             creation_time=TIME,
             last_update_time=TIME,
@@ -655,7 +657,7 @@ def test_methods_when_project_version_does_not_exist(data_store: DataStore) -> N
             function_name=FUNCTION_NAME_1,
             invocation_id=INVOCATION_ID_1,
             update_time=LATER_TIME,
-            set_cancellation_requested=True,
+            new_cancellation_request_time=LATER_TIME,
         )
 
     with pytest.raises(VersionDoesNotExist):
@@ -683,7 +685,7 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
             invocation_id=INVOCATION_ID_1,
             parent_invocation=None,
             input=INPUT_1,
-            cancellation_requested=True,
+            cancellation_request_time=TIME,
             invocation_status=InvocationStatus.TERMINATED,
             creation_time=TIME,
             last_update_time=TIME,
@@ -696,7 +698,7 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
             function_name=FUNCTION_NAME_1,
             invocation_id=INVOCATION_ID_1,
             update_time=LATER_TIME,
-            set_cancellation_requested=True,
+            new_cancellation_request_time=LATER_TIME,
         )
 
     with pytest.raises(ProjectDoesNotExist):
