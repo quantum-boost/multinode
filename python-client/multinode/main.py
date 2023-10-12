@@ -230,7 +230,7 @@ def describe(
     version_id: Optional[str],
     function_name: Optional[str],
     invocation_id: Optional[str],
-):
+) -> None:
     """Provides detailed description of a project, version, function, or invocation."""
     config = load_config()
     api_client = get_authenticated_client(config)
@@ -304,7 +304,7 @@ def describe(
 
 
 @cli.command()
-def logs():
+def logs() -> None:
     raise NotImplementedError
 
 

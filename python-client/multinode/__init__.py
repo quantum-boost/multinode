@@ -1,6 +1,6 @@
 import math
 from datetime import timedelta
-from typing import Callable, Dict, Optional, TypeVar
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from multinode.api_client import ExecutionSpec, FunctionSpec, ResourceSpec
 from multinode.core.job import Job
@@ -11,7 +11,7 @@ OutputT = TypeVar("OutputT")
 
 class Multinode:
     def __init__(self) -> None:
-        self.jobs: Dict[str, Job] = {}
+        self.jobs: Dict[str, Job[Any, Any]] = {}
 
     def job(
         self,
@@ -21,7 +21,7 @@ class Multinode:
         cpu: float = 0.1,
         memory: str = "100 MiB",
         max_concurrency: int = 10,
-    ) -> Callable[[Callable], Job]:
+    ) -> Callable[[Callable[[InputT], OutputT]], Job[InputT, OutputT]]:
         """
         Decorator that transforms a Python function into a Multinode `Job`.
 

@@ -34,6 +34,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 exclude = ["multinode/api_client"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "multinode.api_client"
+implicit_reexport = true
 
 [tool.black]
 extend-exclude = "multinode/api_client"
