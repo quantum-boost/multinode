@@ -29,3 +29,16 @@ def document_possible_errors(
     # inferring the response type from the function return value.
 
     return responses
+
+
+def document_all_errors() -> list[dict[str, Any]]:
+    error_type_specs: list[dict[str, Any]] = []
+    for error_class in ApiError.__subclasses__():
+        error_type_specs.append(
+            {
+                "error_name": error_class.__name__,
+                "error_status_code": error_class.error_code(),
+                "error_message": error_class.error_message(),
+            }
+        )
+    return error_type_specs

@@ -41,10 +41,11 @@ Calling this API
 curl -X GET http://localhost:5000/projects -H "Authorization: Bearer butterflyburger"
 ```
 
-Auto-generating a schema and saving it to `../api-schemas/control-plane.json`. (NB this folder is gitignored)
+Auto-generating an OpenAPI schema and error type documentation.
+(NB the ../api-schemas folder is gitignored)
 ```commandline
 mkdir ../api-schemas
-poetry run generate-schema --output ../api-schemas/control-plane.json
+poetry run generate-schema --schema-output ../api-schemas/control-plane.json --error-types-output ../api-schemas/control-plane-errors.json
 ```
 
 ### Data structure

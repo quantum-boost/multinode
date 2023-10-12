@@ -3,14 +3,12 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from multinode.api_client import ApiClient, Configuration, DefaultApi
-from multinode.constants import (
-    CONFIG_FILE_PATH,
+from multinode.constants import CONFIG_FILE_PATH, DEFAULT_API_URL
+from multinode.core.errors import MissingEnvironmentVariableError
+from multinode.shared.worker_environment_variables import (
     CONTROL_PLANE_API_KEY_ENV,
     CONTROL_PLANE_API_URL_ENV,
-    DEFAULT_API_URL,
 )
-from multinode.core.errors import MissingEnvironmentVariableError
 
 
 class Config(BaseModel):
@@ -59,11 +57,3 @@ def save_config_to_file(config: Config) -> None:
 
     with CONFIG_FILE_PATH.open("w") as f:
         f.write(config.json(exclude_none=True, exclude_unset=True))
-
-
-def create_control_plane_client_from_config(multinode_config: Config) -> DefaultApi:
-    client_config = Configuration(
-        host=multinode_config.api_url, access_token=multinode_config.api_key
-    )
-    client = ApiClient(client_config)
-    return DefaultApi(client)
