@@ -28,7 +28,6 @@ AWS_REGION = "eu-west-2"
 CLUSTER_NAME = "Multinode"
 SUBNET_IDS = ["subnet-07350b22534e0f5f8"]
 SECURITY_GROUP_IDS = ["sg-0583d500dc1d94f2e"]
-ASSIGN_PUBLIC_IP = True
 TASK_ROLE_ARN = "arn:aws:iam::921216064263:role/MultinodeTaskRole"
 EXECUTION_ROLE_ARN = "arn:aws:iam::921216064263:role/ecsTaskExecutionRole"
 LOG_GROUP = "/ecs/multinode-workers"
@@ -44,7 +43,6 @@ def main() -> None:
         cluster_name=CLUSTER_NAME,
         subnet_ids=SUBNET_IDS,
         security_group_ids=SECURITY_GROUP_IDS,
-        assign_public_ip=ASSIGN_PUBLIC_IP,
         task_role_arn=TASK_ROLE_ARN,
         execution_role_arn=EXECUTION_ROLE_ARN,
         log_group=LOG_GROUP,

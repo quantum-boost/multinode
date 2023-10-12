@@ -18,7 +18,6 @@ AWS_REGION_ENV = "AWS_REGION"
 CLUSTER_NAME_ENV = "CLUSTER_NAME"
 SUBNET_IDS_ENV = "SUBNET_IDS"
 SECURITY_GROUP_IDS_ENV = "SECURITY_GROUP_IDS"
-ASSIGN_PUBLIC_IP_ENV = "ASSIGN_PUBLIC_IP"
 TASK_ROLE_ARN_ENV = "TASK_ROLE_ARN"
 EXECUTION_ROLE_ARN_ENV = "EXECUTION_ROLE_ARN"
 LOG_GROUP_ENV = "LOG_GROUP"
@@ -46,9 +45,6 @@ def provisioner_from_environment_variables(
             security_group_ids=get_mandatory_environment_variable(
                 SECURITY_GROUP_IDS_ENV
             ).split(","),
-            assign_public_ip=bool(
-                get_mandatory_environment_variable(ASSIGN_PUBLIC_IP_ENV)
-            ),
             task_role_arn=get_mandatory_environment_variable(TASK_ROLE_ARN_ENV),
             execution_role_arn=get_mandatory_environment_variable(
                 EXECUTION_ROLE_ARN_ENV
