@@ -48,12 +48,12 @@ jobs:
 
     # Generate & upload API schema
     - name: Generate API schema
-      run: mkdir ../api-schemas && poetry run generate-schema --output ../api-schemas/control-plane.json
+      run: mkdir ../api-schemas && poetry run generate-schema --schema-output ../api-schemas/control-plane.json --error-types-output ../api-schemas/control-plane-errors.json
     - name: Upload API schema
       uses: actions/upload-artifact@v3
       with:
-        name: control-plane-api-schema
-        path: api-schemas/control-plane.json
+        name: control-plane-schemas
+        path: api-schemas/
 
     # Build & upload docker image
     - name: Build wheel
@@ -95,9 +95,8 @@ jobs:
       - name: Download API schema
         uses: actions/download-artifact@v3
         with:
-          name: control-plane-api-schema
-      - name: Move API schema
-        run: mkdir ../api-schemas && mv ../control-plane.json ../api-schemas/control-plane.json
+          name: control-plane-schemas
+          path: api-schemas/
       - name: Generate API client
         run: bash scripts/generate_client.sh
 

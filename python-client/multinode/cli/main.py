@@ -5,7 +5,14 @@ from typing import List, Optional
 import click
 
 from multinode.api_client import ProjectInfo
-from multinode.api_client.exceptions import ForbiddenException, NotFoundException
+from multinode.api_client.error_types import (
+    ApiKeyIsInvalid,
+    ControlPlaneException,
+    InvocationDoesNotExist,
+    ProjectDoesNotExist,
+    VersionDoesNotExist,
+)
+from multinode.api_client.exceptions import ForbiddenException
 from multinode.cli.deployment import ProjectDeploymentOption, deploy_new_project_version
 from multinode.cli.describe import (
     describe_function,
@@ -14,12 +21,9 @@ from multinode.cli.describe import (
     describe_version,
 )
 from multinode.cli.fail import cli_fail
-from multinode.config import (
-    create_control_plane_client_from_config,
-    load_config_from_file,
-    save_config_to_file,
-)
+from multinode.config import load_config_from_file, save_config_to_file
 from multinode.constants import LATEST_VERSION_STR
+from multinode.utils.api import get_authenticated_client
 
 
 @click.group()
@@ -54,10 +58,11 @@ def login(ctx: click.Context) -> None:
     config.api_key = api_key
 
     # Check if the API key is valid
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
     try:
         api_client.list_projects()
-    except ForbiddenException:
+    except (ForbiddenException, ApiKeyIsInvalid):
+        # No API key => Forbidden. Invalid API key => ApiKeyIsInvalid
         cli_fail(ctx, "API key is invalid.")
 
     save_config_to_file(config)
@@ -107,10 +112,10 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
     In-flight functions will be cancelled before the project is deleted.
     """
     config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
     try:
         api_client.delete_project(project_name)
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     click.secho(
@@ -159,7 +164,7 @@ def upgrade(
 def list() -> None:
     """List all deployed projects."""
     config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
     projects: List[ProjectInfo] = api_client.list_projects().projects
     if len(projects) == 0:
         click.echo("You have not deployed any projects yet.")
@@ -204,20 +209,20 @@ def describe(
 ) -> None:
     """Provides detailed description of a project, version, function, or invocation."""
     config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
     resolved_version_id = version_id or LATEST_VERSION_STR
 
     # Project and version need to exist regardless of what the user wants to describe
     try:
         project = api_client.get_project(project_name)
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     try:
         version = api_client.get_project_version(
             project.project_name, resolved_version_id
         )
-    except NotFoundException:
+    except VersionDoesNotExist:
         cli_fail(
             ctx,
             f'Version "{resolved_version_id}" does not exist '
@@ -262,7 +267,7 @@ def describe(
             function.function_name,
             invocation_id,
         )
-    except NotFoundException:
+    except InvocationDoesNotExist:
         cli_fail(
             ctx,
             f'Invocation "{invocation_id}" does not exist '
@@ -282,7 +287,9 @@ def describe(
 @click.option("--function-name", type=str, required=True)
 @click.option("--invocation-id", type=str, required=True)
 @click.option("--execution-id", type=str, required=True)
+@click.pass_context
 def logs(
+    ctx: click.Context,
     project_name: str,
     version_id: Optional[str],
     function_name: str,
@@ -291,17 +298,20 @@ def logs(
 ) -> None:
     """Prints the logs of an execution."""
     config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
     resolved_version_id = version_id or LATEST_VERSION_STR
-    # TODO add client-side error handling in case some id is wrong
     # TODO dynamic scrolling through the logs if all cannot be fetched at once
-    logs = api_client.get_execution_logs(
-        project_name=project_name,
-        version_ref_str=resolved_version_id,
-        function_name=function_name,
-        invocation_id=invocation_id,
-        execution_id=execution_id,
-    )
+    try:
+        logs = api_client.get_execution_logs(
+            project_name=project_name,
+            version_ref_str=resolved_version_id,
+            function_name=function_name,
+            invocation_id=invocation_id,
+            execution_id=execution_id,
+        )
+    except ControlPlaneException as e:
+        cli_fail(ctx, str(e))
+
     click.echo("\n".join(logs.log_lines))
 
 

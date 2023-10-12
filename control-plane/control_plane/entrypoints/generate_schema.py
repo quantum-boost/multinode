@@ -6,6 +6,7 @@ from control_plane.docker.credentials_loader import (
     AbstractContainerRepositoryCredentialsLoader,
 )
 from control_plane.entrypoints.api_setup.api_endpoints import build_app
+from control_plane.entrypoints.utils.documentation import document_all_errors
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.user_management.authenticator import AbstractAuthenticator
 
@@ -32,12 +33,23 @@ class FakeContainerRepositoryCredentialsLoader(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--output",
+        "--schema-output",
         type=str,
         help="Output file path for the schema",
         required=True,
     )
-    output = parser.parse_args().output
+
+    parser.add_argument(
+        "--error-types-output",
+        type=str,
+        help="Output file path for the error types",
+        required=True,
+    )
+
+    args = parser.parse_args()
+
+    schema_output = args.schema_output
+    error_types_output = args.error_types_output
 
     # Disable abstract methods since we don't have to implement them in fake classes
     # Also disable mypy because it's not happy about it
@@ -52,5 +64,8 @@ def main() -> None:
 
     data_store = FakeDataStore()
     app = build_app(data_store, provisioner, credentials_loader, authenticator)
-    with open(output, "w") as f:
+    with open(schema_output, "w") as f:
         json.dump(app.openapi(), f, indent=2)
+
+    with open(error_types_output, "w") as f:
+        json.dump(document_all_errors(), f, indent=2)

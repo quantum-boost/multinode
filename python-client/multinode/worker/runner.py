@@ -17,17 +17,14 @@ from multinode.api_client import (
     ExecutionOutcome,
     ExecutionTemporaryResultPayload,
 )
-from multinode.constants import (
+from multinode.api_client.error_types import FunctionDoesNotExist
+from multinode.core.errors import InvocationCancelledError, InvocationTimedOutError
+from multinode.shared.worker_environment_variables import (
     EXECUTION_ID_ENV,
     FUNCTION_NAME_ENV,
     INVOCATION_ID_ENV,
     PROJECT_NAME_ENV,
     VERSION_ID_ENV,
-)
-from multinode.core.errors import (
-    FunctionDoesNotExist,
-    InvocationCancelledError,
-    InvocationTimedOutError,
 )
 from multinode.utils.dynamic_imports import import_multinode_object_from_dir
 
@@ -83,9 +80,9 @@ class WorkerRunner:
                 assert fn is not None
             except KeyError:
                 raise FunctionDoesNotExist(
-                    self._context.project_name,
-                    self._context.version_id,
-                    self._context.function_name,
+                    f'Function "{self._context.function_name}" does not exist '
+                    f'on version "{self._context.version_id}" of project '
+                    f'"{self._context.project_name}".'
                 )
 
             args, kwargs = jsonpickle.decode(self._execution.input)

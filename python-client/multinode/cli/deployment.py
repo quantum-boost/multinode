@@ -12,19 +12,15 @@ from docker.errors import BuildError, ImageNotFound
 from multinode.api_client import (
     ContainerRepositoryCredentials,
     DefaultApi,
-    ProjectInfo,
     VersionDefinition,
     VersionInfo,
 )
-from multinode.api_client.exceptions import ApiException, NotFoundException
+from multinode.api_client.error_types import ProjectAlreadyExists, ProjectDoesNotExist
 from multinode.cli.fail import cli_fail
-from multinode.config import (
-    create_control_plane_client_from_config,
-    load_config_from_file,
-)
+from multinode.config import load_config_from_file
 from multinode.constants import ROOT_WORKER_DIR
-from multinode.core.errors import ProjectAlreadyExists
 from multinode.core.multinode import Multinode
+from multinode.utils.api import get_authenticated_client
 from multinode.utils.dynamic_imports import import_multinode_object_from_dir
 
 # TODO we should allow user specify preferred Python version
@@ -89,7 +85,7 @@ def deploy_new_project_version(
     ```
     """
     config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
+    api_client = get_authenticated_client(config)
 
     # Building and pushing the image takes a significant amount of time.
     # So we first need to check if the project deployment option won't be violated
@@ -104,7 +100,7 @@ def deploy_new_project_version(
                 f'Project "{project_name}" already exists. '
                 f"Please choose a different name or run `multinode upgrade` instead.",
             )
-    except NotFoundException:
+    except ProjectDoesNotExist:
         if project_deployment_option == ProjectDeploymentOption.UPGRADE_EXISTING:
             cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
@@ -120,7 +116,7 @@ def deploy_new_project_version(
         # Even though we checked for existence of the project above, it may have been
         # created in the meantime by another user while image was being built/pushed.
         try:
-            _create_project(api_client, project_name)
+            api_client.create_project(project_name)
         except ProjectAlreadyExists:
             if project_deployment_option == ProjectDeploymentOption.CREATE_NEW:
                 cli_fail(
@@ -133,7 +129,7 @@ def deploy_new_project_version(
         version = _create_project_version(
             api_client, project_name, multinode_obj, image_tag
         )
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     click.secho(
@@ -280,18 +276,6 @@ def _pretty_print_docker_push_log(
         layers_progress[line["id"]] = line["progress"]
         for layer_id, progress in layers_progress.items():
             click.echo(f"\033[K{layer_id}: {progress}")  # Clean line and print progress
-
-
-def _create_project(api_client: DefaultApi, project_name: str) -> ProjectInfo:
-    try:
-        project = api_client.create_project(project_name)
-    except ApiException as e:
-        if e.status == 409:
-            raise ProjectAlreadyExists
-        else:
-            raise e
-
-    return project
 
 
 def _create_project_version(

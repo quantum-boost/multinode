@@ -11,16 +11,7 @@ from multinode.api_client import (
     InvocationDefinition,
     ParentInvocationDefinition,
 )
-from multinode.config import (
-    create_control_plane_client_from_config,
-    load_config_with_api_key_from_env_or_file,
-)
-from multinode.constants import (
-    FUNCTION_NAME_ENV,
-    INVOCATION_ID_ENV,
-    PROJECT_NAME_ENV,
-    VERSION_ID_ENV,
-)
+from multinode.config import load_config_with_api_key_from_env_or_file
 from multinode.core.errors import (
     InvalidUseError,
     InvocationCancelledError,
@@ -28,6 +19,13 @@ from multinode.core.errors import (
     InvocationTimedOutError,
 )
 from multinode.core.invocation import Invocation, InvocationStatus
+from multinode.shared.worker_environment_variables import (
+    FUNCTION_NAME_ENV,
+    INVOCATION_ID_ENV,
+    PROJECT_NAME_ENV,
+    VERSION_ID_ENV,
+)
+from multinode.utils.api import get_authenticated_client
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
@@ -179,7 +177,7 @@ class Function:
 
         if self._api_client is None:
             config = load_config_with_api_key_from_env_or_file()
-            self._api_client = create_control_plane_client_from_config(config)
+            self._api_client = get_authenticated_client(config)
 
         return DataRequiredForInvocation(
             project_name=self.project_name,
