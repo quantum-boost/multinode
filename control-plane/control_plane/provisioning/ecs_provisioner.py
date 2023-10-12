@@ -38,7 +38,6 @@ class EcsProvisioner(AbstractProvisioner):
         cluster_name: str,
         subnet_ids: list[str],
         security_group_ids: list[str],
-        assign_public_ip: bool,
         task_role_arn: str,
         execution_role_arn: str,
         log_group: str,
@@ -52,7 +51,6 @@ class EcsProvisioner(AbstractProvisioner):
         self._cluster_name = cluster_name
         self._subnet_ids = subnet_ids
         self._security_group_ids = security_group_ids
-        self._assign_public_ip = assign_public_ip
         self._task_role_arn = task_role_arn
         self._execution_role_arn = execution_role_arn
         self._log_group = log_group
@@ -141,9 +139,7 @@ class EcsProvisioner(AbstractProvisioner):
                 "awsvpcConfiguration": {
                     "subnets": self._subnet_ids,
                     "securityGroups": self._security_group_ids,
-                    "assignPublicIp": "ENABLED"
-                    if self._assign_public_ip
-                    else "DISABLED",
+                    "assignPublicIp": "ENABLED",
                 },
             },
             overrides={
