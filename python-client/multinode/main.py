@@ -5,7 +5,14 @@ from typing import List, Optional
 import click
 
 from multinode.api_client import ProjectInfo
-from multinode.api_client.exceptions import ForbiddenException, NotFoundException
+from multinode.api_client.error_types import (
+    ApiKeyIsInvalid,
+    InvocationDoesNotExist,
+    ProjectAlreadyExists,
+    ProjectDoesNotExist,
+    VersionDoesNotExist,
+)
+from multinode.api_client.exceptions import ForbiddenException
 from multinode.config import load_config, save_config
 from multinode.utils.api import (
     create_project,
@@ -19,7 +26,6 @@ from multinode.utils.cli_helpers import (
     describe_project,
     describe_version,
 )
-from multinode.utils.errors import ProjectAlreadyExists
 from multinode.utils.imports import import_multinode_object_from_file
 
 LATEST_VERSION = "latest"
@@ -60,7 +66,8 @@ def login(ctx: click.Context) -> None:
     api_client = get_authenticated_client(config)
     try:
         api_client.list_projects()
-    except ForbiddenException:
+    except (ForbiddenException, ApiKeyIsInvalid):
+        # No API key => Forbidden. Invalid API key => ApiKeyIsInvalid
         cli_fail(ctx, "API key is invalid.")
 
     save_config(config)
@@ -129,7 +136,7 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
     api_client = get_authenticated_client(config)
     try:
         api_client.delete_project(project_name)
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     click.secho(
@@ -174,7 +181,7 @@ def upgrade(
 
     try:
         version = create_project_version(api_client, project_name, multinode_obj)
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     click.secho(
@@ -239,14 +246,14 @@ def describe(
     # Project and version need to exist regardless of what the user wants to describe
     try:
         project = api_client.get_project(project_name)
-    except NotFoundException:
+    except ProjectDoesNotExist:
         cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
     try:
         version = api_client.get_project_version(
             project.project_name, resolved_version_id
         )
-    except NotFoundException:
+    except VersionDoesNotExist:
         cli_fail(
             ctx,
             f'Version "{resolved_version_id}" does not exist '
@@ -291,7 +298,7 @@ def describe(
             function.function_name,
             invocation_id,
         )
-    except NotFoundException:
+    except InvocationDoesNotExist:
         cli_fail(
             ctx,
             f'Invocation "{invocation_id}" does not exist '

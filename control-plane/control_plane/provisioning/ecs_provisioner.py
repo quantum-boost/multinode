@@ -6,6 +6,15 @@ from botocore.exceptions import ClientError
 
 from control_plane.provisioning.ecs_cpu_memory_helper import select_cpu_memory_units
 from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
+from control_plane.shared.worker_environment_variables import (
+    CONTROL_PLANE_API_KEY_ENV,
+    CONTROL_PLANE_API_URL_ENV,
+    EXECUTION_ID_ENV,
+    FUNCTION_NAME_ENV,
+    INVOCATION_ID_ENV,
+    PROJECT_NAME_ENV,
+    VERSION_ID_ENV,
+)
 from control_plane.types.datatypes import (
     PreparedFunctionDetails,
     ResourceSpec,
@@ -18,15 +27,6 @@ from control_plane.types.datatypes import (
 CONTAINER_NAME = "main"
 LOG_STREAM_PREFIX = "ecs"
 TERMINATION_GRACE_PERIOD_SECONDS = 120
-
-# Environment variables that this provisioner will inject into the ECS tasks that it will create
-PROJECT_NAME_ENV = "PROJECT_NAME"
-VERSION_ID_ENV = "VERSION_ID"
-FUNCTION_NAME_ENV = "FUNCTION_NAME"
-INVOCATION_ID_ENV = "INVOCATION_ID"
-EXECUTION_ID_ENV = "EXECUTION_ID"
-CONTROL_PLANE_API_URL_ENV = "CONTROL_PLANE_API_URL"
-CONTROL_PLANE_API_KEY_ENV = "CONTROL_PLANE_API_KEY"
 
 
 class EcsProvisioner(AbstractProvisioner):

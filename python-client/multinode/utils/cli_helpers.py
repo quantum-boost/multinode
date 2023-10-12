@@ -3,7 +3,6 @@ from typing import NoReturn
 import click
 
 from multinode.api_client import (
-    DefaultApi,
     FunctionInfoForVersion,
     InvocationInfo,
     InvocationInfoForFunction,
@@ -12,6 +11,7 @@ from multinode.api_client import (
     ProjectInfo,
     VersionInfo,
 )
+from multinode.utils.api import Api
 
 MAX_LIST_RESULTS = 10  # TODO make the CLI tool dynamic so it fetches more on scroll
 MAX_LIST_COUNT = 50
@@ -23,7 +23,7 @@ def cli_fail(ctx: click.Context, message: str) -> NoReturn:
 
 
 def describe_project(
-    api_client: DefaultApi,
+    api_client: Api,
     project: ProjectInfo,
 ) -> None:
     deletion_line = (
@@ -45,7 +45,7 @@ def describe_project(
 
 
 def describe_version(
-    api_client: DefaultApi,
+    api_client: Api,
     project: ProjectInfo,
     version: VersionInfo,
     latest: bool = False,
@@ -71,7 +71,7 @@ def describe_version(
 
 
 def describe_function(
-    api_client: DefaultApi,
+    api_client: Api,
     project: ProjectInfo,
     version: VersionInfo,
     function: FunctionInfoForVersion,
@@ -98,7 +98,7 @@ def describe_function(
 
 
 def describe_invocation(
-    api_client: DefaultApi,
+    api_client: Api,
     project: ProjectInfo,
     version: VersionInfo,
     function: FunctionInfoForVersion,

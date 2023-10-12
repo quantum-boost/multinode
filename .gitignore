@@ -10,4 +10,5 @@ dist/*
 api-schemas/*
 
 python-client/multinode/api_client/
+python-client/multinode/shared/
 python-client/.openapi-generator/
