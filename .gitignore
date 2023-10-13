@@ -6,8 +6,8 @@ build/*
 *.whl
 **/__pycache__/
 *.pyc
-dist/*
+**/dist/*
 api-schemas/*
 
-python-client/multinode/api_client/
-python-client/.openapi-generator/
+**/api_client/
+**/.openapi-generator/

@@ -1,8 +1,8 @@
-from typing import NoReturn
+from typing import NoReturn, Optional
 
 import click
-
-from multinode.api_client import (
+from multinode_shared.api_client import (
+    ApiException,
     DefaultApi,
     FunctionInfoForVersion,
     InvocationInfo,
@@ -10,8 +10,11 @@ from multinode.api_client import (
     InvocationsListForFunction,
     InvocationStatus,
     ProjectInfo,
+    VersionDefinition,
     VersionInfo,
 )
+
+from multinode import Multinode
 
 MAX_LIST_RESULTS = 10  # TODO make the CLI tool dynamic so it fetches more on scroll
 MAX_LIST_COUNT = 50
@@ -20,6 +23,34 @@ MAX_LIST_COUNT = 50
 def cli_fail(ctx: click.Context, message: str) -> NoReturn:
     click.secho(message, fg="red")
     ctx.exit(1)
+
+
+def create_project(api_client: DefaultApi, project_name: str) -> Optional[ProjectInfo]:
+    try:
+        project = api_client.create_project(project_name)
+    except ApiException as e:
+        if e.status == 409:
+            return None
+        else:
+            raise e
+
+    return project
+
+
+def create_project_version(
+    api_client: DefaultApi,
+    project_name: str,
+    multinode_obj: Multinode,
+) -> VersionInfo:
+    functions = [function.fn_spec for function in multinode_obj.functions.values()]
+    # TODO nginx is just a placeholder, provide actual docker image
+    version_def = VersionDefinition(
+        default_docker_image="nginx:latest", functions=functions
+    )
+    version = api_client.create_project_version(
+        project_name=project_name, version_definition=version_def
+    )
+    return version
 
 
 def describe_project(

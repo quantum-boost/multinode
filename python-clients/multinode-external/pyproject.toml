@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "multinode-external"
+version = "0.0.0"
+description = ""
+authors = ["Kacper Kielak <kacper@multinode.dev>"]
+readme = "README.md"
+packages = [
+    {include = "multinode_external"},
+    {include = "multinode_shared", from = "../multinode-shared"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+
+# multinode-shared
+pydantic = "^1.10.5, <2"
+requests = "^2.31.0"
+aenum = "^3.1.15"
+python-dateutil = "^2.8.2"
+urllib3 = "^2.0.6"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.1"
+flake8 = "^6.1.0"
+flake8-bugbear = "^23.9.16"
+flake8-pyproject = "^1.2.3"
+isort = "^5.12.0"
+mypy = "^1.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+strict = true
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 88
+select = ["C", "E" , "F", "W", "B","B950"]
+extend-ignore = ["E203", "E501", "W503"]
+exclude = [".venv"]

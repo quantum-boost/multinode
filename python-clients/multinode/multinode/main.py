@@ -3,23 +3,20 @@ from pathlib import Path
 from typing import List, Optional
 
 import click
+from multinode_shared.api_client import ProjectInfo, VersionDefinition
+from multinode_shared.api_client.exceptions import ForbiddenException, NotFoundException
+from multinode_shared.config import load_config_from_file, save_config_to_file
+from multinode_shared.utils.api import get_authenticated_client
 
-from multinode.api_client import ProjectInfo
-from multinode.api_client.exceptions import ForbiddenException, NotFoundException
-from multinode.config import load_config, save_config
-from multinode.utils.api import (
-    create_project,
-    create_project_version,
-    get_authenticated_client,
-)
 from multinode.utils.cli_helpers import (
     cli_fail,
+    create_project,
+    create_project_version,
     describe_function,
     describe_invocation,
     describe_project,
     describe_version,
 )
-from multinode.utils.errors import ProjectAlreadyExists
 from multinode.utils.imports import import_multinode_object_from_file
 
 LATEST_VERSION = "latest"
@@ -34,7 +31,7 @@ def cli(ctx: click.Context) -> None:
         return
 
     # Otherwise, check if user is logged in
-    config = load_config()
+    config = load_config_from_file()
     if config.api_key is None:
         cli_fail(ctx, "You are not logged in. Run `multinode login` first.")
 
@@ -42,7 +39,7 @@ def cli(ctx: click.Context) -> None:
 @cli.command()
 @click.pass_context
 def login(ctx: click.Context) -> None:
-    config = load_config()
+    config = load_config_from_file()
     if config.api_key is not None:
         click.echo(
             "You are already logged in. If you want to log in with "
@@ -63,15 +60,15 @@ def login(ctx: click.Context) -> None:
     except ForbiddenException:
         cli_fail(ctx, "API key is invalid.")
 
-    save_config(config)
+    save_config_to_file(config)
     click.secho("You have successfully logged in!", fg="green")
 
 
 @cli.command()
 def logout() -> None:
-    config = load_config()
+    config = load_config_from_file()
     config.api_key = None
-    save_config(config)
+    save_config_to_file(config)
     click.echo("You have successfully logged out!")
 
 
@@ -89,23 +86,29 @@ def logout() -> None:
 @click.pass_context
 def deploy(ctx: click.Context, filepath: Path, project_name: str) -> None:
     """Deploy a Multinode project based on the code in FILEPATH."""
-    config = load_config()
+    config = load_config_from_file()
     api_client = get_authenticated_client(config)
     try:
         multinode_obj = import_multinode_object_from_file(filepath)
     except ImportError as e:
         cli_fail(ctx, e.msg)
 
-    try:
-        project = create_project(api_client, project_name)
-    except ProjectAlreadyExists:
+    project = create_project(api_client, project_name)
+    if project is None:
         cli_fail(
             ctx,
             f'Project "{project_name}" already exists. '
             f"Please choose a different name or run `multinode upgrade` instead.",
         )
 
-    version = create_project_version(api_client, project.project_name, multinode_obj)
+    functions = [function.fn_spec for function in multinode_obj.functions.values()]
+    # TODO nginx is just a placeholder, provide actual docker image
+    version_def = VersionDefinition(
+        default_docker_image="nginx:latest", functions=functions
+    )
+    version = api_client.create_project_version(
+        project_name=project.project_name, version_definition=version_def
+    )
     click.secho(
         f'Project "{version.project_name}" has been successfully deployed! '
         f"Version id = {version.version_id}",
@@ -125,7 +128,7 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
 
     In-flight functions will be cancelled before the project is deleted.
     """
-    config = load_config()
+    config = load_config_from_file()
     api_client = get_authenticated_client(config)
     try:
         api_client.delete_project(project_name)
@@ -157,7 +160,7 @@ def upgrade(
     ctx: click.Context, filepath: Path, project_name: str, deploy: bool
 ) -> None:
     """Upgrade a Multinode project based on the code in FILEPATH."""
-    config = load_config()
+    config = load_config_from_file()
     api_client = get_authenticated_client(config)
     try:
         multinode_obj = import_multinode_object_from_file(filepath)
@@ -165,11 +168,11 @@ def upgrade(
         cli_fail(ctx, e.msg)
 
     if deploy:
-        try:
-            project = create_project(api_client, project_name)
+        project = create_project(api_client, project_name)
+        if project is not None:
             project_name = project.project_name
             click.echo(f'Project "{project_name}" does not exist. Deploying...')
-        except ProjectAlreadyExists:
+        else:
             click.echo(f'Project "{project_name}" already exists. Upgrading...')
 
     try:
@@ -187,7 +190,7 @@ def upgrade(
 @cli.command()
 def list() -> None:
     """List all deployed projects."""
-    config = load_config()
+    config = load_config_from_file()
     api_client = get_authenticated_client(config)
     projects: List[ProjectInfo] = api_client.list_projects().projects
     if len(projects) == 0:
@@ -232,7 +235,7 @@ def describe(
     invocation_id: Optional[str],
 ) -> None:
     """Provides detailed description of a project, version, function, or invocation."""
-    config = load_config()
+    config = load_config_from_file()
     api_client = get_authenticated_client(config)
     resolved_version_id = version_id or LATEST_VERSION
 

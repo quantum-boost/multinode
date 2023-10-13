@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "multinode-shared"
+version = "0.0.0"
+description = ""
+authors = ["Kacper Kielak <kacper@multinode.dev>"]
+readme = "README.md"
+packages = [{include = "multinode_shared"}]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+
+pydantic = "^1.10.5, <2"
+requests = "^2.31.0"
+aenum = "^3.1.15"
+python-dateutil = "^2.8.2"
+urllib3 = "^2.0.6"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.6.0"
+black = "^23.9.1"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+flake8-bugbear = "^23.9.16"
+flake8-pyproject = "^1.2.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+exclude = ["multinode_shared/api_client"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "multinode_shared.api_client"
+implicit_reexport = true
+
+[tool.black]
+extend-exclude = "multinode_shared/api_client"
+
+[tool.isort]
+profile = "black"
+extend_skip = ["multinode_shared/api_client"]
+
+[tool.flake8]
+max-line-length = 88
+select = ["C", "E" , "F", "W", "B","B950"]
+extend-ignore = ["E203", "E501", "W503"]
+exclude = [".venv", "multinode_shared/api_client"]

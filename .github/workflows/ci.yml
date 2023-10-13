@@ -75,12 +75,12 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: 'eu-west-2'
 
-  python-client:
+  python-clients:
     needs: control-plane
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python-client
+        working-directory: python-clients
     steps:
       - name: Check out git repo
         uses: actions/checkout@v3
@@ -90,18 +90,18 @@ jobs:
           python-version: "3.8"
       - name: Install poetry
         run: curl -sSL https://install.python-poetry.org | python -
-      - name: Install dependencies
-        run: poetry install
       - name: Download API schema
         uses: actions/download-artifact@v3
         with:
           name: control-plane-api-schema
       - name: Move API schema
         run: mkdir ../api-schemas && mv ../control-plane.json ../api-schemas/control-plane.json
-      - name: Generate API client
-        run: bash scripts/generate_client.sh
+      - name: Initialize packages
+        run: bash scripts/init.sh
 
       - name: Run linters
         run: bash scripts/lint.sh
-      - name: Build wheel
-        run: poetry build --format wheel
+      - name: Build multinode client
+        run: cd multinode && poetry build-project --format wheel && cd ..
+      - name: Build multinode-external client
+        run: cd multinode-external && poetry build-project --format wheel && cd ..

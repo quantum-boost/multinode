@@ -2,6 +2,6 @@
 # The patterns follow closely to .gitignore or .dockerignore.
 
 .openapi-generator/
-multinode/api_client_README.md
-multinode/__init__.py
+multinode_shared/api_client_README.md
+multinode_shared/__init__.py
 

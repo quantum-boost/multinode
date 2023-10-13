@@ -2,8 +2,8 @@ import math
 from datetime import timedelta
 from typing import Any, Callable, Dict, Optional, TypeVar
 
-from multinode.api_client import ExecutionSpec, FunctionSpec, ResourceSpec
-from multinode.core.function import Function
+from multinode_shared.api_client import ExecutionSpec, FunctionSpec, ResourceSpec
+from multinode_shared.function import Function
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")

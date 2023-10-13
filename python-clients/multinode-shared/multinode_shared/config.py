@@ -13,7 +13,7 @@ class Config(BaseModel):
     api_key: Optional[str] = None
 
 
-def load_config() -> Config:
+def load_config_from_file() -> Config:
     if CONFIG_FILE_PATH.exists():
         with CONFIG_FILE_PATH.open("r") as f:
             return Config.parse_raw(f.read())
@@ -21,7 +21,7 @@ def load_config() -> Config:
     return Config.parse_raw("{}")
 
 
-def save_config(config: Config) -> None:
+def save_config_to_file(config: Config) -> None:
     CONFIG_FILE_PATH.parent.mkdir(exist_ok=True)
 
     with CONFIG_FILE_PATH.open("w") as f:

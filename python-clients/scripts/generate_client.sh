@@ -1,11 +1,16 @@
 #!/bin/bash
 set -e  # exit on first error
-cd "${0%/*}/.."  # cd into the python-client root directory
+cd "${0%/*}/../multinode-shared"  # cd into the shared directory
 
-API_SCHEMAS_DIR="../api-schemas"
+API_SCHEMAS_DIR="../../api-schemas"
 JAR_FILEPATH="${API_SCHEMAS_DIR}/openapi-generator-cli.jar"
 SCHEMA_FILEPATH="${API_SCHEMAS_DIR}/control-plane.json"
 
+if [ ! -f "${SCHEMA_FILEPATH}" ]; then
+    ABSOLUTE_SCHEMA_PATH="$(cd "$(dirname "${SCHEMA_FILEPATH}")"; pwd)/$(basename "${SCHEMA_FILEPATH}")"
+    echo "Couldn't find control plane schema at ${ABSOLUTE_SCHEMA_PATH}"
+    exit 1
+fi
 
 if [ ! -f "${JAR_FILEPATH}" ]; then
     echo "Downloading openapi-generator-cli.jar..."
@@ -15,4 +20,4 @@ fi
 java -jar "${JAR_FILEPATH}" generate \
   -i "${SCHEMA_FILEPATH}" \
   -g python \
-  --additional-properties=generateSourceCodeOnly=True,packageName=multinode.api_client
+  --additional-properties=generateSourceCodeOnly=True,packageName=multinode_shared.api_client

@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "multinode"
-version = "0.0.2"
+version = "0.0.3"
 description = "Multinode's Python client"
 authors = ["Kacper Kielak <kacper@multinode.dev>"]
 readme = "README.md"
-packages = [{include = "multinode"}]
+packages = [
+    {include = "multinode"},
+    {include = "multinode_shared", from = "../multinode-shared"}
+]
 
 [tool.poetry.scripts]
 multinode = 'multinode.main:cli'
@@ -13,42 +16,39 @@ multinode = 'multinode.main:cli'
 python = "^3.8.1"
 
 click = "^8.1.7"
-pydantic = "^1.10.5, <2"
 colorama = "^0.4.6"
+
+# multinode-shared
+pydantic = "^1.10.5, <2"
 requests = "^2.31.0"
 aenum = "^3.1.15"
 python-dateutil = "^2.8.2"
 urllib3 = "^2.0.6"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.5.1"
 black = "^23.9.1"
 flake8 = "^6.1.0"
 flake8-bugbear = "^23.9.16"
 flake8-pyproject = "^1.2.3"
 isort = "^5.12.0"
+mypy = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-exclude = ["multinode/api_client"]
 strict = true
 
 [[tool.mypy.overrides]]
-module = "multinode.api_client"
+module = "multinode_shared.api_client"
 implicit_reexport = true
-
-[tool.black]
-extend-exclude = "multinode/api_client"
 
 [tool.isort]
 profile = "black"
-extend_skip = ["multinode/api_client"]
 
 [tool.flake8]
 max-line-length = 88
 select = ["C", "E" , "F", "W", "B","B950"]
 extend-ignore = ["E203", "E501", "W503"]
-exclude = [".venv", "multinode/api_client"]
+exclude = [".venv"]

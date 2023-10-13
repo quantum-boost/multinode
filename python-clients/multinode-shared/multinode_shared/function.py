@@ -1,6 +1,6 @@
 from typing import Generic, List, TypeVar
 
-from multinode.api_client import FunctionSpec
+from multinode_shared.api_client import FunctionSpec
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
