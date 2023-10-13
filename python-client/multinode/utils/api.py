@@ -37,7 +37,7 @@ def create_project_version(
     project_name: str,
     multinode_obj: Multinode,
 ) -> VersionInfo:
-    functions = [job.fn_spec for job in multinode_obj.jobs.values()]
+    functions = [function.fn_spec for function in multinode_obj.functions.values()]
     # TODO nginx is just a placeholder, provide actual docker image
     version_def = VersionDefinition(
         default_docker_image="nginx:latest", functions=functions
