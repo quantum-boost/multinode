@@ -59,7 +59,7 @@ def describe_version(
         + f"\tcreation time: {version.creation_time}\n"
     )
 
-    click.secho(f"{version.version_id}{latest_suffix} jobs:", bold=True)
+    click.secho(f"{version.version_id}{latest_suffix} functions:", bold=True)
     for f in version.functions:
         invocations = api_client.list_invocations(
             project.project_name,
