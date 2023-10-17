@@ -6,14 +6,16 @@ import click
 
 from multinode.api_client import ProjectInfo
 from multinode.api_client.exceptions import ForbiddenException, NotFoundException
-from multinode.config import load_config, save_config
-from multinode.utils.api import (
-    create_project,
-    create_project_version,
-    get_authenticated_client,
+from multinode.config import (
+    create_control_plane_client_from_config,
+    load_config_from_file,
+    save_config_to_file,
 )
+from multinode.constants import LATEST_VERSION_STR
 from multinode.utils.cli_helpers import (
     cli_fail,
+    create_project,
+    create_project_version,
     describe_function,
     describe_invocation,
     describe_project,
@@ -21,8 +23,6 @@ from multinode.utils.cli_helpers import (
 )
 from multinode.utils.errors import ProjectAlreadyExists
 from multinode.utils.imports import import_multinode_object_from_file
-
-LATEST_VERSION = "latest"
 
 
 @click.group()
@@ -34,7 +34,7 @@ def cli(ctx: click.Context) -> None:
         return
 
     # Otherwise, check if user is logged in
-    config = load_config()
+    config = load_config_from_file()
     if config.api_key is None:
         cli_fail(ctx, "You are not logged in. Run `multinode login` first.")
 
@@ -42,7 +42,7 @@ def cli(ctx: click.Context) -> None:
 @cli.command()
 @click.pass_context
 def login(ctx: click.Context) -> None:
-    config = load_config()
+    config = load_config_from_file()
     if config.api_key is not None:
         click.echo(
             "You are already logged in. If you want to log in with "
@@ -57,21 +57,21 @@ def login(ctx: click.Context) -> None:
     config.api_key = api_key
 
     # Check if the API key is valid
-    api_client = get_authenticated_client(config)
+    api_client = create_control_plane_client_from_config(config)
     try:
         api_client.list_projects()
     except ForbiddenException:
         cli_fail(ctx, "API key is invalid.")
 
-    save_config(config)
+    save_config_to_file(config)
     click.secho("You have successfully logged in!", fg="green")
 
 
 @cli.command()
 def logout() -> None:
-    config = load_config()
+    config = load_config_from_file()
     config.api_key = None
-    save_config(config)
+    save_config_to_file(config)
     click.echo("You have successfully logged out!")
 
 
@@ -89,8 +89,8 @@ def logout() -> None:
 @click.pass_context
 def deploy(ctx: click.Context, filepath: Path, project_name: str) -> None:
     """Deploy a Multinode project based on the code in FILEPATH."""
-    config = load_config()
-    api_client = get_authenticated_client(config)
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
     try:
         multinode_obj = import_multinode_object_from_file(filepath)
     except ImportError as e:
@@ -125,8 +125,8 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
 
     In-flight functions will be cancelled before the project is deleted.
     """
-    config = load_config()
-    api_client = get_authenticated_client(config)
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
     try:
         api_client.delete_project(project_name)
     except NotFoundException:
@@ -157,8 +157,8 @@ def upgrade(
     ctx: click.Context, filepath: Path, project_name: str, deploy: bool
 ) -> None:
     """Upgrade a Multinode project based on the code in FILEPATH."""
-    config = load_config()
-    api_client = get_authenticated_client(config)
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
     try:
         multinode_obj = import_multinode_object_from_file(filepath)
     except ImportError as e:
@@ -187,8 +187,8 @@ def upgrade(
 @cli.command()
 def list() -> None:
     """List all deployed projects."""
-    config = load_config()
-    api_client = get_authenticated_client(config)
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
     projects: List[ProjectInfo] = api_client.list_projects().projects
     if len(projects) == 0:
         click.echo("You have not deployed any projects yet.")
@@ -232,9 +232,9 @@ def describe(
     invocation_id: Optional[str],
 ) -> None:
     """Provides detailed description of a project, version, function, or invocation."""
-    config = load_config()
-    api_client = get_authenticated_client(config)
-    resolved_version_id = version_id or LATEST_VERSION
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
+    resolved_version_id = version_id or LATEST_VERSION_STR
 
     # Project and version need to exist regardless of what the user wants to describe
     try:
