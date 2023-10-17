@@ -19,6 +19,7 @@ requests = "^2.31.0"
 aenum = "^3.1.15"
 python-dateutil = "^2.8.2"
 urllib3 = "^2.0.6"
+jsonpickle = "^3.0.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.5.1"
@@ -27,18 +28,28 @@ flake8 = "^6.1.0"
 flake8-bugbear = "^23.9.16"
 flake8-pyproject = "^1.2.3"
 isort = "^5.12.0"
+pytest = "^7.4.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-exclude = ["multinode/api_client"]
+# We need to ignore test_invocation.py because otherwise we get errors like:
+# Argument "worker_status" to "ExecutionSummary" has incompatible type "str"; expected "WorkerStatus"
+# due to api client using aenum instead of standard enum library.
+# This should be fixed once v7.1.0 of the openapi client generator comes out, see:
+# https://github.com/OpenAPITools/openapi-generator/pull/16691
+exclude = ["multinode/api_client", "tests/core/test_invocation.py"]
 strict = true
 
 [[tool.mypy.overrides]]
 module = "multinode.api_client"
 implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = "jsonpickle"
+ignore_missing_imports = true
 
 [tool.black]
 extend-exclude = "multinode/api_client"

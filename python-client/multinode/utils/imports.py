@@ -5,7 +5,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import List
 
-from multinode import Multinode
+from multinode.core.multinode import Multinode
 
 
 def import_multinode_object_from_file(filepath: Path) -> Multinode:
