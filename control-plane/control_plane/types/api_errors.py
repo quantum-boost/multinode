@@ -250,7 +250,7 @@ class VersionDoesNotExist(ApiError):
 class ProjectAlreadyExists(ApiError):
     @staticmethod
     def error_message() -> str:
-        return "A project with this ID already exists."
+        return "A project with this name already exists."
 
     @staticmethod
     def error_code() -> int:
@@ -260,7 +260,7 @@ class ProjectAlreadyExists(ApiError):
 class ProjectDoesNotExist(ApiError):
     @staticmethod
     def error_message() -> str:
-        return "A project with this ID does not exist"
+        return "A project with this name does not exist"
 
     @staticmethod
     def error_code() -> int:
