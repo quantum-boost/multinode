@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Any, List, Optional, TypeVar
 
 import jsonpickle
@@ -20,8 +21,13 @@ from multinode.constants import (
     PROJECT_NAME_ENV,
     VERSION_ID_ENV,
 )
-from multinode.core.invocation import Invocation
-from multinode.utils.errors import InvalidUseError
+from multinode.core.invocation import Invocation, InvocationStatus
+from multinode.utils.errors import (
+    InvalidUseError,
+    InvocationCancelledError,
+    InvocationFailedError,
+    InvocationTimedOutError,
+)
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
@@ -66,6 +72,26 @@ class Function:
         self.project_name = project_name
         self.version_id = version_id
         self._api_client: Optional[DefaultApi] = None
+
+    def __call__(self, *input_data: Any, poll_frequency: float = 1) -> Any:
+        invocation_id = self.start(*input_data)
+        invocation = self.get(invocation_id)
+        while not invocation.status.finished:
+            time.sleep(poll_frequency)
+            invocation = self.get(invocation_id)
+
+        if invocation.status == InvocationStatus.FAILED:
+            raise InvocationFailedError(invocation.error)
+
+        if invocation.status == InvocationStatus.CANCELLED:
+            raise InvocationCancelledError("Invocation was cancelled by a user.")
+
+        if invocation.status == InvocationStatus.TIMED_OUT:
+            raise InvocationTimedOutError(
+                "Invocation did not finish before the timeout."
+            )
+
+        return invocation.result
 
     def start(self, *input_data: Any) -> str:
         data_for_inv = self._get_data_required_for_invocation()
