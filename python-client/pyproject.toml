@@ -35,12 +35,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-# We need to ignore test_invocation.py because otherwise we get errors like:
-# Argument "worker_status" to "ExecutionSummary" has incompatible type "str"; expected "WorkerStatus"
-# due to api client using aenum instead of standard enum library.
-# This should be fixed once v7.1.0 of the openapi client generator comes out, see:
-# https://github.com/OpenAPITools/openapi-generator/pull/16691
-exclude = ["multinode/api_client", "tests/core/test_invocation.py"]
+exclude = ["multinode/api_client", "tests/"]
 strict = true
 
 [[tool.mypy.overrides]]

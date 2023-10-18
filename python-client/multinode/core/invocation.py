@@ -22,6 +22,15 @@ class InvocationStatus(Enum):
     PENDING = "PENDING"
     FAILED = "FAILED"
 
+    @property
+    def finished(self) -> bool:
+        return self in {
+            InvocationStatus.SUCCEEDED,
+            InvocationStatus.CANCELLED,
+            InvocationStatus.TIMED_OUT,
+            InvocationStatus.FAILED,
+        }
+
 
 class Invocation(BaseModel):
     status: InvocationStatus
