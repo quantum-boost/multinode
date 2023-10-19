@@ -21,13 +21,13 @@ from multinode.constants import (
     PROJECT_NAME_ENV,
     VERSION_ID_ENV,
 )
-from multinode.core.invocation import Invocation, InvocationStatus
-from multinode.utils.errors import (
+from multinode.core.errors import (
     InvalidUseError,
     InvocationCancelledError,
     InvocationFailedError,
     InvocationTimedOutError,
 )
+from multinode.core.invocation import Invocation, InvocationStatus
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional, TypeVar, cast
 
 import jsonpickle
-from pydantic.main import BaseModel
 
 from multinode.api_client import ExecutionOutcome, ExecutionSummary, InvocationInfo
 from multinode.api_client import InvocationStatus as ApiInvocationStatus
@@ -32,7 +32,8 @@ class InvocationStatus(Enum):
         }
 
 
-class Invocation(BaseModel):
+@dataclass
+class Invocation:
     status: InvocationStatus
     result: Optional[Any]
     error: Optional[str]

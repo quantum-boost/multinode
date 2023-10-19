@@ -3,7 +3,11 @@ class ProjectAlreadyExists(Exception):
 
 
 class FunctionDoesNotExist(Exception):
-    pass
+    def __init__(self, project_name: str, version_id: str, function_name: str):
+        super().__init__(
+            f'Function "{function_name}" does not exist '
+            f'on version "{version_id}" of project "{project_name}".'
+        )
 
 
 class InvalidUseError(Exception):

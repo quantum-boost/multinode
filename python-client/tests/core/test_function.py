@@ -2,13 +2,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from multinode.core.function import Function
-from multinode.core.invocation import Invocation, InvocationStatus
-from multinode.utils.errors import (
+from multinode.core.errors import (
     InvocationCancelledError,
     InvocationFailedError,
     InvocationTimedOutError,
 )
+from multinode.core.function import Function
+from multinode.core.invocation import Invocation, InvocationStatus
 
 TEST_POLL_FREQUENCY = 0.01
 
