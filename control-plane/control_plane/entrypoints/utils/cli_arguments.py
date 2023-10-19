@@ -4,8 +4,8 @@ from typing import NamedTuple
 
 
 class ProvisionerType(StrEnum):
-    DEV = "dev"
     ECS = "ecs"
+    # May add other options such as K8s in future
 
 
 class CliArguments(NamedTuple):
@@ -22,7 +22,6 @@ def parse_cli_arguments() -> CliArguments:
         type=str,
         help="Type of provisioner",
         choices=[
-            str(ProvisionerType.DEV),
             str(ProvisionerType.ECS),
         ],
         required=True,

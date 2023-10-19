@@ -13,7 +13,6 @@ from control_plane.entrypoints.utils.provisioner_setup import (
 from control_plane.entrypoints.utils.sql_setup import (
     datastore_from_environment_variables,
 )
-from control_plane.provisioning.dev_provisioner import DevelopmentProvisioner
 from control_plane.provisioning.provisioner import AbstractProvisioner
 
 logging.basicConfig(

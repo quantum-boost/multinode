@@ -2,7 +2,6 @@ import logging
 
 from control_plane.docker.credentials_loader import (
     AbstractContainerRepositoryCredentialsLoader,
-    DummyContainerRepositoryCredentialsLoader,
 )
 from control_plane.docker.ecr_credentials_loader import (
     EcrContainerRepositoryCredentialsLoader,
@@ -19,11 +18,7 @@ CONTAINER_REPOSITORY_NAME_ENV = "CONTAINER_REPOSITORY_NAME"
 def credentials_loader_from_environment_variables(
     cli_args: CliArguments,
 ) -> AbstractContainerRepositoryCredentialsLoader:
-    if cli_args.provisioner_type == ProvisionerType.DEV:
-        logging.info("Using dummy container repository credentials loader")
-        return DummyContainerRepositoryCredentialsLoader()
-
-    elif cli_args.provisioner_type == ProvisionerType.ECS:
+    if cli_args.provisioner_type == ProvisionerType.ECS:
         logging.info("Using ECR container repository credentials loader")
         return EcrContainerRepositoryCredentialsLoader(
             repository_name=get_mandatory_environment_variable(
