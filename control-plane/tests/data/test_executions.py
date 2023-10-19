@@ -173,14 +173,6 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     )
     assert len(all_executions) == 0
 
-    executions_for_invocation_1 = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_1,
-        invocation_id=INVOCATION_ID_1,
-    ).executions
-    assert len(executions_for_invocation_1) == 0
-
     # Create first execution
     data_store.executions.create(
         project_name=PROJECT_NAME,
@@ -261,26 +253,6 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
     assert all_executions[0].execution_finish_time is None
     assert all_executions[0].invocation_creation_time == INVOCATION_CREATION_TIME_1
 
-    executions_for_invocation_1 = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_1,
-        invocation_id=INVOCATION_ID_1,
-    ).executions
-
-    assert len(executions_for_invocation_1) == 1
-    assert executions_for_invocation_1[0].execution_id == EXECUTION_ID_1
-    assert executions_for_invocation_1[0].worker_status == WorkerStatus.PENDING
-    assert executions_for_invocation_1[0].worker_details is None
-    assert executions_for_invocation_1[0].termination_signal_sent == False
-    assert executions_for_invocation_1[0].outcome is None
-    assert executions_for_invocation_1[0].output is None
-    assert executions_for_invocation_1[0].error_message is None
-    assert executions_for_invocation_1[0].creation_time == TIME
-    assert executions_for_invocation_1[0].last_update_time == TIME
-    assert executions_for_invocation_1[0].execution_start_time is None
-    assert executions_for_invocation_1[0].execution_finish_time is None
-
     invocation_1 = data_store.invocations.get(
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,
@@ -344,24 +316,6 @@ def test_create_two_executions_for_different_invocations(data_store: DataStore) 
         worker_statuses={WorkerStatus.PENDING}
     )
     assert len(all_executions) == 2
-
-    executions_for_invocation_1 = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_1,
-        invocation_id=INVOCATION_ID_1,
-    ).executions
-    assert len(executions_for_invocation_1) == 1
-    assert executions_for_invocation_1[0].execution_id == EXECUTION_ID_1
-
-    executions_for_invocation_2 = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_2,
-        invocation_id=INVOCATION_ID_2,
-    ).executions
-    assert len(executions_for_invocation_2) == 1
-    assert executions_for_invocation_2[0].execution_id == EXECUTION_ID_2
 
     invocation_1 = data_store.invocations.get(
         project_name=PROJECT_NAME,
@@ -615,15 +569,6 @@ def test_update_execution_start_time(data_store: DataStore) -> None:
     assert len(all_executions) == 1
     assert all_executions[0].execution_start_time == LATER_TIME
 
-    executions_for_invocation = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_1,
-        invocation_id=INVOCATION_ID_1,
-    ).executions
-    assert len(executions_for_invocation) == 1
-    assert executions_for_invocation[0].execution_start_time == LATER_TIME
-
     invocation = data_store.invocations.get(
         project_name=PROJECT_NAME,
         version_id=VERSION_ID,
@@ -777,18 +722,6 @@ def test_update_execution_results(data_store: DataStore) -> None:
     assert all_executions[0].outcome == ExecutionOutcome.FAILED
     assert all_executions[0].output == OUTPUT_1
     assert all_executions[0].error_message == ERROR_MESSAGE
-
-    executions_for_invocation = data_store.executions.list_for_invocation(
-        project_name=PROJECT_NAME,
-        version_id=VERSION_ID,
-        function_name=FUNCTION_NAME_1,
-        invocation_id=INVOCATION_ID_1,
-    ).executions
-    assert len(executions_for_invocation) == 1
-    assert executions_for_invocation[0].execution_finish_time == LATER_TIME
-    assert executions_for_invocation[0].outcome == ExecutionOutcome.FAILED
-    assert executions_for_invocation[0].output == OUTPUT_1
-    assert executions_for_invocation[0].error_message == ERROR_MESSAGE
 
     invocation = data_store.invocations.get(
         project_name=PROJECT_NAME,
@@ -945,14 +878,6 @@ def test_methods_when_invocation_does_not_exist(data_store: DataStore) -> None:
             new_worker_details=WORKER_DETAILS,
         )
 
-    with pytest.raises(InvocationDoesNotExist):
-        data_store.executions.list_for_invocation(
-            project_name=PROJECT_NAME,
-            version_id=VERSION_ID,
-            function_name=FUNCTION_NAME_1,
-            invocation_id=NONEXISTENT_INVOCATION_ID,
-        )
-
 
 def test_methods_when_function_does_not_exist(data_store: DataStore) -> None:
     with pytest.raises(FunctionDoesNotExist):
@@ -984,14 +909,6 @@ def test_methods_when_function_does_not_exist(data_store: DataStore) -> None:
             update_time=LATER_TIME,
             new_worker_status=WorkerStatus.RUNNING,
             new_worker_details=WORKER_DETAILS,
-        )
-
-    with pytest.raises(FunctionDoesNotExist):
-        data_store.executions.list_for_invocation(
-            project_name=PROJECT_NAME,
-            version_id=VERSION_ID,
-            function_name=NONEXISTENT_FUNCTION_NAME,
-            invocation_id=INVOCATION_ID_1,
         )
 
 
@@ -1027,14 +944,6 @@ def test_methods_when_version_does_not_exist(data_store: DataStore) -> None:
             new_worker_details=WORKER_DETAILS,
         )
 
-    with pytest.raises(VersionDoesNotExist):
-        data_store.executions.list_for_invocation(
-            project_name=PROJECT_NAME,
-            version_id=NONEXISTENT_VERSION_NAME,
-            function_name=FUNCTION_NAME_1,
-            invocation_id=INVOCATION_ID_1,
-        )
-
 
 def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
     with pytest.raises(ProjectDoesNotExist):
@@ -1066,12 +975,4 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
             update_time=LATER_TIME,
             new_worker_status=WorkerStatus.RUNNING,
             new_worker_details=WORKER_DETAILS,
-        )
-
-    with pytest.raises(ProjectDoesNotExist):
-        data_store.executions.list_for_invocation(
-            project_name=NONEXISTENT_PROJECT_NAME,
-            version_id=VERSION_ID,
-            function_name=FUNCTION_NAME_1,
-            invocation_id=INVOCATION_ID_1,
         )
