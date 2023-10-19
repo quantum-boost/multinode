@@ -6,8 +6,8 @@ from multinode.config import (
     load_config_with_api_key_from_env_or_file,
 )
 from multinode.constants import LATEST_VERSION_STR
+from multinode.core.errors import FunctionDoesNotExist
 from multinode.core.function import Function
-from multinode.utils.errors import FunctionDoesNotExist
 
 
 def get_deployed_function(
@@ -21,10 +21,7 @@ def get_deployed_function(
     try:
         f_info = next(f for f in version.functions if f.function_name == function_name)
     except StopIteration:
-        raise FunctionDoesNotExist(
-            f'Function "{function_name}" does not exist '
-            f'on version "{version_id}" of project "{project_name}".'
-        )
+        raise FunctionDoesNotExist(project_name, version_id, function_name)
 
     fn_spec = FunctionSpec(
         function_name=f_info.function_name,
@@ -32,4 +29,6 @@ def get_deployed_function(
         resource_spec=f_info.resource_spec,
         execution_spec=f_info.execution_spec,
     )
-    return Function(fn_spec, version.project_name, version.version_id)
+    return Function(
+        fn_spec, project_name=version.project_name, version_id=version.version_id
+    )

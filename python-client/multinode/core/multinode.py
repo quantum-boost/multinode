@@ -1,6 +1,6 @@
 import math
 from datetime import timedelta
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from multinode.api_client import ExecutionSpec, FunctionSpec, ResourceSpec
 from multinode.core.function import Function
@@ -8,7 +8,7 @@ from multinode.core.function import Function
 
 class Multinode:
     def __init__(self) -> None:
-        self._functions: Dict[str, Function] = {}
+        self._functions: Dict[str, Tuple[Function, Callable[..., Any]]] = {}
 
     def function(
         self,
@@ -55,10 +55,10 @@ class Multinode:
                 resource_spec=resource_spec,
                 execution_spec=exec_spec,
             )
-            function_obj = Function(fn_spec)
+            multinode_fn = Function(fn_spec)
 
-            self._functions[fn.__name__] = function_obj
-            return function_obj
+            self._functions[fn.__name__] = (multinode_fn, fn)
+            return multinode_fn
 
         return decorator
 

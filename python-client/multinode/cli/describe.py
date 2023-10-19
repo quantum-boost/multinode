@@ -1,9 +1,6 @@
-from typing import NoReturn
-
 import click
 
 from multinode.api_client import (
-    ApiException,
     DefaultApi,
     FunctionInfoForVersion,
     InvocationInfo,
@@ -11,47 +8,11 @@ from multinode.api_client import (
     InvocationsListForFunction,
     InvocationStatus,
     ProjectInfo,
-    VersionDefinition,
     VersionInfo,
 )
-from multinode.core.multinode import Multinode
-from multinode.utils.errors import ProjectAlreadyExists
 
 MAX_LIST_RESULTS = 10  # TODO make the CLI tool dynamic so it fetches more on scroll
 MAX_LIST_COUNT = 50
-
-
-def cli_fail(ctx: click.Context, message: str) -> NoReturn:
-    click.secho(message, fg="red")
-    ctx.exit(1)
-
-
-def create_project(api_client: DefaultApi, project_name: str) -> ProjectInfo:
-    try:
-        project = api_client.create_project(project_name)
-    except ApiException as e:
-        if e.status == 409:
-            raise ProjectAlreadyExists
-        else:
-            raise e
-
-    return project
-
-
-def create_project_version(
-    api_client: DefaultApi,
-    project_name: str,
-    multinode_obj: Multinode,
-) -> VersionInfo:
-    functions = [function.fn_spec for function in multinode_obj._functions.values()]
-    # TODO nginx is just a placeholder, provide actual docker image
-    version_def = VersionDefinition(
-        default_docker_image="nginx:latest", functions=functions
-    )
-    version = api_client.create_project_version(
-        project_name=project_name, version_definition=version_def
-    )
-    return version
 
 
 def describe_project(
@@ -133,7 +94,7 @@ def describe_invocation(
     invocation: InvocationInfo,
 ) -> None:
     # TODO let's implement when invocations can actually via the CLI tool
-    raise NotImplementedError
+    raise NotImplementedError()
 
 
 def _echo_function_details(
@@ -178,8 +139,7 @@ def _echo_basic_invocation_details(
         else "(terminated)"
     )
     click.echo(
-        f"{line_prefix}{invocation.invocation_id}:\n"
+        f"{line_prefix}{invocation.invocation_id} {status}:\n"
         f"{line_prefix}\tcreation time: {invocation.creation_time}\n"
-        f"{line_prefix}\t{status}\n"
         f"{parent_invocation_line}"
     )

@@ -6,23 +6,20 @@ import click
 
 from multinode.api_client import ProjectInfo
 from multinode.api_client.exceptions import ForbiddenException, NotFoundException
+from multinode.cli.deployment import ProjectDeploymentOption, deploy_new_project_version
+from multinode.cli.describe import (
+    describe_function,
+    describe_invocation,
+    describe_project,
+    describe_version,
+)
+from multinode.cli.fail import cli_fail
 from multinode.config import (
     create_control_plane_client_from_config,
     load_config_from_file,
     save_config_to_file,
 )
 from multinode.constants import LATEST_VERSION_STR
-from multinode.utils.cli_helpers import (
-    cli_fail,
-    create_project,
-    create_project_version,
-    describe_function,
-    describe_invocation,
-    describe_project,
-    describe_version,
-)
-from multinode.utils.errors import ProjectAlreadyExists
-from multinode.utils.imports import import_multinode_object_from_file
 
 
 @click.group()
@@ -76,7 +73,10 @@ def logout() -> None:
 
 
 @cli.command()
-@click.argument("filepath", type=click.Path(exists=True))
+@click.argument(
+    "project-dir",
+    type=click.Path(path_type=Path, exists=True),
+)
 @click.option(
     "--project-name",
     type=str,
@@ -87,29 +87,10 @@ def logout() -> None:
     ),
 )
 @click.pass_context
-def deploy(ctx: click.Context, filepath: Path, project_name: str) -> None:
+def deploy(ctx: click.Context, project_dir: Path, project_name: str) -> None:
     """Deploy a Multinode project based on the code in FILEPATH."""
-    config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
-    try:
-        multinode_obj = import_multinode_object_from_file(filepath)
-    except ImportError as e:
-        cli_fail(ctx, e.msg)
-
-    try:
-        project = create_project(api_client, project_name)
-    except ProjectAlreadyExists:
-        cli_fail(
-            ctx,
-            f'Project "{project_name}" already exists. '
-            f"Please choose a different name or run `multinode upgrade` instead.",
-        )
-
-    version = create_project_version(api_client, project.project_name, multinode_obj)
-    click.secho(
-        f'Project "{version.project_name}" has been successfully deployed! '
-        f"Version id = {version.version_id}",
-        fg="green",
+    deploy_new_project_version(
+        ctx, project_dir, project_name, ProjectDeploymentOption.CREATE_NEW
     )
 
 
@@ -135,11 +116,15 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
     click.secho(
         f'Project "{project_name}" has been successfully marked for deletion.',
         fg="green",
+        bold=True,
     )
 
 
 @cli.command()
-@click.argument("filepath", type=click.Path(exists=True))
+@click.argument(
+    "project-dir",
+    type=click.Path(path_type=Path, exists=True),
+)
 @click.option(
     "--project-name",
     type=str,
@@ -154,33 +139,19 @@ def undeploy(ctx: click.Context, project_name: str) -> None:
 )
 @click.pass_context
 def upgrade(
-    ctx: click.Context, filepath: Path, project_name: str, deploy: bool
+    ctx: click.Context, project_dir: Path, project_name: str, deploy: bool
 ) -> None:
-    """Upgrade a Multinode project based on the code in FILEPATH."""
-    config = load_config_from_file()
-    api_client = create_control_plane_client_from_config(config)
-    try:
-        multinode_obj = import_multinode_object_from_file(filepath)
-    except ImportError as e:
-        cli_fail(ctx, e.msg)
-
-    if deploy:
-        try:
-            project = create_project(api_client, project_name)
-            project_name = project.project_name
-            click.echo(f'Project "{project_name}" does not exist. Deploying...')
-        except ProjectAlreadyExists:
-            click.echo(f'Project "{project_name}" already exists. Upgrading...')
-
-    try:
-        version = create_project_version(api_client, project_name, multinode_obj)
-    except NotFoundException:
-        cli_fail(ctx, f'Project "{project_name}" does not exist.')
-
-    click.secho(
-        f'Project "{version.project_name}" has been successfully upgraded! '
-        f"New version id = {version.version_id}",
-        fg="green",
+    """Upgrade a Multinode project based on the code in PROJECT_DIR."""
+    deployment_opt = (
+        ProjectDeploymentOption.CREATE_IF_EXISTS_OTHERWISE_UPGRADE
+        if deploy
+        else ProjectDeploymentOption.UPGRADE_EXISTING
+    )
+    deploy_new_project_version(
+        ctx,
+        project_dir,
+        project_name,
+        deployment_opt,
     )
 
 

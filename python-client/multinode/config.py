@@ -10,7 +10,7 @@ from multinode.constants import (
     CONTROL_PLANE_API_URL_ENV,
     DEFAULT_API_URL,
 )
-from multinode.utils.errors import MissingEnvironmentVariableError
+from multinode.core.errors import MissingEnvironmentVariableError
 
 
 class Config(BaseModel):
