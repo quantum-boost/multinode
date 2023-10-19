@@ -22,7 +22,6 @@ class ExecutionsLifecycleActions:
         self.handle_pending_executions(time)
         self.handle_running_executions(time)
         self.handle_running_executions_requiring_termination_signals(time)
-        self.handle_executions_stuck_in_provisioning(time)
 
     def handle_pending_executions(self, time: int) -> None:
         """
@@ -158,31 +157,4 @@ class ExecutionsLifecycleActions:
                 f"Updated execution ({execution.project_name}, {execution.version_id}, "
                 f"{execution.function_name}, {execution.invocation_id}, {execution.execution_id})"
                 f" - sent termination signal"
-            )
-
-    def handle_executions_stuck_in_provisioning(self, time: int) -> None:
-        """
-        This handles the extremely rare edge case where handle_pending_executions is interrupted in between
-        provisioning a worker and saving the worker status as RUNNING.
-
-        In this situation, we should find the worker (e.g. using tags), and then terminate the worker.
-
-        It's important to do this, because the user's code may suffer from race conditions if two workers are
-        running simultaneously.
-        """
-        executions_stuck_in_provisioning = self._data_store.executions.list_all(
-            worker_statuses={WorkerStatus.PROVISIONING}
-        )
-
-        # TODO: Identity the worker (e.g. using tags), and kill the worker.
-
-        for execution in executions_stuck_in_provisioning:
-            self._data_store.executions.update(
-                project_name=execution.project_name,
-                version_id=execution.version_id,
-                function_name=execution.function_name,
-                invocation_id=execution.invocation_id,
-                execution_id=execution.execution_id,
-                update_time=time,
-                new_worker_status=WorkerStatus.TERMINATED,
             )
