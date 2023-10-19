@@ -7,7 +7,6 @@ from control_plane.entrypoints.utils.cli_arguments import CliArguments, Provisio
 from control_plane.entrypoints.utils.environment import (
     get_mandatory_environment_variable,
 )
-from control_plane.provisioning.dev_provisioner import DevelopmentProvisioner
 from control_plane.provisioning.ecs_provisioner import EcsProvisioner
 from control_plane.provisioning.provisioner import AbstractProvisioner
 
@@ -26,11 +25,7 @@ LOG_GROUP_ENV = "LOG_GROUP"
 def provisioner_from_environment_variables(
     cli_args: CliArguments,
 ) -> AbstractProvisioner:
-    if cli_args.provisioner_type == ProvisionerType.DEV:
-        logging.info("Using dev provisioner")
-        return DevelopmentProvisioner(lag_cycles=5)
-
-    elif cli_args.provisioner_type == ProvisionerType.ECS:
+    if cli_args.provisioner_type == ProvisionerType.ECS:
         logging.info("Using ECS provisioner")
         return EcsProvisioner(
             control_plane_api_url=get_mandatory_environment_variable(

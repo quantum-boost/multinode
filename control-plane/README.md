@@ -27,13 +27,6 @@ poetry build --format wheel
 docker build -t control-plane:latest .
 ```
 
-Running loop and API in dev mode
-```commandline
-docker run --name postgres --env-file=environment/example-dev.env -p 5432:5432 -d postgres:15.4
-docker run --name control-loop --env-file=environment/example-dev.env --network host -d control-plane:latest loop --provisioner=dev --create-tables --delete-tables
-docker run --name control-api --env-file=environment/example-dev.env --network host -p 5000:5000 -d control-plane:latest api --provisioner=dev
-```
-
 Running loop and API with the ECS provisioner.
 (Example IAM permissions in iam_permissions/iam_policy.json.
 The AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables are not required if using an IAM role.)

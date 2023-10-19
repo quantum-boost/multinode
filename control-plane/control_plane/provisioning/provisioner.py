@@ -64,16 +64,6 @@ class AbstractProvisioner(ABC):
         """
         raise NotImplementedError
 
-    def notify_of_execution_completion(self, *, worker_details: WorkerDetails) -> None:
-        """
-        Only used in the mocked-up development provisioner.
-        The purpose of this method is to simulate worker termination after executions complete.
-
-        For real cloud provisioners, this method is a no-op.
-        """
-        # Override in development server
-        pass
-
     @abstractmethod
     def get_worker_logs(
         self,

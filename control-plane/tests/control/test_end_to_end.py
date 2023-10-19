@@ -6,9 +6,6 @@ from control_plane.control.api.all import ApiHandler
 from control_plane.control.periodic.all import LifecycleActions
 from control_plane.data.data_store import DataStore
 from control_plane.data.sql_connection import SqlConnectionPool
-from control_plane.docker.credentials_loader import (
-    DummyContainerRepositoryCredentialsLoader,
-)
 from control_plane.types.datatypes import (
     ExecutionFinalResultPayload,
     ExecutionOutcome,
@@ -23,6 +20,9 @@ from control_plane.types.datatypes import (
     WorkerStatus,
 )
 from control_plane.types.version_reference import VersionReference, VersionReferenceType
+from tests.docker.dummy_credentials_loader import (
+    DummyContainerRepositoryCredentialsLoader,
+)
 from tests.provisioning.dummy_provisioner import DummyProvisioner
 
 
