@@ -418,3 +418,14 @@ class ProjectsList(BaseModel):
 
 class HealthStatus(BaseModel):
     status: str
+
+
+class ContainerRepositoryCredentials(BaseModel):
+    # Usage:
+    # docker login -u {username} -p {password} {endpoint_url}
+    # docker push {repository_name}:{tag}
+
+    repository_name: str
+    username: str
+    password: str
+    endpoint_url: str

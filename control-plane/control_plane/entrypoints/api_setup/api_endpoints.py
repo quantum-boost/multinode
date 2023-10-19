@@ -8,6 +8,9 @@ from starlette.responses import JSONResponse
 
 from control_plane.control.api.all import ApiHandler
 from control_plane.data.data_store import DataStore
+from control_plane.docker.credentials_loader import (
+    AbstractContainerRepositoryCredentialsLoader,
+)
 from control_plane.entrypoints.utils.current_time import current_time
 from control_plane.entrypoints.utils.documentation import document_possible_errors
 from control_plane.provisioning.provisioner import AbstractProvisioner
@@ -32,6 +35,7 @@ from control_plane.types.api_errors import (
     VersionDoesNotExist,
 )
 from control_plane.types.datatypes import (
+    ContainerRepositoryCredentials,
     ExecutionFinalResultPayload,
     ExecutionInfo,
     ExecutionLogs,
@@ -64,9 +68,10 @@ from control_plane.user_management.authenticator import (
 def build_app(
         data_store: DataStore,
         provisioner: AbstractProvisioner,
+        credentials_loader: AbstractContainerRepositoryCredentialsLoader,
         authenticator: AbstractAuthenticator,
 ) -> FastAPI:
-    api_handler = ApiHandler(data_store, provisioner)
+    api_handler = ApiHandler(data_store, provisioner, credentials_loader)
 
     app = FastAPI()
     app.openapi_version = "3.0.3"  # has better compatibility with client generators
@@ -407,6 +412,16 @@ def build_app(
             max_lines=max_lines,
             initial_offset=initial_offset,
         )
+
+    # Container repository credentials endpoint
+    @app.get(
+        path="/container_repository_credentials",
+        responses=document_possible_errors([]),
+    )
+    def get_container_repository_credentials(
+            auth_info: AuthResult = Depends(authenticate),
+    ) -> ContainerRepositoryCredentials:
+        return api_handler.repository_credentials.get_container_repository_credentials()
 
     # Error handling
 

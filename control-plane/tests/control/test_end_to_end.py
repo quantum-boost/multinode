@@ -6,6 +6,9 @@ from control_plane.control.api.all import ApiHandler
 from control_plane.control.periodic.all import LifecycleActions
 from control_plane.data.data_store import DataStore
 from control_plane.data.sql_connection import SqlConnectionPool
+from control_plane.docker.credentials_loader import (
+    DummyContainerRepositoryCredentialsLoader,
+)
 from control_plane.types.datatypes import (
     ExecutionFinalResultPayload,
     ExecutionOutcome,
@@ -104,8 +107,9 @@ def test_two_invocations_running_in_parallel_with_one_succeeding_and_one_failing
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -381,8 +385,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -600,8 +605,9 @@ def test_parent_and_child_invocations_with_parent_cancelled_while_both_execution
 @pytest.mark.timeout(5)
 def test_invocation_timing_out_while_execution_in_flight(data_store: DataStore) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -712,8 +718,9 @@ def test_invocation_timing_out_while_execution_in_flight_and_cleanup_not_finishi
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -809,8 +816,9 @@ def test_invocation_being_cancelled_before_worker_is_provisioned(
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -910,8 +918,9 @@ def test_invocation_timing_out_before_worker_is_provisioned(
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -996,8 +1005,9 @@ def test_invocation_being_retried_due_to_error_being_thrown_in_code(
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -1183,8 +1193,9 @@ def test_invocation_being_retried_due_to_hardware_failure(
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
@@ -1355,8 +1366,9 @@ def test_with_project_deletion(
     data_store: DataStore,
 ) -> None:
     provisioner = DummyProvisioner()
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
 
-    api = ApiHandler(data_store, provisioner)
+    api = ApiHandler(data_store, provisioner, credentials_loader)
     loop = LifecycleActions(data_store, provisioner)
 
     api.registration.create_project(project_name=PROJECT_NAME, time=TIME)

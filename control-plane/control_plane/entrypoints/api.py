@@ -10,6 +10,9 @@ from control_plane.entrypoints.utils.cli_arguments import parse_cli_arguments
 from control_plane.entrypoints.utils.provisioner_setup import (
     provisioner_from_environment_variables,
 )
+from control_plane.entrypoints.utils.repository_credentials_setup import (
+    credentials_loader_from_environment_variables,
+)
 from control_plane.entrypoints.utils.sql_setup import (
     datastore_from_environment_variables,
 )
@@ -22,10 +25,11 @@ logging.basicConfig(
 def main() -> None:
     cli_args = parse_cli_arguments()
     provisioner = provisioner_from_environment_variables(cli_args)
+    credentials_loader = credentials_loader_from_environment_variables(cli_args)
     authenticator = authenticator_from_environment_variables()
 
     with datastore_from_environment_variables(cli_args) as data_store:
-        app = build_app(data_store, provisioner, authenticator)
+        app = build_app(data_store, provisioner, credentials_loader, authenticator)
         uvicorn.run(app, host="0.0.0.0", port=5000)
 
 

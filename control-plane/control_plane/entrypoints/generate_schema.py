@@ -2,6 +2,9 @@ import argparse
 import json
 
 from control_plane.data.data_store import DataStore
+from control_plane.docker.credentials_loader import (
+    AbstractContainerRepositoryCredentialsLoader,
+)
 from control_plane.entrypoints.api_setup.api_endpoints import build_app
 from control_plane.provisioning.provisioner import AbstractProvisioner
 from control_plane.user_management.authenticator import AbstractAuthenticator
@@ -20,6 +23,12 @@ class FakeAuthenticator(AbstractAuthenticator):
     pass
 
 
+class FakeContainerRepositoryCredentialsLoader(
+    AbstractContainerRepositoryCredentialsLoader
+):
+    pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -35,10 +44,13 @@ def main() -> None:
     FakeProvisioner.__abstractmethods__ = set()  # type: ignore
     provisioner = FakeProvisioner()  # type: ignore
 
+    FakeContainerRepositoryCredentialsLoader.__abstractmethods__ = set()  # type: ignore
+    credentials_loader = FakeContainerRepositoryCredentialsLoader()  # type: ignore
+
     FakeAuthenticator.__abstractmethods__ = set()  # type: ignore
     authenticator = FakeAuthenticator()  # type: ignore
 
     data_store = FakeDataStore()
-    app = build_app(data_store, provisioner, authenticator)
+    app = build_app(data_store, provisioner, credentials_loader, authenticator)
     with open(output, "w") as f:
         json.dump(app.openapi(), f, indent=2)
