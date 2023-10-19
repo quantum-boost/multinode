@@ -185,55 +185,6 @@ class FunctionsTable:
 
             return _construct_function_info_from_row(row)
 
-    def list_for_project_version(
-        self, *, project_name: str, version_id: str
-    ) -> FunctionsListForVersion:
-        """
-        :raises ProjectDoesNotExist:
-        :raises VersionDoesNotExist:
-        """
-        raise_error_if_version_does_not_exist(project_name, version_id, self._pool)
-
-        with self._pool.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT
-                  function_name,
-                  docker_image,
-                  resource_spec,
-                  execution_spec,
-                  function_status,
-                  prepared_function_details
-                FROM functions
-                WHERE project_name = %s AND version_id = %s;
-                """,
-                [project_name, version_id],
-            )
-
-            rows = cursor.fetchall()
-
-            functions = [
-                FunctionInfoForVersion(
-                    function_name=row[0],
-                    docker_image=row[1],
-                    resource_spec=ResourceSpec.model_validate_json(row[2]),
-                    execution_spec=ExecutionSpec.model_validate_json(row[3]),
-                    function_status=FunctionStatus(row[4]),
-                    prepared_function_details=(
-                        PreparedFunctionDetails.model_validate_json(row[5])
-                        if row[5] is not None
-                        else None
-                    ),
-                )
-                for row in rows
-            ]
-
-            return FunctionsListForVersion(
-                project_name=project_name,
-                version_id=version_id,
-                functions=functions,
-            )
-
     def list_all(self, *, statuses: set[FunctionStatus]) -> list[FunctionInfo]:
         if len(statuses) == 0:
             # Must handle separately to avoid SQL syntax error

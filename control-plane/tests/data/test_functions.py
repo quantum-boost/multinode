@@ -80,11 +80,6 @@ def test_create_two_functions(data_store: DataStore) -> None:
             function_name=FUNCTION_NAME_1,
         )
 
-    functions_for_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_1
-    ).functions
-    assert len(functions_for_version) == 0
-
     version = data_store.project_versions.get(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1
     )
@@ -133,19 +128,6 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert all_functions[0].prepared_function_details is None
     assert all_functions[0].project_deletion_requested == False
 
-    functions_for_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_1
-    ).functions
-    assert len(functions_for_version) == 1
-    assert functions_for_version[0].function_name == FUNCTION_NAME_1
-    assert functions_for_version[0].docker_image == DOCKER_IMAGE
-    assert functions_for_version[0].resource_spec.virtual_cpus == pytest.approx(
-        RESOURCE_SPEC.virtual_cpus, 1.0e-5
-    )
-    assert functions_for_version[0].execution_spec == EXECUTION_SPEC
-    assert functions_for_version[0].function_status == FunctionStatus.PENDING
-    assert functions_for_version[0].prepared_function_details is None
-
     version = data_store.project_versions.get(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1
     )
@@ -158,11 +140,6 @@ def test_create_two_functions(data_store: DataStore) -> None:
     assert version.functions[0].execution_spec == EXECUTION_SPEC
     assert version.functions[0].function_status == FunctionStatus.PENDING
     assert version.functions[0].prepared_function_details is None
-
-    functions_for_other_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_2  # the other project version
-    ).functions
-    assert len(functions_for_other_version) == 0
 
     other_version = data_store.project_versions.get(
         project_name=PROJECT_NAME, version_id=VERSION_ID_2
@@ -202,15 +179,6 @@ def test_create_two_functions(data_store: DataStore) -> None:
         FUNCTION_NAME_2,
     }
 
-    functions_for_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_1
-    ).functions
-    assert len(functions_for_version) == 2
-    assert {function.function_name for function in functions_for_version} == {
-        FUNCTION_NAME_1,
-        FUNCTION_NAME_2,
-    }
-
     version = data_store.project_versions.get(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1
     )
@@ -245,11 +213,6 @@ def test_create_with_duplicate_name(data_store: DataStore) -> None:
             function_status=FunctionStatus.PENDING,
             prepared_function_details=None,
         )
-
-    functions_for_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_1
-    ).functions
-    assert len(functions_for_version) == 1
 
 
 def test_update_function(data_store: DataStore) -> None:
@@ -303,15 +266,6 @@ def test_update_function(data_store: DataStore) -> None:
     )
     assert other_function.function_status == FunctionStatus.PENDING
     assert other_function.prepared_function_details is None
-
-    functions_for_version = data_store.functions.list_for_project_version(
-        project_name=PROJECT_NAME, version_id=VERSION_ID_1
-    ).functions
-    assert (
-        functions_for_version[0].prepared_function_details == PREPARED_FUNCTION_DETAILS
-        or functions_for_version[1].prepared_function_details
-        == PREPARED_FUNCTION_DETAILS
-    )
 
     version = data_store.project_versions.get(
         project_name=PROJECT_NAME, version_id=VERSION_ID_1
@@ -378,11 +332,6 @@ def test_methods_when_project_version_does_not_exist(data_store: DataStore) -> N
             function_name=FUNCTION_NAME_1,
         )
 
-    with pytest.raises(VersionDoesNotExist):
-        data_store.functions.list_for_project_version(
-            project_name=PROJECT_NAME, version_id=NONEXISTENT_VERSION_ID
-        )
-
 
 def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
     with pytest.raises(ProjectDoesNotExist):
@@ -411,9 +360,4 @@ def test_methods_when_project_does_not_exist(data_store: DataStore) -> None:
             project_name=NONEXISTENT_PROJECT_NAME,
             version_id=VERSION_ID_1,
             function_name=FUNCTION_NAME_1,
-        )
-
-    with pytest.raises(ProjectDoesNotExist):
-        data_store.functions.list_for_project_version(
-            project_name=NONEXISTENT_PROJECT_NAME, version_id=VERSION_ID_1
         )
