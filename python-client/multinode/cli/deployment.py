@@ -1,12 +1,8 @@
-import inspect
 import shutil
-import sys
 import time
 from enum import Enum
-from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from types import ModuleType
-from typing import Dict, Generator, List
+from typing import Dict, Generator
 from uuid import uuid4
 
 import click
@@ -26,21 +22,23 @@ from multinode.config import (
     create_control_plane_client_from_config,
     load_config_from_file,
 )
+from multinode.constants import ROOT_WORKER_DIR
 from multinode.core.errors import ProjectAlreadyExists
 from multinode.core.multinode import Multinode
+from multinode.utils.dynamic_imports import import_multinode_object_from_dir
 
 # TODO we should allow user specify preferred Python version
-DOCKER_TEMPLATE = """FROM python:3.8-bullseye
+DOCKER_TEMPLATE = f"""FROM python:3.8-bullseye
 
-WORKDIR /app
-COPY . /app
+WORKDIR {ROOT_WORKER_DIR}
+COPY . {ROOT_WORKER_DIR}
 
 ENV PYTHONBUFFERED=1 \\
-    PYTHONPATH=/app \\
-    {user_env_vars}
+    PYTHONPATH={ROOT_WORKER_DIR} \\
+    {{user_env_vars}}
 
 
-{install_req_line}
+{{install_req_line}}
 RUN pip install multinode
 
 ENTRYPOINT ["start-multinode-worker"]
@@ -111,7 +109,8 @@ def deploy_new_project_version(
         if project_deployment_option == ProjectDeploymentOption.UPGRADE_EXISTING:
             cli_fail(ctx, f'Project "{project_name}" does not exist.')
 
-    multinode_obj = _import_multinode_object_from_dir(ctx, project_dir)
+    multinode_obj = import_multinode_object_from_dir(project_dir)
+    click.secho(f"Found Multinode object in {project_dir}.", fg="green", bold=True)
 
     container_repo_creds = api_client.get_container_repository_credentials()
     image_tag = _package_and_push_project_image(
@@ -154,8 +153,6 @@ def _package_and_push_project_image(
 ) -> str:
     image_tag = f"{repository_credentials.repository_name}:{project_name}-{uuid4()}"
 
-    # TODO flakiness of the pythonpath when actually running the container
-    # TODO will be fixed in the worker code PR
     main_filepath = project_dir / "main.py"
     if not main_filepath.exists():
         cli_fail(ctx, f"Could not find main.py file in the {project_dir} directory.")
@@ -285,63 +282,6 @@ def _pretty_print_docker_push_log(
             click.echo(f"\033[K{layer_id}: {progress}")  # Clean line and print progress
 
 
-def _import_multinode_object_from_dir(
-    ctx: click.Context, project_dir: Path
-) -> Multinode:
-    # Assume PYTHONPATH is at the root of the project dir
-    sys.path.append(str(project_dir))
-    main_filepath = project_dir / "main.py"
-    try:
-        module = _import_python_module_from_file(main_filepath)
-        multinode_objects = _extract_multinode_objects_from_module(module)
-    except ImportError as e:
-        cli_fail(ctx, e.msg)
-
-    if len(multinode_objects) == 0:
-        cli_fail(ctx, f"Could not find a Multinode object in {main_filepath}.")
-    if len(multinode_objects) > 1:
-        cli_fail(
-            ctx,
-            f"Found more than one Multinode object in {main_filepath}. "
-            f"Only one is allowed.",
-        )
-
-    click.secho(f"Found Multinode object in {project_dir}.", fg="green", bold=True)
-    return multinode_objects[0]
-
-
-def _extract_multinode_objects_from_module(module: ModuleType) -> List[Multinode]:
-    mn_objects: List[Multinode] = []
-    for _, obj in inspect.getmembers(module):
-        if isinstance(obj, Multinode):
-            mn_objects.append(obj)
-
-    return mn_objects
-
-
-def _import_python_module_from_file(filepath: Path) -> ModuleType:
-    """
-    Dynamically imports a Python file.
-
-    Keep in mind that importing a file also executes all the code inside.
-
-    :return: `ModuleType` object.
-    :raises ImportError: if the file cannot be imported as a Python module.
-    """
-    module_name = inspect.getmodulename(filepath)
-    if module_name is None:
-        raise ImportError(f"Could not import {filepath} as a python module.")
-
-    spec = spec_from_file_location(module_name, filepath)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not import {filepath} as a python module.")
-
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    sys.modules[module_name] = module
-    return module
-
-
 def _create_project(api_client: DefaultApi, project_name: str) -> ProjectInfo:
     try:
         project = api_client.create_project(project_name)
@@ -357,7 +297,7 @@ def _create_project(api_client: DefaultApi, project_name: str) -> ProjectInfo:
 def _create_project_version(
     api_client: DefaultApi, project_name: str, multinode_obj: Multinode, image_tag: str
 ) -> VersionInfo:
-    functions = [function[0].fn_spec for function in multinode_obj._functions.values()]
+    functions = [function.fn_spec for function in multinode_obj._functions.values()]
     version_def = VersionDefinition(default_docker_image=image_tag, functions=functions)
     version = api_client.create_project_version(
         project_name=project_name, version_definition=version_def
