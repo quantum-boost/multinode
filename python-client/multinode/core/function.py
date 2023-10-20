@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Any, List, Optional, TypeVar
+from typing import Any, Callable, List, Optional, TypeVar
 
 import jsonpickle
 from pydantic import BaseModel
@@ -53,6 +53,7 @@ class Function:
     def __init__(
         self,
         fn_spec: FunctionSpec,
+        fn: Optional[Callable[..., Any]] = None,
         project_name: Optional[str] = None,
         version_id: Optional[str] = None,
     ):
@@ -69,11 +70,12 @@ class Function:
            `project_name` and `version_id` are loaded from environment variables.
         """
         self.fn_spec = fn_spec
+        self.fn = fn
         self.project_name = project_name
         self.version_id = version_id
         self._api_client: Optional[DefaultApi] = None
 
-    def __call__(self, *input_data: Any, poll_frequency: float = 1) -> Any:
+    def call_remote(self, *input_data: Any, poll_frequency: float = 1) -> Any:
         invocation_id = self.start(*input_data)
         invocation = self.get(invocation_id)
         while not invocation.status.finished:
@@ -92,6 +94,18 @@ class Function:
             )
 
         return invocation.result
+
+    def call_local(self, *input_data: Any) -> Any:
+        if self.fn is None:
+            # It means function got obtained via `get_deployed_function(...)`
+            # and we don't have the actual function definition
+            # TODO can we somehow make it work in the future?
+            raise InvalidUseError(
+                "Functions obtained via `get_deployed_function(...)` "
+                "cannot be called locally."
+            )
+
+        return self.fn(*input_data)
 
     def start(self, *input_data: Any) -> str:
         data_for_inv = self._get_data_required_for_invocation()

@@ -1,0 +1,2 @@
+class FailedFunctionError(Exception):
+    pass
