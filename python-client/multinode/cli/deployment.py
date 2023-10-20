@@ -1,6 +1,7 @@
 import shutil
 import time
 from enum import Enum
+from importlib.metadata import version
 from pathlib import Path
 from typing import Dict, Generator
 from uuid import uuid4
@@ -34,7 +35,7 @@ ENV PYTHONBUFFERED=1 \\
 
 RUN pip install --root-user-action=ignore --upgrade pip
 {{install_req_line}}
-RUN pip install --root-user-action=ignore multinode
+RUN pip install --root-user-action=ignore multinode=={version("multinode")}
 
 ENTRYPOINT ["start-multinode-worker"]
 """
