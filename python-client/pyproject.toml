@@ -3,9 +3,8 @@ name = "multinode"
 version = "0.0.10"
 description = "Multinode's Python client"
 authors = ["Kacper Kielak <kacper@multinode.dev>"]
-readme = "README.md"
 packages = [{include = "multinode"}]
-# Poetry ignores files from .gitignore so we need to explicitly include api_client
+# Poetry ignores files from .gitignore so we need to explicitly include some of them
 include =["multinode/api_client/**/*", "multinode/shared/**/*"]
 
 [tool.poetry.scripts]
