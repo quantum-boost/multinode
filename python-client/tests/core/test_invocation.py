@@ -142,7 +142,7 @@ def test_from_invocation_info_with_successful_execution_and_1_retry() -> None:
     assert invocation.result == "test-output"
     assert invocation.error is None
     assert invocation.terminated is True
-    assert invocation.num_retries == 1
+    assert invocation.num_failed_attempts == 1
 
 
 def test_from_invocation_info_with_successful_execution_after_timeout() -> None:
@@ -171,7 +171,7 @@ def test_from_invocation_info_with_successful_execution_after_timeout() -> None:
     assert invocation.result == "test-output"
     assert invocation.error is None
     assert invocation.terminated is True
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_with_different_failed_executions_before_retries_limit() -> (
@@ -207,7 +207,7 @@ def test_from_invocation_info_with_different_failed_executions_before_retries_li
     assert invocation.result is None
     assert invocation.error == "test-error-message2"
     assert invocation.terminated is False
-    assert invocation.num_retries == 3
+    assert invocation.num_failed_attempts == 3
 
 
 def test_from_invocation_info_with_all_executions_failed_after_retries_limit() -> None:
@@ -241,7 +241,7 @@ def test_from_invocation_info_with_all_executions_failed_after_retries_limit() -
     assert invocation.result == "intermediate-output"
     assert invocation.error == "test-error-message1"
     assert invocation.terminated is False
-    assert invocation.num_retries == 4
+    assert invocation.num_failed_attempts == 4
 
 
 def test_from_invocation_info_with_aborted_execution() -> None:
@@ -274,7 +274,7 @@ def test_from_invocation_info_with_aborted_execution() -> None:
     assert invocation.result == "aborted-output"
     assert invocation.error is None
     assert invocation.terminated is True
-    assert invocation.num_retries == 3
+    assert invocation.num_failed_attempts == 3
 
 
 def test_from_invocation_info_with_aborted_execution_after_timeout() -> None:
@@ -302,7 +302,7 @@ def test_from_invocation_info_with_aborted_execution_after_timeout() -> None:
     assert invocation.result == "aborted-output"
     assert invocation.error is None
     assert invocation.terminated is True
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_with_running_execution_and_cancellation_request() -> None:
@@ -330,7 +330,7 @@ def test_from_invocation_info_with_running_execution_and_cancellation_request() 
     assert invocation.result is None
     assert invocation.error is None
     assert invocation.terminated is False
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_with_running_and_failed_execution() -> None:
@@ -359,7 +359,7 @@ def test_from_invocation_info_with_running_and_failed_execution() -> None:
     assert invocation.result is None
     assert invocation.error is None
     assert invocation.terminated is False
-    assert invocation.num_retries == 1
+    assert invocation.num_failed_attempts == 1
 
 
 def test_from_invocation_info_without_executions() -> None:
@@ -387,7 +387,7 @@ def test_from_invocation_info_without_executions() -> None:
     assert invocation.result is None
     assert invocation.error is None
     assert invocation.terminated is False
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_with_pending_execution() -> None:
@@ -415,7 +415,7 @@ def test_from_invocation_info_with_pending_execution() -> None:
     assert invocation.result is None
     assert invocation.error is None
     assert invocation.terminated is False
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_without_executions_but_terminated_invocation() -> None:
@@ -443,7 +443,7 @@ def test_from_invocation_info_without_executions_but_terminated_invocation() -> 
     assert invocation.result is None
     assert invocation.error is None
     assert invocation.terminated is True
-    assert invocation.num_retries == 0
+    assert invocation.num_failed_attempts == 0
 
 
 def test_from_invocation_info_with_failed_executions_before_retries_limit_but_terminated_invocation() -> (  # noqa: B950
@@ -473,4 +473,4 @@ def test_from_invocation_info_with_failed_executions_before_retries_limit_but_te
     assert invocation.result == "intermediate-output"
     assert invocation.error == "test-error-message1"
     assert invocation.terminated is True
-    assert invocation.num_retries == 2
+    assert invocation.num_failed_attempts == 2
