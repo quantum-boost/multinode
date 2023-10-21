@@ -34,8 +34,7 @@ WORKDIR {ROOT_WORKER_DIR}
 COPY . {ROOT_WORKER_DIR}
 
 ENV PYTHONBUFFERED=1 \\
-    PYTHONPATH={ROOT_WORKER_DIR} \\
-    {{user_env_vars}}
+    PYTHONPATH={ROOT_WORKER_DIR}{{user_env_vars}}
 
 
 {{install_req_line}}
@@ -234,6 +233,7 @@ def _get_user_env_vars(ctx: click.Context, project_dir: Path) -> str:
             "It will run without any environment variables.",
             fg="yellow",
         )
+        return ""
 
     env_lines = []
     with open(env_path, "r") as f:
@@ -251,9 +251,9 @@ def _get_user_env_vars(ctx: click.Context, project_dir: Path) -> str:
                     f"on the line {i+1} of the .env file: {line}",
                 )
 
-            env_lines.append(f"{key.strip()}={value.strip()}")
+            env_lines.append(f" \\\n    {key.strip()}={value.strip()}")
 
-    return " \\\n    ".join(env_lines)
+    return "".join(env_lines)
 
 
 def _pretty_print_docker_build_log(
