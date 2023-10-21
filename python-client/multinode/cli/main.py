@@ -271,12 +271,38 @@ def describe(
             f'of project "{project_name}".',
         )
 
-    describe_invocation(api_client, project, version, function, invocation)
+    describe_invocation(invocation)
 
 
 @cli.command()
-def logs() -> None:
-    raise NotImplementedError
+@click.option("--project-name", type=str, required=True)
+@click.option(
+    "--version-id", type=str, help="If not provided, the latest version is used."
+)
+@click.option("--function-name", type=str, required=True)
+@click.option("--invocation-id", type=str, required=True)
+@click.option("--execution-id", type=str, required=True)
+def logs(
+    project_name: str,
+    version_id: Optional[str],
+    function_name: str,
+    invocation_id: str,
+    execution_id: str,
+) -> None:
+    """Prints the logs of an execution."""
+    config = load_config_from_file()
+    api_client = create_control_plane_client_from_config(config)
+    resolved_version_id = version_id or LATEST_VERSION_STR
+    # TODO add client-side error handling in case some id is wrong
+    # TODO dynamic scrolling through the logs if all cannot be fetched at once
+    logs = api_client.get_execution_logs(
+        project_name=project_name,
+        version_ref_str=resolved_version_id,
+        function_name=function_name,
+        invocation_id=invocation_id,
+        execution_id=execution_id,
+    )
+    click.echo("\n".join(logs.log_lines))
 
 
 if __name__ == "__main__":
