@@ -13,6 +13,7 @@ from multinode.api_client import (
     ProjectInfo,
     VersionInfo,
 )
+from multinode.core.invocation import Invocation
 
 MAX_LIST_RESULTS = 10  # TODO make the CLI tool dynamic so it fetches more on scroll
 MAX_LIST_COUNT = 50
@@ -133,11 +134,17 @@ def _echo_basic_invocation_details(
             f"{parent_inv.invocation_id} ({parent_inv.function_name})\n"
         )
 
-    status = (
-        "(in-flight)"
-        if invocation.invocation_status == InvocationStatus.RUNNING
-        else "(terminated)"
-    )
+    if isinstance(invocation, InvocationInfoForFunction):
+        status = (
+            "(in-flight)"
+            if invocation.invocation_status == InvocationStatus.RUNNING
+            else "(terminated)"
+        )
+    elif isinstance(invocation, InvocationInfo):
+        status = Invocation.from_invocation_info(invocation).readable_status()
+    else:
+        raise ValueError
+
     click.echo(
         f"{line_prefix}{invocation.invocation_id} {status}:\n"
         f"{line_prefix}\tcreation time: {invocation.creation_time}\n"

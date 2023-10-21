@@ -17,7 +17,7 @@ PENDING_INVOCATION = Invocation(
     result=None,
     error=None,
     terminated=False,
-    num_retries=0,
+    num_failed_attempts=0,
 )
 
 RUNNING_INVOCATION = Invocation(
@@ -25,7 +25,7 @@ RUNNING_INVOCATION = Invocation(
     result="intermediate-result",
     error=None,
     terminated=False,
-    num_retries=1,
+    num_failed_attempts=1,
 )
 
 SUCCEEDED_INVOCATION = Invocation(
@@ -34,7 +34,7 @@ SUCCEEDED_INVOCATION = Invocation(
     error=None,
     # terminated=False on purpose, __call__ method should still return at this point
     terminated=False,
-    num_retries=1,
+    num_failed_attempts=1,
 )
 
 CANCELLED_INVOCATIONS = Invocation(
@@ -42,7 +42,7 @@ CANCELLED_INVOCATIONS = Invocation(
     result="cleanup-result",
     error=None,
     terminated=False,
-    num_retries=0,
+    num_failed_attempts=0,
 )
 
 FAILED_INVOCATION = Invocation(
@@ -50,7 +50,7 @@ FAILED_INVOCATION = Invocation(
     result="intermediate-result",
     error="error-message",
     terminated=False,
-    num_retries=3,
+    num_failed_attempts=3,
 )
 
 TIMED_OUT_INVOCATION = Invocation(
@@ -58,7 +58,7 @@ TIMED_OUT_INVOCATION = Invocation(
     result="intermediate-result",
     error=None,
     terminated=False,
-    num_retries=3,
+    num_failed_attempts=3,
 )
 
 

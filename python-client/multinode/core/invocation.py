@@ -38,12 +38,12 @@ class Invocation:
     result: Optional[Any]
     error: Optional[str]
     terminated: bool
-    num_retries: int
+    num_failed_attempts: int
 
     @staticmethod
     def from_invocation_info(inv_info: InvocationInfo) -> Invocation:
-        num_retries = _get_num_failed_executions(inv_info)
-        status = _resolve_invocation_status(inv_info, num_retries)
+        num_failed_attempts = _get_num_failed_executions(inv_info)
+        status = _resolve_invocation_status(inv_info, num_failed_attempts)
         terminated = inv_info.invocation_status == ApiInvocationStatus.TERMINATED
         result = _extract_result(inv_info)
         error = _extract_error(inv_info)
@@ -52,8 +52,27 @@ class Invocation:
             result=result,
             error=error,
             terminated=terminated,
-            num_retries=num_retries,
+            num_failed_attempts=num_failed_attempts,
         )
+
+    def readable_status(self) -> str:
+        clauses: list[str] = [self.status.value]
+
+        if self.status.finished and not self.terminated:
+            clauses.append(" - terminating")
+
+        if self.num_failed_attempts > 0:
+            plural_suffix = "s" if self.num_failed_attempts != 1 else ""
+            if self.status == InvocationStatus.FAILED:
+                clauses.append(
+                    f", {self.num_failed_attempts} failed attempt{plural_suffix}"
+                )
+            elif self.status in {InvocationStatus.PENDING, InvocationStatus.RUNNING}:
+                clauses.append(
+                    f", {self.num_failed_attempts} previous failed attempt{plural_suffix}"
+                )
+
+        return "(" + "".join(clauses) + ")"
 
 
 def _resolve_invocation_status(
@@ -93,9 +112,11 @@ def _has_successful_execution(inv_info: InvocationInfo) -> bool:
     )
 
 
-def _has_reached_max_retries_limit(inv_info: InvocationInfo, num_retries: int) -> bool:
+def _has_reached_max_retries_limit(
+    inv_info: InvocationInfo, num_failed_attempts: int
+) -> bool:
     max_attempts = inv_info.execution_spec.max_retries + 1
-    return num_retries == max_attempts
+    return num_failed_attempts == max_attempts
 
 
 def _has_timed_out(inv_info: InvocationInfo) -> bool:
