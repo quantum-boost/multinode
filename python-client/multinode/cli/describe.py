@@ -1,7 +1,10 @@
+from typing import Union
+
 import click
 
 from multinode.api_client import (
     DefaultApi,
+    ExecutionSummary,
     FunctionInfoForVersion,
     InvocationInfo,
     InvocationInfoForFunction,
@@ -87,14 +90,11 @@ def describe_function(
 
 
 def describe_invocation(
-    api_client: DefaultApi,
-    project: ProjectInfo,
-    version: VersionInfo,
-    function: FunctionInfoForVersion,
     invocation: InvocationInfo,
 ) -> None:
-    # TODO let's implement when invocations can actually via the CLI tool
-    raise NotImplementedError()
+    _echo_basic_invocation_details(invocation)
+    for e in invocation.executions:
+        _echo_basic_execution_details(e, line_prefix="\t")
 
 
 def _echo_function_details(
@@ -122,7 +122,7 @@ def _echo_function_details(
 
 
 def _echo_basic_invocation_details(
-    invocation: InvocationInfoForFunction,
+    invocation: Union[InvocationInfoForFunction, InvocationInfo],
     line_prefix: str = "",
 ) -> None:
     parent_invocation_line = ""
@@ -143,3 +143,31 @@ def _echo_basic_invocation_details(
         f"{line_prefix}\tcreation time: {invocation.creation_time}\n"
         f"{parent_invocation_line}"
     )
+
+
+def _echo_basic_execution_details(
+    execution: ExecutionSummary, line_prefix: str = ""
+) -> None:
+    lines = [
+        f"{line_prefix}{execution.execution_id}:",
+        f"{line_prefix}\tstatus: {execution.worker_status}",
+        f"{line_prefix}\tcreation time: {execution.creation_time}",
+    ]
+
+    if execution.execution_start_time is not None:
+        lines.append(
+            f"{line_prefix}\texecution start time: {execution.execution_start_time}"
+        )
+
+    if execution.execution_finish_time is not None:
+        lines.append(
+            f"{line_prefix}\texecution finish time: {execution.execution_finish_time}"
+        )
+
+    if execution.outcome is not None:
+        lines.append(f"{line_prefix}\toutcome: {execution.outcome}")
+
+    if execution.error_message is not None:
+        lines.append(f"{line_prefix}\terror message: {execution.error_message}")
+
+    click.echo("\n".join(lines) + "\n")
