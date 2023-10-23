@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from multinode.constants import CONFIG_FILE_PATH, DEFAULT_API_URL
+from multinode.constants import CONFIG_FILE_PATH
 from multinode.errors import MissingEnvironmentVariableError
 from multinode.shared.worker_environment_variables import (
     CONTROL_PLANE_API_KEY_ENV,
@@ -12,7 +12,7 @@ from multinode.shared.worker_environment_variables import (
 
 
 class Config(BaseModel):
-    api_url: str = DEFAULT_API_URL
+    api_url: Optional[str] = None
     api_key: Optional[str] = None
 
 

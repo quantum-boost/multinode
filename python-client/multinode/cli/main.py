@@ -1,4 +1,3 @@
-from getpass import getpass
 from pathlib import Path
 from typing import List, Optional
 
@@ -44,7 +43,7 @@ def cli(ctx: click.Context) -> None:
 @click.pass_context
 def login(ctx: click.Context) -> None:
     config = load_config_from_file()
-    if config.api_key is not None:
+    if config.api_key is not None or config.api_url is not None:
         click.echo(
             "You are already logged in. If you want to log in with "
             "a different account, run `multinode logout` first."
@@ -54,7 +53,9 @@ def login(ctx: click.Context) -> None:
     # Current login flow just asks for API key directly. Alternatives include
     # redirecting to an authenticated web session or exchanging username/password for
     # an API key. Both require additional work and are not necessary for the MVP.
-    api_key = getpass("Enter your API key:")
+    api_url = click.prompt("Enter the URL to your Multinode control plane")
+    config.api_url = api_url
+    api_key = click.prompt("Enter your API key", hide_input=True)
     config.api_key = api_key
 
     # Check if the API key is valid
