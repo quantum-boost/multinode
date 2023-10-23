@@ -1,3 +1,4 @@
+import datetime
 from typing import Union
 
 import click
@@ -31,7 +32,7 @@ def describe_project(
     click.echo(
         click.style(f"{project.project_name} details:\n", bold=True)
         + f"{deletion_line}"
-        + f"\tcreation time: {project.creation_time}\n"
+        + f"\tcreation time: {_format_time(project.creation_time)}\n"
     )
 
     versions = api_client.list_project_versions(project.project_name).versions
@@ -53,7 +54,7 @@ def describe_version(
 
     click.echo(
         click.style(f"{version.version_id}{latest_suffix} details:\n", bold=True)
-        + f"\tcreation time: {version.creation_time}\n"
+        + f"\tcreation time: {_format_time(version.creation_time)}\n"
     )
 
     click.secho(f"{version.version_id}{latest_suffix} functions:", bold=True)
@@ -112,7 +113,6 @@ def _echo_function_details(
 
     click.echo(
         click.style(f"{line_prefix}{function.function_name}:\n", bold=bold_name)
-        + f"{line_prefix}\tdocker image: {function.docker_image}\n"
         + f"{line_prefix}\tcpus: {function.resource_spec.virtual_cpus}\n"
         + f"{line_prefix}\tmemory: {function.resource_spec.memory_gbs} GiB\n"
         + f"{line_prefix}\tmax concurrency: {function.resource_spec.max_concurrency}\n"
@@ -147,7 +147,7 @@ def _echo_basic_invocation_details(
 
     click.echo(
         f"{line_prefix}{invocation.invocation_id} {status}:\n"
-        f"{line_prefix}\tcreation time: {invocation.creation_time}\n"
+        f"{line_prefix}\tcreation time: {_format_time(invocation.creation_time)}\n"
         f"{parent_invocation_line}"
     )
 
@@ -157,24 +157,29 @@ def _echo_basic_execution_details(
 ) -> None:
     lines = [
         f"{line_prefix}{execution.execution_id}:",
-        f"{line_prefix}\tstatus: {execution.worker_status}",
-        f"{line_prefix}\tcreation time: {execution.creation_time}",
+        f"{line_prefix}\tcreation time: {_format_time(execution.creation_time)}",
     ]
 
     if execution.execution_start_time is not None:
         lines.append(
-            f"{line_prefix}\texecution start time: {execution.execution_start_time}"
+            f"{line_prefix}\texecution start time: "
+            f"{_format_time(execution.execution_start_time)}"
         )
 
     if execution.execution_finish_time is not None:
         lines.append(
-            f"{line_prefix}\texecution finish time: {execution.execution_finish_time}"
+            f"{line_prefix}\texecution finish time: "
+            f"{_format_time(execution.execution_finish_time)}"
         )
 
     if execution.outcome is not None:
-        lines.append(f"{line_prefix}\toutcome: {execution.outcome}")
+        lines.append(f"{line_prefix}\toutcome: {execution.outcome.value}")
 
     if execution.error_message is not None:
         lines.append(f"{line_prefix}\terror message: {execution.error_message}")
 
     click.echo("\n".join(lines) + "\n")
+
+
+def _format_time(time_as_int: int) -> str:
+    return datetime.datetime.fromtimestamp(time_as_int).strftime("%Y-%m-%d %H:%M:%SZ")
