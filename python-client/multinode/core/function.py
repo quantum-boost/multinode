@@ -56,6 +56,7 @@ class Function:
         fn: Optional[Callable[..., Any]] = None,
         project_name: Optional[str] = None,
         version_id: Optional[str] = None,
+        poll_frequency: int = 1,
     ):
         """
         There are 3 situations where Multinode Function object can be created and its
@@ -74,12 +75,13 @@ class Function:
         self.project_name = project_name
         self.version_id = version_id
         self._api_client: Optional[DefaultApi] = None
+        self._poll_frequency = poll_frequency
 
-    def call_remote(self, *input_data: Any, poll_frequency: float = 1) -> Any:
-        invocation_id = self.start(*input_data)
+    def call_remote(self, *args: Any, **kwargs: Any) -> Any:
+        invocation_id = self.start(*args, **kwargs)
         invocation = self.get(invocation_id)
         while not invocation.status.finished:
-            time.sleep(poll_frequency)
+            time.sleep(self._poll_frequency)
             invocation = self.get(invocation_id)
 
         if invocation.status == InvocationStatus.FAILED:
@@ -95,7 +97,7 @@ class Function:
 
         return invocation.result
 
-    def call_local(self, *input_data: Any) -> Any:
+    def call_local(self, *args: Any, **kwargs: Any) -> Any:
         if self.fn is None:
             # It means function got obtained via `get_deployed_function(...)`
             # and we don't have the actual function definition
@@ -105,13 +107,13 @@ class Function:
                 "cannot be called locally."
             )
 
-        return self.fn(*input_data)
+        return self.fn(*args, **kwargs)
 
-    def start(self, *input_data: Any) -> str:
+    def start(self, *args: Any, **kwargs: Any) -> str:
         data_for_inv = self._get_data_required_for_invocation()
 
         parent_invocation = _get_parent_invocation_from_env()
-        serialized_data = jsonpickle.encode(input_data)
+        serialized_data = jsonpickle.encode([args, kwargs])
         inv_definition = InvocationDefinition(
             parent_invocation=parent_invocation, input=serialized_data
         )

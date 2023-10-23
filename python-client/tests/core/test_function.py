@@ -67,29 +67,35 @@ def fn_definition(x: str) -> int:
 
 
 def test_call_remote_invocation_succeeded() -> None:
-    fn = Function(fn=fn_definition, fn_spec=MagicMock())
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
     fn.start = MagicMock(return_value="invocation_id")
 
     mocked_responses = [PENDING_INVOCATION, RUNNING_INVOCATION, SUCCEEDED_INVOCATION]
     fn.get = MagicMock(side_effect=mocked_responses)
 
-    result = fn.call_remote("input-data", poll_frequency=TEST_POLL_FREQUENCY)
+    result = fn.call_remote("input-data")
     assert result == "final-result"
 
 
 def test_call_remote_invocation_cancelled() -> None:
-    fn = Function(fn=fn_definition, fn_spec=MagicMock())
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
     fn.start = MagicMock(return_value="invocation_id")
 
     mocked_responses = [CANCELLED_INVOCATIONS]
     fn.get = MagicMock(side_effect=mocked_responses)
 
     with pytest.raises(InvocationCancelledError):
-        fn.call_remote("input-data", poll_frequency=TEST_POLL_FREQUENCY)
+        fn.call_remote("input-data")
 
 
 def test_call_invocation_timed_out() -> None:
-    fn = Function(fn=fn_definition, fn_spec=MagicMock())
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
     fn.start = MagicMock(return_value="invocation_id")
 
     mocked_responses = [
@@ -101,11 +107,13 @@ def test_call_invocation_timed_out() -> None:
     fn.get = MagicMock(side_effect=mocked_responses)
 
     with pytest.raises(InvocationTimedOutError):
-        fn.call_remote("input-data", poll_frequency=TEST_POLL_FREQUENCY)
+        fn.call_remote("input-data")
 
 
 def test_call_invocation_failed() -> None:
-    fn = Function(fn=fn_definition, fn_spec=MagicMock())
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
     fn.start = MagicMock(return_value="invocation_id")
 
     mocked_responses = [
@@ -117,4 +125,4 @@ def test_call_invocation_failed() -> None:
     fn.get = MagicMock(side_effect=mocked_responses)
 
     with pytest.raises(InvocationFailedError, match="error-message"):
-        fn.call_remote("input-data", poll_frequency=TEST_POLL_FREQUENCY)
+        fn.call_remote("input-data")
