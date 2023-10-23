@@ -105,7 +105,7 @@ class WorkerRunner:
             else:
                 final_result = ExecutionFinalResultPayload(
                     outcome=ExecutionOutcome.FAILED,  # type: ignore
-                    error_message=str(e),
+                    error_message=f"{e.__class__.__name__}: {str(e)}",
                 )
 
             self._finish_execution(final_result)
