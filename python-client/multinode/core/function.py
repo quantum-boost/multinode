@@ -86,12 +86,10 @@ class Function:
             raise InvocationFailedError(invocation.error)
 
         if invocation.status == InvocationStatus.CANCELLED:
-            raise InvocationCancelledError("Invocation was cancelled by a user.")
+            raise InvocationCancelledError("Invocation was cancelled.")
 
         if invocation.status == InvocationStatus.TIMED_OUT:
-            raise InvocationTimedOutError(
-                "Invocation did not finish before the timeout."
-            )
+            raise InvocationTimedOutError("Invocation timed out.")
 
         return invocation.result
 
