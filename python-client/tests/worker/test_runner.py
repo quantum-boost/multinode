@@ -34,7 +34,7 @@ DEFAULT_EXECUTION_SPEC = ExecutionSpec(
     timeout_seconds=3600,
 )
 FUNCTION_STATUS = FunctionStatus.READY
-INPUT = jsonpickle.encode("test-input")
+INPUT = jsonpickle.encode([("test-input",), {}])
 TIME = 1
 
 

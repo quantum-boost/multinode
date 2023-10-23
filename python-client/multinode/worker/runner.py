@@ -88,11 +88,12 @@ class WorkerRunner:
                     self._context.function_name,
                 )
 
-            fn_input = jsonpickle.decode(self._execution.input)
+            args, kwargs = jsonpickle.decode(self._execution.input)
+            fn_out = fn(*args, **kwargs)
             if inspect.isgeneratorfunction(fn):
-                self._run_generator_function(fn, fn_input)
+                self._process_generator_function_out(fn_out)
             else:
-                self._run_classic_function(fn, fn_input)
+                self._process_classic_function_out(fn_out)
 
         except BaseException as e:
             if isinstance(e, InvocationCancelledError) or isinstance(
@@ -110,24 +111,21 @@ class WorkerRunner:
             self._finish_execution(final_result)
             raise e  # Re-raise the error so the stack trace is visible in logs
 
-    def _run_generator_function(
-        self,
-        fn: Callable[[Any], Generator[Any, None, Any]],
-        fn_input: Any,
+    def _process_generator_function_out(
+        self, fn_out: Generator[Any, None, None]
     ) -> None:
-        for out in fn(fn_input):
+        for latest_out in fn_out:
             temp_result = ExecutionTemporaryResultPayload(
-                latest_output=jsonpickle.encode(out)
+                latest_output=jsonpickle.encode(latest_out)
             )
             self._update_execution(temp_result)
 
         final_result = ExecutionFinalResultPayload(outcome=self.outcome)
         self._finish_execution(final_result)
 
-    def _run_classic_function(self, fn: Callable[..., Any], fn_input: Any) -> None:
-        out = fn(fn_input)
+    def _process_classic_function_out(self, fn_out: Any) -> None:
         final_result = ExecutionFinalResultPayload(
-            outcome=self.outcome, final_output=jsonpickle.encode(out)
+            outcome=self.outcome, final_output=jsonpickle.encode(fn_out)
         )
         self._finish_execution(final_result)
 
