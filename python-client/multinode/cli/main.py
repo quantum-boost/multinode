@@ -73,6 +73,7 @@ def login(ctx: click.Context) -> None:
 @cli.command()
 def logout() -> None:
     config = load_config_from_file()
+    config.api_url = None
     config.api_key = None
     save_config_to_file(config)
     click.echo("You have successfully logged out!")
