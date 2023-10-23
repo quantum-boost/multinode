@@ -12,7 +12,7 @@ TEMPLATE = """from multinode.api_client import ApiException
 import json
 
 
-class ControlPlaneException(Exception):
+class MultinodeApiException(Exception):
     pass
 
 {error_classes}
@@ -24,7 +24,7 @@ def resolve_error(original: ApiException) -> Exception:
 """
 
 ERROR_TYPE_TEMPLATE = """
-class {error_name}(ControlPlaneException):
+class {error_name}(MultinodeApiException):
     pass
 
 """

@@ -15,11 +15,11 @@ from multinode.api_client import (
     VersionDefinition,
     VersionInfo,
 )
-from multinode.api_client.error_types import ProjectAlreadyExists, ProjectDoesNotExist
 from multinode.cli.fail import cli_fail
 from multinode.config import load_config_from_file
 from multinode.constants import ROOT_WORKER_DIR
 from multinode.core.multinode import Multinode
+from multinode.errors import ProjectAlreadyExists, ProjectDoesNotExist
 from multinode.utils.api import get_authenticated_client
 from multinode.utils.dynamic_imports import import_multinode_object_from_dir
 

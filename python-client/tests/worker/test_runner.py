@@ -16,7 +16,7 @@ from multinode.api_client import (
     ResourceSpec,
     WorkerStatus,
 )
-from multinode.core.errors import InvocationCancelledError
+from multinode.errors import InvocationCancelledError
 from multinode.worker.main import WorkerContext
 from multinode.worker.runner import WorkerRunner
 

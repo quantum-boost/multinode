@@ -17,8 +17,11 @@ from multinode.api_client import (
     ExecutionOutcome,
     ExecutionTemporaryResultPayload,
 )
-from multinode.api_client.error_types import FunctionDoesNotExist
-from multinode.core.errors import InvocationCancelledError, InvocationTimedOutError
+from multinode.errors import (
+    FunctionDoesNotExist,
+    InvocationCancelledError,
+    InvocationTimedOutError,
+)
 from multinode.shared.worker_environment_variables import (
     EXECUTION_ID_ENV,
     FUNCTION_NAME_ENV,
