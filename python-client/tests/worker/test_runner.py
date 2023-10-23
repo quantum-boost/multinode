@@ -245,7 +245,7 @@ def test_run_worker_failed_yield_function() -> None:
         execution_id=EXECUTION_ID,
         execution_final_result_payload=ExecutionFinalResultPayload(
             outcome=ExecutionOutcome.FAILED,
-            error_message="I'm a failed function after all :(",
+            error_message="FailedFunctionError: I'm a failed function after all :(",
         ),
     )
 
@@ -392,6 +392,6 @@ def test_run_worker_failed_function_during_abort_handling() -> None:
         execution_id=EXECUTION_ID,
         execution_final_result_payload=ExecutionFinalResultPayload(
             outcome=ExecutionOutcome.FAILED,
-            error_message="I'm a failed function after all :(",
+            error_message="FailedFunctionError: I'm a failed function after all :(",
         ),
     )
