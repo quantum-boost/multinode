@@ -32,9 +32,9 @@ COPY . {ROOT_WORKER_DIR}
 ENV PYTHONBUFFERED=1 \\
     PYTHONPATH={ROOT_WORKER_DIR}{{user_env_vars}}
 
-
+RUN pip install --root-user-action=ignore --upgrade pip
 {{install_req_line}}
-RUN pip install multinode
+RUN pip install --root-user-action=ignore multinode
 
 ENTRYPOINT ["start-multinode-worker"]
 """
@@ -212,8 +212,8 @@ def _get_install_requirements_line(project_dir: Path) -> str:
     requirements_path = project_dir / "requirements.txt"
     if not requirements_path.exists():
         click.secho(
-            "We didn't detect the requirements.txt file in your project. "
-            "It will run without any external dependencies.",
+            "requirements.txt file not found - "
+            "executions will run without additional dependencies.",
             fg="yellow",
         )
         return ""
@@ -225,8 +225,8 @@ def _get_user_env_vars(ctx: click.Context, project_dir: Path) -> str:
     env_path = project_dir / ".env"
     if not env_path.exists():
         click.secho(
-            "We didn't detect the .env file in your project. "
-            "It will run without any environment variables.",
+            ".env file not found - "
+            "executions will run without additional environment variables.",
             fg="yellow",
         )
         return ""
