@@ -12,13 +12,13 @@ from multinode.api_client import (
     ParentInvocationDefinition,
 )
 from multinode.config import load_config_with_api_key_from_env_or_file
-from multinode.core.errors import (
+from multinode.core.invocation import Invocation, InvocationStatus
+from multinode.errors import (
     InvalidUseError,
     InvocationCancelledError,
     InvocationFailedError,
     InvocationTimedOutError,
 )
-from multinode.core.invocation import Invocation, InvocationStatus
 from multinode.shared.worker_environment_variables import (
     FUNCTION_NAME_ENV,
     INVOCATION_ID_ENV,

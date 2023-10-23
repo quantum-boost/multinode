@@ -5,13 +5,6 @@ from typing import List, Optional
 import click
 
 from multinode.api_client import ProjectInfo
-from multinode.api_client.error_types import (
-    ApiKeyIsInvalid,
-    ControlPlaneException,
-    InvocationDoesNotExist,
-    ProjectDoesNotExist,
-    VersionDoesNotExist,
-)
 from multinode.api_client.exceptions import ForbiddenException
 from multinode.cli.deployment import ProjectDeploymentOption, deploy_new_project_version
 from multinode.cli.describe import (
@@ -23,6 +16,13 @@ from multinode.cli.describe import (
 from multinode.cli.fail import cli_fail
 from multinode.config import load_config_from_file, save_config_to_file
 from multinode.constants import LATEST_VERSION_STR
+from multinode.errors import (
+    ApiKeyIsInvalid,
+    InvocationDoesNotExist,
+    MultinodeApiException,
+    ProjectDoesNotExist,
+    VersionDoesNotExist,
+)
 from multinode.utils.api import get_authenticated_client
 
 
@@ -309,7 +309,7 @@ def logs(
             invocation_id=invocation_id,
             execution_id=execution_id,
         )
-    except ControlPlaneException as e:
+    except MultinodeApiException as e:
         cli_fail(ctx, str(e))
 
     click.echo("\n".join(logs.log_lines))

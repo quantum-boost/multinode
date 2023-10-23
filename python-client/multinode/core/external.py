@@ -1,10 +1,10 @@
 from typing import Optional
 
 from multinode.api_client import FunctionSpec
-from multinode.api_client.error_types import FunctionDoesNotExist
 from multinode.config import load_config_with_api_key_from_env_or_file
 from multinode.constants import LATEST_VERSION_STR
 from multinode.core.function import Function
+from multinode.errors import FunctionDoesNotExist
 from multinode.utils.api import get_authenticated_client
 
 

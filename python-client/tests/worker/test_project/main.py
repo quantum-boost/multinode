@@ -7,7 +7,7 @@ from test_project.length_calculation import calc_length
 from yield_fn_final import YieldFnFinal
 
 from multinode import Multinode
-from multinode.core.errors import InvocationCancelledError
+from multinode.errors import InvocationCancelledError
 
 mn = Multinode()
 
