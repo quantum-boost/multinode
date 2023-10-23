@@ -76,24 +76,30 @@ class Invocation:
 
 
 def _resolve_invocation_status(
-    inv_info: InvocationInfo, num_retries: int
+    inv_info: InvocationInfo, num_failed_attempts: int
 ) -> InvocationStatus:
     if _has_successful_execution(inv_info):
         return InvocationStatus.SUCCEEDED
 
-    if _has_reached_max_retries_limit(inv_info, num_retries):
-        return InvocationStatus.FAILED
-
-    if _has_timed_out(inv_info):
+    if _has_timed_out_execution(inv_info):
         return InvocationStatus.TIMED_OUT
 
-    if (
-        _has_aborted_execution(inv_info)
-        # If invocation was cancelled (and terminated) before any execution started
-        # then there wouldn't be aborted executions.
-        or inv_info.invocation_status == ApiInvocationStatus.TERMINATED
-    ):
+    if _has_cancelled_execution(inv_info):
         return InvocationStatus.CANCELLED
+
+    if _has_failed_attempts_equal_to_max_retries_limit(inv_info, num_failed_attempts):
+        return InvocationStatus.FAILED
+
+    # Can time out while waiting for spare worker capacity
+    if _is_terminated_post_timeout(inv_info):
+        return InvocationStatus.TIMED_OUT
+
+    # Can be cancelled while waiting for spare worker capacity
+    if inv_info.invocation_status == ApiInvocationStatus.TERMINATED:
+        return InvocationStatus.CANCELLED
+
+    # All TERMINATED cases have now been handled.
+    # The remaining cases can only arise if the invocation is RUNNING.
 
     if _has_cancellation_request(inv_info):
         return InvocationStatus.CANCELLING
@@ -105,48 +111,37 @@ def _resolve_invocation_status(
 
 
 def _has_successful_execution(inv_info: InvocationInfo) -> bool:
+    return any(_is_successful_execution(execution) for execution in inv_info.executions)
+
+
+def _has_timed_out_execution(inv_info: InvocationInfo) -> bool:
     return any(
-        execution
+        _is_aborted_execution(execution)
+        and _received_sigterm_post_timeout(execution, inv_info)
         for execution in inv_info.executions
-        if execution.outcome == ExecutionOutcome.SUCCEEDED
     )
 
 
-def _has_reached_max_retries_limit(
+def _has_cancelled_execution(inv_info: InvocationInfo) -> bool:
+    return any(
+        _is_aborted_execution(execution)
+        and not _received_sigterm_post_timeout(execution, inv_info)
+        for execution in inv_info.executions
+    )
+
+
+def _has_failed_attempts_equal_to_max_retries_limit(
     inv_info: InvocationInfo, num_failed_attempts: int
 ) -> bool:
     max_attempts = inv_info.execution_spec.max_retries + 1
     return num_failed_attempts == max_attempts
 
 
-def _has_timed_out(inv_info: InvocationInfo) -> bool:
+def _is_terminated_post_timeout(inv_info: InvocationInfo) -> bool:
     timeout_seconds = inv_info.execution_spec.timeout_seconds
-
-    if (
+    return (
         inv_info.invocation_status == ApiInvocationStatus.TERMINATED
         and inv_info.last_update_time > inv_info.creation_time + timeout_seconds
-    ):
-        return True
-
-    # It could be the case that invocation hasn't terminated yet but the executions
-    # already aborted due to timeout.
-    termination_signal_times_of_aborted_executions = [
-        execution.termination_signal_time
-        for execution in inv_info.executions
-        if execution.outcome == ExecutionOutcome.ABORTED
-        and execution.termination_signal_time is not None
-    ]
-    return any(
-        time > inv_info.creation_time + timeout_seconds
-        for time in termination_signal_times_of_aborted_executions
-    )
-
-
-def _has_aborted_execution(inv_info: InvocationInfo) -> bool:
-    return any(
-        execution
-        for execution in inv_info.executions
-        if execution.outcome == ExecutionOutcome.ABORTED
     )
 
 
@@ -169,31 +164,13 @@ def _has_execution_with_running_code(inv_info: InvocationInfo) -> bool:
 
 
 def _get_num_failed_executions(invocation: InvocationInfo) -> int:
-    num_failures_due_to_code_exceptions = len(
+    return len(
         [
             execution
             for execution in invocation.executions
-            if execution.outcome == ExecutionOutcome.FAILED
+            if _is_failed_execution(execution)
         ]
     )
-
-    # Other reasons for failures include:
-    #   (i) unexpected hardware failures
-    #   (ii) worker process receiving SIGTERM and failing to clean up within the grace period
-    # (or both (i) and (ii) can happen in the same execution)
-    # Together, these cases correspond to worker_status = TERMINATED and outcome = None
-    num_failures_due_to_other_reasons = len(
-        [
-            execution
-            for execution in invocation.executions
-            if (
-                execution.worker_status == WorkerStatus.TERMINATED
-                and execution.outcome is None
-            )
-        ]
-    )
-
-    return num_failures_due_to_code_exceptions + num_failures_due_to_other_reasons
 
 
 def _extract_result(inv_info: InvocationInfo) -> Optional[Any]:
@@ -215,5 +192,60 @@ def _extract_error(inv_info: InvocationInfo) -> Optional[str]:
     return cast(Optional[str], latest_execution.error_message)
 
 
-def _last_update_time_key(execution: ExecutionSummary) -> float:
+def _last_update_time_key(execution: ExecutionSummary) -> int:
     return execution.last_update_time
+
+
+# The functions:
+# - _is_successful_execution,
+# - _is_aborted_execution
+# - _is_failed_execution
+#
+# 1) are mutually exclusive,
+# 2) cover all executions that have an outcome, or are terminated, or both.
+
+
+def _is_successful_execution(exec_info: ExecutionSummary) -> bool:
+    return exec_info.outcome == ExecutionOutcome.SUCCEEDED
+
+
+def _is_aborted_execution(exec_info: ExecutionSummary) -> bool:
+    # Cases:
+    # - Worker records the outcome as ABORTED.
+    # - Worker receives SIGTERM before it has started executing (i.e. while it is spinning up)
+    return exec_info.outcome == ExecutionOutcome.ABORTED or (
+        exec_info.worker_status == WorkerStatus.TERMINATED
+        and exec_info.outcome is None
+        and (
+            exec_info.termination_signal_time is not None
+            and exec_info.execution_start_time is None
+        )
+    )
+
+
+def _is_failed_execution(exec_info: ExecutionSummary) -> bool:
+    # Cases:
+    # - Worker records the outcome as FAILED
+    # - Worker receives SIGTERM after it has started executing, and fails to clean up
+    #     within grace period
+    # - Worker suffers unexpected hardware failure
+    return exec_info.outcome == ExecutionOutcome.FAILED or (
+        exec_info.worker_status == WorkerStatus.TERMINATED
+        and exec_info.outcome is None
+        and not (
+            exec_info.termination_signal_time is not None
+            and exec_info.execution_start_time is None
+        )
+    )
+
+
+def _received_sigterm_post_timeout(
+    exec_info: ExecutionSummary, inv_info: InvocationInfo
+) -> bool:
+    if exec_info.termination_signal_time is None:
+        return False
+
+    return (
+        exec_info.termination_signal_time
+        > inv_info.creation_time + inv_info.execution_spec.timeout_seconds
+    )
