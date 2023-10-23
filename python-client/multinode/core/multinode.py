@@ -16,7 +16,7 @@ class Multinode:
         max_retries: int = 0,
         timeout: Optional[timedelta] = None,
         cpu: float = 0.1,
-        memory: str = "100 MiB",
+        memory: str = "256 MiB",
         max_concurrency: int = 10,
     ) -> Callable[[Callable[..., Any]], Function]:
         """

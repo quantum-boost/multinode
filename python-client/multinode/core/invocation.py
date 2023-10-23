@@ -13,7 +13,15 @@ from multinode.api_client import WorkerStatus
 OutputT = TypeVar("OutputT")
 
 
-class InvocationStatus(Enum):
+class StrEnum(str, Enum):
+    def __repr__(self) -> str:
+        return str.__repr__(self.value)
+
+    def __str__(self) -> str:
+        return str.__str__(self.value)
+
+
+class InvocationStatus(StrEnum):
     SUCCEEDED = "SUCCEEDED"
     CANCELLED = "CANCELLED"
     CANCELLING = "CANCELLING"
