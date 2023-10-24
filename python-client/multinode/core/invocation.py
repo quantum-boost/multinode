@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, TypeVar, cast
+from typing import Any, Optional, cast
 
 import jsonpickle
 
 from multinode.api_client import ExecutionOutcome, ExecutionSummary, InvocationInfo
 from multinode.api_client import InvocationStatus as ApiInvocationStatus
 from multinode.api_client import WorkerStatus
-
-OutputT = TypeVar("OutputT")
 
 
 class StrEnum(str, Enum):

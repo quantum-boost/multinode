@@ -126,3 +126,36 @@ def test_call_invocation_failed() -> None:
 
     with pytest.raises(InvocationFailedError, match="error-message"):
         fn.call_remote("input-data")
+
+
+def test_map_all_invocations_succeeded() -> None:
+    n_inputs = 5
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
+    fn.start = MagicMock(side_effect=[f"invocation{i}" for i in range(n_inputs)])
+
+    mocked_responses = [SUCCEEDED_INVOCATION] * n_inputs
+    fn.get = MagicMock(side_effect=mocked_responses)
+
+    result = fn.map(["input-data"] * n_inputs)
+    for r in result:
+        assert r == "final-result"
+
+
+def test_starmap_all_invocations_succeed() -> None:
+    n_inputs = 5
+    fn = Function(
+        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+    )
+    fn.start = MagicMock(side_effect=[f"invocation{i}" for i in range(n_inputs)])
+
+    mocked_responses = [SUCCEEDED_INVOCATION] * n_inputs
+    fn.get = MagicMock(side_effect=mocked_responses)
+
+    result = fn.starmap([(f"first-arg{i}", f"second-arg{i}") for i in range(n_inputs)])
+    for r in result:
+        assert r == "final-result"
+
+
+# TODO more tests for map and starmap
