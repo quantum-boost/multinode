@@ -1,10 +1,7 @@
-# Reference: Python client and CLI
+**Reference: Python client and CLI**
+- [Function definitions](./docs/definitions.md)
+- [Function registration and lifecycle management](./docs/registration.md)
+- [Function invocations](./docs/invocations.md)
 
-To fill in...
 
-
----
-
-# Developer notes
-
-[Link](./developer_notes.md)
+**Developer notes:** [Link](./developer_notes.md)
