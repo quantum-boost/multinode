@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "multinode"
-version = "0.0.10"
+version = "0.0.11"
 description = "Multinode's Python client"
 authors = ["Kacper Kielak <kacper@multinode.dev>"]
 packages = [{include = "multinode"}]
