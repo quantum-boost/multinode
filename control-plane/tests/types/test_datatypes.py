@@ -5,7 +5,9 @@ from control_plane.types.datatypes import (
     ExecutionFinalResultPayload,
     ExecutionOutcome,
     ExecutionSpec,
+    ExecutionTemporaryResultPayload,
     FunctionSpec,
+    InvocationDefinition,
     ResourceSpec,
     VersionDefinition,
 )
@@ -170,3 +172,39 @@ def test_invalid_final_result_payload_with_failed_outcome() -> None:
         )
 
     assert "error_message must be populated" in str(exc_info)
+
+
+def test_temp_result_payload_with_oversided_output() -> None:
+    output = "".join("a" for _ in range(1000000))
+    with pytest.raises(ValidationError) as exc_info:
+        ExecutionTemporaryResultPayload(latest_output=output)
+
+    assert "latest_output cannot exceed" in str(exc_info)
+
+
+def test_final_result_payload_with_oversided_output() -> None:
+    output = "".join("a" for _ in range(1000000))
+    with pytest.raises(ValidationError) as exc_info:
+        ExecutionFinalResultPayload(
+            final_output=output, outcome=ExecutionOutcome.SUCCEEDED
+        )
+
+    assert "final_output cannot exceed" in str(exc_info)
+
+
+def test_final_result_payload_with_oversided_error_message() -> None:
+    error_message = "".join("a" for _ in range(1000000))
+    with pytest.raises(ValidationError) as exc_info:
+        ExecutionFinalResultPayload(
+            error_message=error_message, outcome=ExecutionOutcome.FAILED
+        )
+
+    assert "error_message cannot exceed" in str(exc_info)
+
+
+def test_invocation_definition_with_oversided_input() -> None:
+    input_value = "".join("a" for _ in range(1000000))
+    with pytest.raises(ValidationError) as exc_info:
+        InvocationDefinition(input=input_value)
+
+    assert "input cannot exceed" in str(exc_info)
