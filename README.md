@@ -61,18 +61,18 @@ run_expensive_task = get_deployed_function(
     function_name="run_expensive_task"
 )
 
-# ... other task_code ...
+# ... other code ...
 
 # Start a task invocation.
 # The computation runs on *remote* hardware, which is *provisioned on demand*.
 invocation_id = run_expensive_task.start(x=10000)
 
-# ... other task_code ...
+# ... other code ...
 
 # Get the status of the task invocation, and the result (if available)
 invocation = sum_of_squares.get(invocation_id)
 print(invocation.status)  # e.g. PENDING, RUNNING, SUCCEEDED
-print(invocation.result)  # 333283335000 (if available), or None (if still running)
+print(invocation.result)  # e.g. 12345 (if available), or None (if still running)
 ```
 
 
@@ -83,6 +83,7 @@ In addition to the above basic functionality, Multinode allows you to:
 - Cancel a task programmatically.
 - Implement retries in case of code errors or hardware failures.
 - Configure timeouts and concurrency limits.
+- Spawn subtasks from a parent task.
 - Inspect task logs.
 - Add custom Python dependencies and environment variables.
 - Manage the lifecycle of the deployed application.
