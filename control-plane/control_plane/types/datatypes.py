@@ -3,6 +3,18 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from control_plane.shared.parameter_bounds import (
+    ERROR_MESSAGE_LENGTH_LIMIT,
+    FUNCTION_NAME_LENGTH_LIMIT,
+    INPUT_LENGTH_LIMIT,
+    MAX_CONCURRENCY_LIMIT,
+    MAX_RETRIES_LIMIT,
+    MEMORY_GBS_LIMIT,
+    OUTPUT_LENGTH_LIMIT,
+    TIMEOUT_SECONDS_LIMIT,
+    VIRTUAL_CPUS_LIMIT,
+)
+
 
 class StrEnum(str, Enum):
     def __repr__(self) -> str:
@@ -23,8 +35,8 @@ class ResourceSpec(BaseModel):
     def check_valid_virtual_cpus(cls, value: float) -> float:
         if value <= 0:
             raise ValueError("virtual_cpus must be positive")
-        if value > 16:
-            raise ValueError("virtual_cpus must not exceed 16")
+        if value > VIRTUAL_CPUS_LIMIT:
+            raise ValueError(f"virtual_cpus must not exceed {VIRTUAL_CPUS_LIMIT}")
 
         return value
 
@@ -33,8 +45,8 @@ class ResourceSpec(BaseModel):
     def check_valid_memory_gbs(cls, value: float) -> float:
         if value <= 0:
             raise ValueError("memory_gbs must be positive")
-        if value > 64:
-            raise ValueError("memory_gbs must not exceed 64")
+        if value > MEMORY_GBS_LIMIT:
+            raise ValueError(f"memory_gbs must not exceed {MEMORY_GBS_LIMIT}")
 
         return value
 
@@ -43,8 +55,8 @@ class ResourceSpec(BaseModel):
     def check_valid_max_concurrency(cls, value: int) -> int:
         if value <= 0:
             raise ValueError("max_concurrency must be positive")
-        if value > 100:
-            raise ValueError("max_concurrency must not exceed 100")
+        if value > MAX_CONCURRENCY_LIMIT:
+            raise ValueError(f"max_concurrency must not exceed {MAX_CONCURRENCY_LIMIT}")
 
         return value
 
@@ -58,6 +70,8 @@ class ExecutionSpec(BaseModel):
     def check_valid_max_retries(cls, value: int) -> int:
         if value < 0:
             raise ValueError("max_retries must be non-negative")
+        if value > MAX_RETRIES_LIMIT:
+            raise ValueError(f"max_retries must not exceed {MAX_RETRIES_LIMIT}")
 
         return value
 
@@ -66,8 +80,8 @@ class ExecutionSpec(BaseModel):
     def check_valid_timeout_seconds(cls, value: int) -> int:
         if value <= 0:
             raise ValueError("timeout_seconds must be positive")
-        if value > 86400:
-            raise ValueError("timeout_seconds must not exceed 86400")
+        if value > TIMEOUT_SECONDS_LIMIT:
+            raise ValueError(f"timeout_seconds must not exceed {TIMEOUT_SECONDS_LIMIT}")
 
         return value
 
@@ -123,8 +137,10 @@ class ExecutionTemporaryResultPayload(BaseModel):
     @field_validator("latest_output")
     @classmethod
     def check_latest_output_length(cls, value: str) -> str:
-        if len(value) >= 16384:
-            raise ValueError("latest_output cannot exceed 16384 characters")
+        if len(value) >= OUTPUT_LENGTH_LIMIT:
+            raise ValueError(
+                f"latest_output cannot exceed {OUTPUT_LENGTH_LIMIT} characters"
+            )
         return value
 
 
@@ -136,15 +152,19 @@ class ExecutionFinalResultPayload(BaseModel):
     @field_validator("final_output")
     @classmethod
     def check_final_output_length(cls, value: Optional[str]) -> Optional[str]:
-        if value is not None and len(value) >= 16384:
-            raise ValueError("final_output cannot exceed 16384 characters")
+        if value is not None and len(value) >= OUTPUT_LENGTH_LIMIT:
+            raise ValueError(
+                f"final_output cannot exceed {OUTPUT_LENGTH_LIMIT} characters"
+            )
         return value
 
     @field_validator("error_message")
     @classmethod
     def check_error_message_length(cls, value: Optional[str]) -> Optional[str]:
-        if value is not None and len(value) >= 16384:
-            raise ValueError("error_message cannot exceed 16384 characters")
+        if value is not None and len(value) >= ERROR_MESSAGE_LENGTH_LIMIT:
+            raise ValueError(
+                f"error_message cannot exceed {ERROR_MESSAGE_LENGTH_LIMIT} characters"
+            )
         return value
 
     @model_validator(mode="after")
@@ -251,6 +271,13 @@ class InvocationDefinition(BaseModel):
     parent_invocation: Optional[ParentInvocationDefinition] = None
     input: str
 
+    @field_validator("input")
+    @classmethod
+    def check_input_length(cls, value: str) -> str:
+        if len(value) >= INPUT_LENGTH_LIMIT:
+            raise ValueError(f"input cannot exceed {INPUT_LENGTH_LIMIT} characters")
+        return value
+
 
 class ParentInvocationInfo(BaseModel):
     function_name: str
@@ -317,15 +344,17 @@ class FunctionSpec(BaseModel):
     @field_validator("function_name")
     @classmethod
     def check_function_name_length(cls, value: str) -> str:
-        if len(value) >= 256:
-            raise ValueError("function_name cannot exceed 256 characters")
+        if len(value) >= FUNCTION_NAME_LENGTH_LIMIT:
+            raise ValueError(
+                f"function_name cannot exceed {FUNCTION_NAME_LENGTH_LIMIT} characters"
+            )
         return value
 
     @field_validator("docker_image_override")
     @classmethod
     def check_docker_image_override_length(cls, value: Optional[str]) -> Optional[str]:
-        if value is not None and len(value) >= 256:
-            raise ValueError("docker_image_override cannot exceed 256 characters")
+        if value is not None and len(value) >= 1024:
+            raise ValueError("docker_image_override cannot exceed 1024 characters")
         return value
 
 
@@ -368,8 +397,8 @@ class VersionDefinition(BaseModel):
     @field_validator("default_docker_image")
     @classmethod
     def check_default_docker_image_length(cls, value: str) -> str:
-        if len(value) >= 256:
-            raise ValueError("default_docker_image cannot exceed 256 characters")
+        if len(value) >= 1024:
+            raise ValueError("default_docker_image cannot exceed 1024 characters")
         return value
 
     @model_validator(mode="after")

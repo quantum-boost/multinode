@@ -21,6 +21,22 @@ class InvocationCancelledError(Exception):
     pass
 
 
+class FunctionInputSizeLimitExceeded(Exception):
+    pass
+
+
+class FunctionOutputSizeLimitExceeded(Exception):
+    pass
+
+
+class FunctionErrorMessageSizeLimitExceeded(Exception):
+    pass
+
+
+class ParameterValidationError(Exception):
+    pass
+
+
 __all__ = [  # noqa: F405
     "InvalidUseError",
     "MissingEnvironmentVariableError",
@@ -28,6 +44,10 @@ __all__ = [  # noqa: F405
     "InvocationTimedOutError",
     "InvocationCancelledError",
     "MultinodeApiException",
+    "ParameterValidationError",
+    "FunctionInputSizeLimitExceeded",
+    "FunctionOutputSizeLimitExceeded",
+    "FunctionErrorMessageSizeLimitExceeded",
     *[
         error_class.__name__
         for error_class in MultinodeApiException.__subclasses__()  # noqa: F405

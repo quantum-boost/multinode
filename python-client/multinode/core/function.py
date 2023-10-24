@@ -14,11 +14,13 @@ from multinode.api_client import (
 from multinode.config import load_config_with_api_key_from_env_or_file
 from multinode.core.invocation import Invocation, InvocationStatus
 from multinode.errors import (
+    FunctionInputSizeLimitExceeded,
     InvalidUseError,
     InvocationCancelledError,
     InvocationFailedError,
     InvocationTimedOutError,
 )
+from multinode.shared.parameter_bounds import INPUT_LENGTH_LIMIT
 from multinode.shared.worker_environment_variables import (
     FUNCTION_NAME_ENV,
     INVOCATION_ID_ENV,
@@ -109,9 +111,13 @@ class Function:
         data_for_inv = self._get_data_required_for_invocation()
 
         parent_invocation = _get_parent_invocation_from_env()
-        serialized_data = jsonpickle.encode([args, kwargs])
+
+        serialized_input = jsonpickle.encode([args, kwargs])
+        if len(serialized_input) > INPUT_LENGTH_LIMIT:
+            raise FunctionInputSizeLimitExceeded("Function input exceeds size limit")
+
         inv_definition = InvocationDefinition(
-            parent_invocation=parent_invocation, input=serialized_data
+            parent_invocation=parent_invocation, input=serialized_input
         )
 
         inv_info = data_for_inv.api_client.create_invocation(

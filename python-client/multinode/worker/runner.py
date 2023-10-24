@@ -19,8 +19,14 @@ from multinode.api_client import (
 )
 from multinode.errors import (
     FunctionDoesNotExist,
+    FunctionErrorMessageSizeLimitExceeded,
+    FunctionOutputSizeLimitExceeded,
     InvocationCancelledError,
     InvocationTimedOutError,
+)
+from multinode.shared.parameter_bounds import (
+    ERROR_MESSAGE_LENGTH_LIMIT,
+    OUTPUT_LENGTH_LIMIT,
 )
 from multinode.shared.worker_environment_variables import (
     EXECUTION_ID_ENV,
@@ -105,7 +111,7 @@ class WorkerRunner:
             else:
                 final_result = ExecutionFinalResultPayload(
                     outcome=ExecutionOutcome.FAILED,  # type: ignore
-                    error_message=f"{e.__class__.__name__}: {str(e)}",
+                    error_message=_construct_error_message(e),
                 )
 
             self._finish_execution(final_result)
@@ -116,7 +122,7 @@ class WorkerRunner:
     ) -> None:
         for latest_out in fn_out:
             temp_result = ExecutionTemporaryResultPayload(
-                latest_output=jsonpickle.encode(latest_out)
+                latest_output=_serialize_output(latest_out)
             )
             self._update_execution(temp_result)
 
@@ -125,7 +131,7 @@ class WorkerRunner:
 
     def _process_classic_function_out(self, fn_out: Any) -> None:
         final_result = ExecutionFinalResultPayload(
-            outcome=self.outcome, final_output=jsonpickle.encode(fn_out)
+            outcome=self.outcome, final_output=_serialize_output(fn_out)
         )
         self._finish_execution(final_result)
 
@@ -176,3 +182,19 @@ class WorkerRunner:
                 raise InvocationCancelledError()
 
         return handle_signal
+
+
+def _serialize_output(output: Any) -> Any:
+    serialized_output = jsonpickle.encode(output)
+    if len(serialized_output) > OUTPUT_LENGTH_LIMIT:
+        raise FunctionOutputSizeLimitExceeded("Function output exceeds size limit")
+    return serialized_output
+
+
+def _construct_error_message(e: BaseException) -> str:
+    message = f"{e.__class__.__name__}: {str(e)}"
+    if len(message) > ERROR_MESSAGE_LENGTH_LIMIT:
+        raise FunctionErrorMessageSizeLimitExceeded(
+            "Function error message exceeds size limit"
+        )
+    return message
