@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Any, Callable, List, Optional, TypeVar
+from typing import Any, Callable, Generator, Iterable, List, Optional, Tuple
 
 import jsonpickle
 from pydantic import BaseModel
@@ -28,9 +28,6 @@ from multinode.shared.worker_environment_variables import (
     VERSION_ID_ENV,
 )
 from multinode.utils.api import get_authenticated_client
-
-InputT = TypeVar("InputT")
-OutputT = TypeVar("OutputT")
 
 
 class DataRequiredForInvocation(BaseModel):
@@ -77,11 +74,50 @@ class Function:
         self._api_client: Optional[DefaultApi] = None
         self._poll_frequency = poll_frequency
 
+    def map(self, iterable: Iterable[Any]) -> Generator[Any, None, None]:
+        """Call the Multinode function for each item in `iterable`.
+
+        Similar to `map` or `multiprocessing.Pool.map` but each invocation is run
+        on a distinct remote worker.
+
+        :param iterable: arguments to pass to the functions
+        :return: generator of results, in the same order as the inputs in `iterable`
+        """
+        return self.starmap([(item,) for item in iterable])
+
+    def starmap(
+        self, iterable: Iterable[Tuple[Any, ...]]
+    ) -> Generator[Any, None, None]:
+        """Call the Multinode function for each args tuple in `iterable`.
+
+        Like `map` but each invocation can take more than one argument.
+
+        Similar to `itertools.starmap` or `multiprocessing.Pool.starmap` but each
+        invocation is run on a distinct remote worker.
+
+        :param iterable: tuples of arguments to pass to the functions
+        :return: generator of results, in the same order as the inputs in `iterable`
+        """
+        invocation_ids = [self.start(*args) for args in iterable]
+        for inv_id in invocation_ids:
+            yield self.await_result(inv_id)
+
     def call_remote(self, *args: Any, **kwargs: Any) -> Any:
+        """Call the function on a remote worker and wait for the result.
+
+        :param args: positional arguments to pass to the function
+        :param kwargs: keyword arguments to pass to the function
+        :return: result of the function call
+        """
         invocation_id = self.start(*args, **kwargs)
         return self.await_result(invocation_id)
 
     def await_result(self, invocation_id: str) -> Any:
+        """Wait for the result of a remote function call.
+
+        :param invocation_id: id of the invocation to wait for
+        :return: result of the function call
+        """
         invocation = self.get(invocation_id)
         while not invocation.status.finished:
             time.sleep(self._poll_frequency)
@@ -99,6 +135,12 @@ class Function:
         return invocation.result
 
     def call_local(self, *args: Any, **kwargs: Any) -> Any:
+        """Call a function locally.
+
+        :param args: positional arguments to pass to the function
+        :param kwargs: keyword arguments to pass to the function
+        :return: result of the function call
+        """
         if self.fn is None:
             # It means function got obtained via `get_deployed_function(...)`
             # and we don't have the actual function definition
@@ -111,6 +153,12 @@ class Function:
         return self.fn(*args, **kwargs)
 
     def start(self, *args: Any, **kwargs: Any) -> str:
+        """Start a function on a remote worker and return its invocation id.
+
+        :param args: positional arguments to pass to the function
+        :param kwargs: keyword arguments to pass to the function
+        :return: invocation id
+        """
         data_for_inv = self._get_data_required_for_invocation()
 
         parent_invocation = _get_parent_invocation_from_env()
@@ -132,6 +180,11 @@ class Function:
         return inv_info.invocation_id
 
     def get(self, invocation_id: str) -> Invocation:
+        """Get the status of a remote function call.
+
+        :param invocation_id: id of the invocation to get
+        :return: `Invocation` object describing current status of the invocation
+        """
         data_for_inv = self._get_data_required_for_invocation()
 
         inv_info = data_for_inv.api_client.get_invocation(
@@ -143,6 +196,10 @@ class Function:
         return Invocation.from_invocation_info(inv_info)
 
     def cancel(self, invocation_id: str) -> None:
+        """Cancel a remote function call.
+
+        :param invocation_id: id of the invocation to cancel
+        """
         data_for_inv = self._get_data_required_for_invocation()
         data_for_inv.api_client.cancel_invocation(
             data_for_inv.project_name,
@@ -152,6 +209,12 @@ class Function:
         )
 
     def list(self, offset: Optional[str] = None) -> InvocationIdsList:
+        """List all invocations of a function.
+
+        :param offset: starting list offset
+        :return: list of invocation ids and the offset where the list ends if the
+            list was too large to obtain in one API call
+        """
         data_for_inv = self._get_data_required_for_invocation()
 
         invocations_list = data_for_inv.api_client.list_invocations(
