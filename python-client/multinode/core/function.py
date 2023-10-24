@@ -77,6 +77,9 @@ class Function:
 
     def call_remote(self, *args: Any, **kwargs: Any) -> Any:
         invocation_id = self.start(*args, **kwargs)
+        return self.await_result(invocation_id)
+
+    def await_result(self, invocation_id: str) -> Any:
         invocation = self.get(invocation_id)
         while not invocation.status.finished:
             time.sleep(self._poll_frequency)
