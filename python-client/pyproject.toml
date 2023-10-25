@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "multinode"
-version = "0.0.13"
+version = "0.0.14"
 description = "Multinode's Python client"
 authors = ["Kacper Kielak <kacper@multinode.dev>"]
 readme = "../README.md"
