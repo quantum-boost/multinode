@@ -17,10 +17,9 @@ def return_function(x: str) -> int:
     return calc_length(x)
 
 
-@mn.function()
-def yield_function(
-    x: str,
-) -> Generator[Union[Dict[int, str], YieldFnFinal], None, None]:
+# This cannot be just inlined within the `yield_function` because
+# `.call_local` on multinode function doesn't respect generators
+def yield_function_local(x: str):
     strings_so_far = []
     for i in range(len(x)):
         str_rn = {i: x[:i]}
@@ -32,10 +31,18 @@ def yield_function(
 
 
 @mn.function()
+def yield_function(
+    x: str,
+) -> Generator[Union[Dict[int, str], YieldFnFinal], None, None]:
+    for y in yield_function_local(x):
+        yield y
+
+
+@mn.function()
 def yield_function_with_return(
     x: str,
 ) -> Generator[Union[Dict[int, str], YieldFnFinal], None, None]:
-    for y in yield_function.call_local(x):
+    for y in yield_function_local(x):
         yield y
 
     return {11: "return"}

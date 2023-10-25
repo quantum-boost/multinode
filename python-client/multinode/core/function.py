@@ -1,3 +1,4 @@
+import inspect
 import os
 import time
 from typing import Any, Callable, Generator, Iterable, List, Optional, Tuple
@@ -150,7 +151,17 @@ class Function:
                 "cannot be called locally."
             )
 
-        return self.fn(*args, **kwargs)
+        # For consistency with `call_remote`, `call_local` needs to return only the
+        # final result, even if the function is a generator.
+        if inspect.isgeneratorfunction(self.fn):
+            results = list(self.fn(*args, **kwargs))  # Exhaust the generator
+            if len(results) != 0:
+                return results[-1]  # And return final result
+
+            # Unless generator is empty, then result None
+            return None
+        else:
+            return self.fn(*args, **kwargs)
 
     def start(self, *args: Any, **kwargs: Any) -> str:
         """Start a function on a remote worker and return its invocation id.

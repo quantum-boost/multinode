@@ -1,3 +1,4 @@
+from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
@@ -62,13 +63,23 @@ TIMED_OUT_INVOCATION = Invocation(
 )
 
 
-def fn_definition(x: str) -> int:
+def return_fn_definition(x: str) -> int:
     return len(x)
+
+
+def yield_fn_definition(x: str) -> Generator[str, None, None]:
+    for c in x:
+        yield c
+
+
+def yield_fn_definition_without_successful_yields(x: str) -> Generator[str, None, None]:
+    for _ in range(0):
+        yield "won't be returned"
 
 
 def test_call_remote_invocation_succeeded() -> None:
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(return_value="invocation_id")
 
@@ -81,7 +92,7 @@ def test_call_remote_invocation_succeeded() -> None:
 
 def test_call_remote_invocation_cancelled() -> None:
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(return_value="invocation_id")
 
@@ -94,7 +105,7 @@ def test_call_remote_invocation_cancelled() -> None:
 
 def test_call_invocation_timed_out() -> None:
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(return_value="invocation_id")
 
@@ -112,7 +123,7 @@ def test_call_invocation_timed_out() -> None:
 
 def test_call_invocation_failed() -> None:
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(return_value="invocation_id")
 
@@ -131,7 +142,7 @@ def test_call_invocation_failed() -> None:
 def test_map_all_invocations_succeeded() -> None:
     n_inputs = 5
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(side_effect=[f"invocation{i}" for i in range(n_inputs)])
 
@@ -146,7 +157,7 @@ def test_map_all_invocations_succeeded() -> None:
 def test_starmap_all_invocations_succeed() -> None:
     n_inputs = 5
     fn = Function(
-        fn=fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
+        fn=return_fn_definition, fn_spec=MagicMock(), poll_frequency=TEST_POLL_FREQUENCY
     )
     fn.start = MagicMock(side_effect=[f"invocation{i}" for i in range(n_inputs)])
 
@@ -159,3 +170,21 @@ def test_starmap_all_invocations_succeed() -> None:
 
 
 # TODO more tests for map and starmap
+
+
+def test_call_local_return_fn() -> None:
+    fn = Function(fn=return_fn_definition, fn_spec=MagicMock())
+    result = fn.call_local("input-data")
+    assert result == 10
+
+
+def test_call_local_yield_fn() -> None:
+    fn = Function(fn=yield_fn_definition, fn_spec=MagicMock())
+    result = fn.call_local("input-data")
+    assert result == "a"
+
+
+def test_call_local_yield_fn_with_no_successful_yields() -> None:
+    fn = Function(fn=yield_fn_definition_without_successful_yields, fn_spec=MagicMock())
+    result = fn.call_local("input-data")
+    assert result is None
