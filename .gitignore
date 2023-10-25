@@ -8,6 +8,7 @@ build/*
 *.pyc
 dist/*
 api-schemas/*
+**/venv
 
 python-client/multinode/api_client/
 python-client/multinode/shared/

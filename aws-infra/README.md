@@ -39,7 +39,7 @@ If you have never previously used Fargate in your AWS account, then we strongly 
 - Quota name: Fargate On-Demand vCPU resource count
 
 By default, the quota is only 6 vCPUs, which doesn't allow you to take full advantage of Multinode.
-We suggest increasing this to at least 30 vCPUs.
+We suggest increasing this to at least 64 vCPUs.
 
 While waiting for the quota increase, you can still proceed with the documentation and examples in this repo
 to get a feel for how Multinode works.
