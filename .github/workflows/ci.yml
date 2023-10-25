@@ -70,8 +70,8 @@ jobs:
       if: github.ref == 'refs/heads/master'
       run: |
         aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-        docker tag control-plane:latest $ECR_REGISTRY/$ECR_REPOSITORY:$(echo $GITHUB_SHA | cut -c1-8)
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$(echo $GITHUB_SHA | cut -c1-8)
+        docker tag control-plane:latest $ECR_REGISTRY/$ECR_REPOSITORY:$(echo $GITHUB_SHA | cut -c1-7)
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$(echo $GITHUB_SHA | cut -c1-7)
       env:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
