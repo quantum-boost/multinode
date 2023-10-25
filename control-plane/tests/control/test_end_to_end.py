@@ -23,7 +23,10 @@ from control_plane.types.version_reference import VersionReference, VersionRefer
 from tests.docker.dummy_credentials_loader import (
     DummyContainerRepositoryCredentialsLoader,
 )
-from tests.provisioning.dummy_provisioner import DummyProvisioner
+from tests.provisioning.dummy_provisioner import (
+    DUMMY_PROVISIONING_ERROR_MSG,
+    DummyProvisioner,
+)
 
 
 @pytest.fixture(scope="module")
@@ -1359,6 +1362,59 @@ def test_invocation_being_retried_due_to_hardware_failure(
         execution.outcome == ExecutionOutcome.SUCCEEDED
         for execution in invocation.executions
     )
+
+
+@pytest.mark.timeout(5)
+def test_execution_never_starting_due_to_provisioning_error(
+    data_store: DataStore,
+) -> None:
+    # This provisioner will throw an UnrecoverableProvisioningError when trying to provision workers
+    # - simulates breaching AWS quotas
+    provisioner = DummyProvisioner(should_fail_provisioning=True)
+    credentials_loader = DummyContainerRepositoryCredentialsLoader()
+
+    api = ApiHandler(data_store, provisioner, credentials_loader)
+    loop = LifecycleActions(data_store, provisioner)
+
+    api.registration.create_project(project_name=PROJECT_NAME, time=TIME)
+    api.registration.create_project_version(
+        project_name=PROJECT_NAME, version_definition=VERSION_DEFINITION, time=TIME
+    )
+
+    # An invocation is created.
+    invocation = api.invocation.create_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_definition=InvocationDefinition(input=INPUT_1),
+        time=TIME,
+    )
+    invocation_id = invocation.invocation_id
+
+    # Wait until the invocation is TERMINATED
+    while (
+        not api.invocation.get_invocation(
+            project_name=PROJECT_NAME,
+            version_ref=LATEST_VERSION,
+            function_name=STANDARD_FUNCTION,
+            invocation_id=invocation_id,
+        ).invocation_status
+        == InvocationStatus.TERMINATED
+    ):
+        loop.run_once(TIME)
+
+    invocation = api.invocation.get_invocation(
+        project_name=PROJECT_NAME,
+        version_ref=LATEST_VERSION,
+        function_name=STANDARD_FUNCTION,
+        invocation_id=invocation_id,
+    )
+
+    # There should be one execution, which went directly to TERMINATED status without
+    # a worker being provisioned
+    assert len(invocation.executions) == 1
+    assert invocation.executions[0].worker_status == WorkerStatus.TERMINATED
+    assert invocation.executions[0].error_message == DUMMY_PROVISIONING_ERROR_MSG
 
 
 @pytest.mark.timeout(5)

@@ -5,7 +5,11 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 from control_plane.provisioning.ecs_cpu_memory_helper import select_cpu_memory_units
-from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
+from control_plane.provisioning.provisioner import (
+    AbstractProvisioner,
+    LogsResult,
+    UnrecoverableProvisioningError,
+)
 from control_plane.shared.worker_environment_variables import (
     CONTROL_PLANE_API_KEY_ENV,
     CONTROL_PLANE_API_URL_ENV,
@@ -154,6 +158,12 @@ class EcsProvisioner(AbstractProvisioner):
                 ]
             },
         )
+
+        if len(response["failures"]) > 0:
+            failure_reason = response["failures"][0]["reason"]
+            raise UnrecoverableProvisioningError(
+                "AWS Fargate cannot provision container: " + failure_reason
+            )
 
         task_arn = response["tasks"][0]["taskArn"]
         assert isinstance(task_arn, str)
