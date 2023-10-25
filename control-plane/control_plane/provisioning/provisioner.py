@@ -14,6 +14,12 @@ class LogsResult(NamedTuple):
     next_offset: Optional[str]
 
 
+class UnrecoverableProvisioningError(Exception):
+    """An error thrown during provisioning that means the execution should be terminated immediately"""
+
+    pass
+
+
 class AbstractProvisioner(ABC):
     @abstractmethod
     def prepare_function(
@@ -44,6 +50,8 @@ class AbstractProvisioner(ABC):
     ) -> WorkerDetails:
         """
         Provision the worker on the cloud.
+
+        :raises UnrecoverableProvisioningError:
         """
         raise NotImplementedError
 

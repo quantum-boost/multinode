@@ -28,3 +28,18 @@ terraform apply
 ```
 
 **Step 5.** Take note of the `control_plane_api_url` outputted by the terraform.
+
+
+
+### Recommendation: Increasing Fargate quotas
+
+If you have never previously used Fargate in your AWS account, then we strongly recommend that you
+[increase your account quota](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html).
+- Service name: AWS Fargate
+- Quota name: Fargate On-Demand vCPU resource count
+
+By default, the quota is only 6 vCPUs, which doesn't allow you to take full advantage of Multinode.
+We suggest increasing this to at least 30 vCPUs.
+
+While waiting for the quota increase, you can still proceed with the documentation and examples in this repo
+to get a feel for how Multinode works.

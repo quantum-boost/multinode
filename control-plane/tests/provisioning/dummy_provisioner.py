@@ -1,6 +1,10 @@
 from typing import Optional
 
-from control_plane.provisioning.provisioner import AbstractProvisioner, LogsResult
+from control_plane.provisioning.provisioner import (
+    AbstractProvisioner,
+    LogsResult,
+    UnrecoverableProvisioningError,
+)
 from control_plane.types.datatypes import (
     PreparedFunctionDetails,
     ResourceSpec,
@@ -9,6 +13,8 @@ from control_plane.types.datatypes import (
     WorkerType,
 )
 
+DUMMY_PROVISIONING_ERROR_MSG = "provisioning error"
+
 
 class DummyProvisioner(AbstractProvisioner):
     """
@@ -16,11 +22,12 @@ class DummyProvisioner(AbstractProvisioner):
     No actual workers are created. Used in tests.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, should_fail_provisioning: bool = False) -> None:
         # Each set contains *identifiers* of workers.
         self._workers_provisioned: set[str] = set()
         self._workers_sent_termination_signal: set[str] = set()
         self._workers_terminated: set[str] = set()
+        self._should_fail_provisioning = should_fail_provisioning
 
     def prepare_function(
         self,
@@ -44,6 +51,9 @@ class DummyProvisioner(AbstractProvisioner):
         resource_spec: ResourceSpec,
         prepared_function_details: PreparedFunctionDetails,
     ) -> WorkerDetails:
+        if self._should_fail_provisioning:
+            raise UnrecoverableProvisioningError(DUMMY_PROVISIONING_ERROR_MSG)
+
         identifier = create_identifier(
             project_name, version_id, function_name, invocation_id, execution_id
         )
