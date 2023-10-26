@@ -104,7 +104,7 @@ Applications written in these frameworks usually run on a warm pool of workers.
 Each worker stays alive between task executions.
 The number of workers is _autoscaled_ according to some metric (e.g. the number of pending tasks).
 
-Advantage of Multinode's approach:
+Advantages of Multinode's approach:
 - Scales up _immediately_ when new tasks are created; scales down _immediately_ when a task finishes.
 - No risk of interrupting a task execution when scaling down.
 
@@ -115,11 +115,11 @@ Advantages of the alternative warm-pool-based approach:
 
 ### Architecture
 
-Currently, Multinode runs on **AWS**.
-- Asynchronous tasks are run as **ECS tasks**, using **Fargate** as the serverless compute engine.
-- The control plane is deployed as an **ECS service**, again using Fargate.
-- Task definitions and task outputs are stored in an **Aurora** serverless v2 database.
-- Task logs are stored in **Cloudwatch Logs**.
+Currently, Multinode runs on **AWS**, using **ECS/Fargate** for the asynchronous tasks.
+
+A (slightly simplified) architecture diagram is shown below
+
+![architecture](images/architecture.png)
 
 With minimal API changes, the framework can be extended to
 other AWS compute engines (e.g. EC2 with GPUs), to other cloud providers, and to Kubernetes.
