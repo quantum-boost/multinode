@@ -159,7 +159,7 @@ def run_full_task(x):
     y_1 =  # ... some code ...
     y_2 =  # ... some code ...
     
-    # Starts two invocation of run_subtask, which run in a *separate containers*
+    # Starts two invocations of run_subtask, which run in a *separate containers*
     subtask_invocation_id_1 = run_subtask.start(y=y1)
     subtask_invocation_id_2 = run_subtask.start(y=y2)
     

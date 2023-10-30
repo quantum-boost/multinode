@@ -1,18 +1,18 @@
 ### What is Multinode?
 
-**Multinode** allows you to rapidly deploy scalable applications with **asynchronous tasks**.
+**Multinode** lets you rapidly deploy cloud applications that perform **asynchronous tasks**.
 
-Consider using multinode if your application runs tasks that:
+Consider using Multinode if your application runs tasks that:
 - are **triggered on demand** by the user of the application;
 - take of the order of **minutes or hours** to complete;
 - require **expensive hardware** that should be provisioned only when required.
 
-For example, multinode can be used within:
+For example, Multinode can be used within:
 - a document/image/video processing app
 - a data analytics app
 - a scientific computing app
 
-The main benefits of multinode are:
+The main benefits of Multinode are:
 - **Minimal boilerplate:** Cloud API calls, cloud permissions,
 task lifecycle management and task data storage are abstracted away.
 - **Responsive scaling:** Compute resources are spun up as soon as a task is created,
@@ -21,10 +21,10 @@ and torn down as soon as the task is complete.
 
 ### Quick start
 
-Deploy the multinode control plane into your AWS account.
+Deploy the Multinode control plane into your AWS account.
 (Instructions and Terraform code provided in the [aws-infra](aws-infra/README.md) folder.)
 
-Install the multinode Python package and authenticate with the Multinode control plane.
+Install the Multinode Python package and authenticate with the Multinode control plane.
 ```commandline
 pip install multinode
 multinode login
@@ -44,7 +44,7 @@ def run_expensive_task(x):
     return out
 ```
 
-Register the function with the multinode control plane.
+Register the function with the Multinode control plane.
 ```commandline
 multinode deploy tasks/ --project-name=my_project
 ```
@@ -70,7 +70,7 @@ invocation_id = run_expensive_task.start(x=10000)
 # ... other code ...
 
 # Get the status of the task invocation, and the result (if available)
-invocation = sum_of_squares.get(invocation_id)
+invocation = run_expensive_task.get(invocation_id)
 print(invocation.status)  # e.g. PENDING, RUNNING, SUCCEEDED
 print(invocation.result)  # e.g. 12345 (if available), or None (if still running)
 ```
