@@ -86,7 +86,8 @@ When complete, this command returns a new version ID for the project.
 
 In-flight function invocations will continue to run using the old version of the function definitions,
 but future function invocations will use the new version of the code (unless a historical version ID
-is explicitly specified in the invocation call).
+is [explicitly specified](./invocations.md#invoking-functions-from-old-project-versions)
+in the codebase where the invocation is made).
 
 
 ### Deleting a project
