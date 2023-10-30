@@ -49,17 +49,13 @@ def get_tsp_result(invocation_id: str):
     if invocation.status == InvocationStatus.CANCELLED:
         msg = "Invocation was cancelled. "
         if invocation.result is not None:
-            msg += "Best distance found before cancellation: " + str(
-                invocation.result.distance
-            )
+            msg += "Best distance found before cancellation: " + str(invocation.result[1])
         return msg
 
     if invocation.status == InvocationStatus.TIMED_OUT:
         msg = "Invocation timed out. "
         if invocation.result is not None:
-            msg += "Best distance found before time out: " + str(
-                invocation.result.distance
-            )
+            msg += "Best distance found before time out: " + str(invocation.result[1])
         return msg
 
     # Otherwise succeeded
