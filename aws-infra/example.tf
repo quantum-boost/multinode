@@ -12,12 +12,14 @@ module "multinode_deployment" {
   # Required: The Docker image URI for the multinode control plane.
   control_plane_docker_image = "multinodedev/controlplane:1.0.1"
 
-  # Required: The control plane API key. Can be anything you like.
+  # Required: The control plane API key needed to authenticate with Multinode. Can be anything you like.
   control_plane_api_key = "apikey"
 
   # Required: Networking
-  # The load balancer subnets (used for the control plane load balancer) must be public.
-  # The task subnets (used for the control plane processes and the workers) can be public or private.
+  # The load balancer subnets are used for the control plane load balancer.
+  # The task subnets are used for the control plane processes and the workers.
+  # There must be at least two load balancer subnets; they must be public, and must span at least 2 availability zones.
+  # The task subnets can be public or private. (In fact, they can be the same as the load balancer subnets.)
   vpc_id = "vpc-08cd5773aede91ccf"
   load_balancer_subnet_ids = [
     "subnet-0f1abcc644e0041f6",
