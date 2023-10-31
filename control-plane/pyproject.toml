@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "control-plane"
-version = "1.0.0"
+version = "1.0.1"
 description = ""
 authors = ["Kenny Wong <kenny@quantumboost.com>"]
 readme = "README.md"

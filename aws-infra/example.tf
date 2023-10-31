@@ -10,7 +10,7 @@ module "multinode_deployment" {
   deployment_name = "multinode-test"
 
   # Required: The Docker image URI for the multinode control plane.
-  control_plane_docker_image = "multinodedev/controlplane:1.0.0"
+  control_plane_docker_image = "multinodedev/controlplane:1.0.1"
 
   # Required: The control plane API key. Can be anything you like.
   control_plane_api_key = "apikey"
