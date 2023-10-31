@@ -162,12 +162,13 @@ def _package_and_push_project_image(
     # Append current seconds to the directory name to ensure uniqueness
     time_seconds = int(time.time())
     temp_dist_dir = project_dir / f"multinode-dist-{time_seconds}"
-    temp_dist_dir.mkdir()
 
     docker_client = docker.from_env()
     dockerfile_path = temp_dist_dir / "Dockerfile"
     relative_dockerfile_path = dockerfile_path.relative_to(project_dir)
     try:
+        temp_dist_dir.mkdir()
+
         with dockerfile_path.open("w") as f:
             f.write(dockerfile)
 
