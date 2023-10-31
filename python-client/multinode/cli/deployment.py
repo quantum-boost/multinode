@@ -1,3 +1,4 @@
+import os
 import shutil
 import time
 from enum import Enum
@@ -8,7 +9,9 @@ from uuid import uuid4
 
 import click
 import docker
-from docker.errors import BuildError, ImageNotFound
+from docker import DockerClient
+from docker.constants import DEFAULT_UNIX_SOCKET
+from docker.errors import BuildError, DockerException, ImageNotFound
 
 from multinode.api_client import (
     ContainerRepositoryCredentials,
@@ -23,6 +26,13 @@ from multinode.core.multinode import Multinode
 from multinode.errors import ProjectAlreadyExists, ProjectDoesNotExist
 from multinode.utils.api import get_authenticated_client
 from multinode.utils.dynamic_imports import import_multinode_object_from_dir
+
+DEFAULT_MAC_SOCKETS = [
+    Path("~/.docker/run/docker.sock").expanduser(),
+    Path("~/.colima/default/docker.sock").expanduser(),
+]
+DOCKER_HOST_ENV = "DOCKER_HOST"
+
 
 # TODO we should allow user specify preferred Python version
 DOCKER_TEMPLATE = f"""FROM python:3.8-bullseye
@@ -163,7 +173,7 @@ def _package_and_push_project_image(
     time_seconds = int(time.time())
     temp_dist_dir = project_dir / f"multinode-dist-{time_seconds}"
 
-    docker_client = docker.from_env()
+    docker_client = _get_docker_client(ctx)
     dockerfile_path = temp_dist_dir / "Dockerfile"
     relative_dockerfile_path = dockerfile_path.relative_to(project_dir)
     try:
@@ -252,6 +262,49 @@ def _get_user_env_vars(ctx: click.Context, project_dir: Path) -> str:
             env_lines.append(f" \\\n    {key.strip()}={value.strip()}")
 
     return "".join(env_lines)
+
+
+def _get_docker_client(ctx: click.Context) -> DockerClient:
+    try:
+        return docker.from_env()
+    except DockerException as e:
+        if DOCKER_HOST_ENV in os.environ:
+            cli_fail(
+                ctx,
+                f"Failed to connect to Docker socket at '{os.environ[DOCKER_HOST_ENV]}'. "
+                f"Is Docker running and do you have permissions to access it? "
+                f"Is your DOCKER_HOST environment variable set correctly?",
+            )
+        elif not Path(DEFAULT_UNIX_SOCKET).exists():
+            click.secho(
+                f"Couldn't find Docker socket at "
+                f"the default Unix location {DEFAULT_UNIX_SOCKET}. "
+                f"Trying to find it at other locations...",
+                fg="yellow",
+            )
+        else:
+            # It's some other error we're not aware of
+            raise e
+
+    for socket_loc in DEFAULT_MAC_SOCKETS:
+        click.secho(f"Trying {socket_loc}... ", nl=False)
+        if socket_loc.exists():
+            click.secho("Success!", fg="green")
+            return DockerClient(base_url=f"unix://{socket_loc}")
+
+        click.echo()
+
+    tested_locations = ", ".join(
+        [DEFAULT_UNIX_SOCKET] + [f"unix://{s}" for s in DEFAULT_MAC_SOCKETS]
+    )
+    cli_fail(
+        ctx,
+        f"Couldn't find Docker socket at any of the default locations "
+        f"({tested_locations}). "
+        f"Is docker running and do you have permissions to access it? If so, "
+        f"please set the DOCKER_HOST environment variable to point to the "
+        f"location of your Docker socket.",
+    )
 
 
 def _pretty_print_docker_build_log(
