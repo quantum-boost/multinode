@@ -17,7 +17,7 @@ poetry run black .
 
 Running unit tests
 ```commandline
-docker run --name postgres --env-file=environment/example-dev.env -p 5432:5432 -d postgres:15.4
+docker run --name postgres -e POSTGRES_HOST=localhost -e POSTGRES_DB=db -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:15.4
 poetry run pytest
 ```
 
