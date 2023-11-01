@@ -243,10 +243,9 @@ numpy==1.26.1
 Environment variables can be specified in the `.env` file in the [project folder](#project-folder-structure).
 
 ```
-# File: tasks/requirements.txt
+# File: tasks/.env
 
-boto3==1.28.69
-numpy==1.26.1
+SECRET_KEY=bad64dedfbc8dd03e5e22459cbaa1388
 ```
 
 

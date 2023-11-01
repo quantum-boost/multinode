@@ -76,7 +76,8 @@ For example, if your project folder structure is...
 ### Updating project function definitions
 
 The `multinode upgrade` command is used to register a _new version_ of your project function definitions
-with the Multinode control plane.
+with the Multinode control plane. You must run this command every time you make changes to the function 
+definitions in your project. 
 
 ```commandline
 multinode upgrade {CODE_PATH} --project-name={PROJECT_NAME}
