@@ -149,12 +149,12 @@ from multinode import Multinode
 
 mn = Multinode()
 
-@mn.function()
+@mn.function(cpu=4.0, memory="16 GiB")
 def run_subtask(y):
     out =  # ... perform calculation
     return out
 
-@mn.function()
+@mn.function(cpu=0.1, memory="1 GiB")
 def run_full_task(x):
     y_1 =  # ... some code ...
     y_2 =  # ... some code ...
