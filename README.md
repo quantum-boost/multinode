@@ -1,12 +1,14 @@
 ## Multinode
 
-Multinode is a framework for running **asynchronous tasks** on the cloud. The framework:
+Multinode is a low-friction framework for running **asynchronous tasks** on the cloud. The framework:
 
-- Provisions compute resources on demand, without you having to worry about
+- Provisions compute resources on demand, incurring zero costs when idle - all without you having to worry about
 cloud API calls or cloud permissions.
-- Handles retries, timeouts, concurrency quotas, cancellations and progress monitoring.
-- Supports distributed tasks of arbitrary complexity, e.g. tasks that spawn subtasks
+- Handles retries, timeouts, concurrency quotas, cancellations and progress monitoring
+- Supports distributed tasks of arbitrary complexity, i.e. tasks that spawn parallel subtasks
 at runtime.
+- Runs asynchronous tasks triggered by _users_ of an application - not just
+offline/scheduled tasks.
 
 
 ### Quick start
@@ -46,7 +48,7 @@ Register the function with the Multinode control plane.
 multinode deploy tasks/ --project-name=my_project
 ```
 
-Implement the rest of your application, which invokes the function when needed.
+Implement the rest of your application, which triggers the asynchronous task by invoking the Python function.
 (In this particular example, the application is a FastAPI web server.)
 ```python
 # File: application/main.py
@@ -64,6 +66,7 @@ app = FastAPI()
 
 @app.post("/task_invocations")
 def start_task():
+    # The task will run on a *remote* cloud container (provisioned on demand)
     invocation_id = run_expensive_task.start(x=10000)
     return {"invocation_id": invocation_id}
 
@@ -84,20 +87,6 @@ def cancel_task(invocation_id: str):
 
 - [Client reference guide](python-client/README.md) - dependencies, project structure, deployment lifecycle and more.
 - [An example with distributed compute](example-project/README.md) - subtasks spawned dynamically at runtime.
-
-
-
-### Use cases
-
-Multinode is designed for applications that run tasks that:
-- are **triggered on demand by the user** of the application;
-- take of the order of **minutes or hours** to complete;
-- require **expensive hardware** that should be provisioned only when required.
-
-For example, Multinode can be used within:
-- a document/image/video processing app
-- a data analytics app
-- a scientific computing app
 
 
 ### Architecture
