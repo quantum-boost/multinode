@@ -294,7 +294,7 @@ Although the `.start`, `.get`, `.cancel` and `.list` methods provide complete fu
 the Multinode `Function` object has additional convenience methods that can help
 simplify your code.
 
-## .await_result
+### .await_result
 
 The `.await_result` method waits until an invocation reaches
 a completed status (`SUCCEEDED`, `FAILED`, `CANCELLED` or `TIMED_OUT`),
@@ -309,7 +309,7 @@ except (InvocationFailedError, InvocationCancelledError, InvocationTimedOutError
 
 Using `.await_result` is more convenient than repeatedly polling `.get`.
 
-## .call_remote
+### .call_remote
 
 The `.call_remote` method starts a remote invocation of the function, then awaits the result.
 
@@ -322,7 +322,7 @@ except (InvocationFailedError, InvocationCancelledError, InvocationTimedOutError
 
 Calling `.call_remote` is equivalent to calling `.start` followed by `.await_result`.
 
-## .starmap
+### .starmap
 
 `.starmap` accepts an iterable of function argument tuples,
 and creates a remote function invocation for each function argument tuple.
@@ -340,7 +340,7 @@ except (InvocationFailedError, InvocationCancelledError, InvocationTimedOutError
     print(str(e))
 ```
 
-## .map
+### .map
 
 `.map` is similar to `.starmap`, except that it only works for functions that accept a single argument.
 Whereas `.starmap` accepts an iterable of arguments tuples, `.map` accepts an iterable of arguments.
