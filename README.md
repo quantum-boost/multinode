@@ -1,28 +1,18 @@
-### What is Multinode?
+## Multinode
 
-**Multinode** lets you rapidly deploy cloud applications that perform **asynchronous tasks**.
+Multinode is a framework for running **asynchronous tasks** on the cloud. The framework:
 
-Consider using Multinode if your application runs tasks that:
-- are **triggered on demand** by the user of the application;
-- take of the order of **minutes or hours** to complete;
-- require **expensive hardware** that should be provisioned only when required.
-
-For example, Multinode can be used within:
-- a document/image/video processing app
-- a data analytics app
-- a scientific computing app
-
-The main benefits of Multinode are:
-- **Minimal boilerplate:** Cloud API calls, cloud permissions,
-task lifecycle management and task data storage are abstracted away.
-- **Responsive scaling:** Compute resources are spun up as soon as a task is created,
-and torn down as soon as the task is complete.
+- Provisions compute resources on demand, without you having to worry about
+cloud API calls or cloud permissions.
+- Handles retries, timeouts, concurrency quotas, cancellations and progress monitoring.
+- Supports distributed tasks of arbitrary complexity, e.g. tasks that spawn subtasks
+at runtime.
 
 
 ### Quick start
 
-Deploy the Multinode control plane into your AWS account.
-(Instructions and Terraform code provided in the [aws-infra](aws-infra/README.md) folder.)
+Deploy the Multinode control plane into your AWS account - see [instructions here](aws-infra/README.md).
+(Or contact us if you are interested in a hosted solution.)
 
 Install the Multinode Python package and authenticate with the Multinode control plane.
 ```commandline
@@ -30,15 +20,22 @@ pip install multinode
 multinode login
 ```
 
-Define the task as a Python function.
+Define your asynchronous task as a Python function.
 ```python
 # File: tasks/main.py
 
 from multinode import Multinode
+from datetime import timedelta
 
 mn = Multinode()
 
-@mn.function(cpu=4.0, memory="16 GiB")
+@mn.function(
+    cpu=4.0,
+    memory="16 GiB",
+    max_retries=1,
+    max_concurrency=10,
+    timeout=timedelta(hours=1)
+)
 def run_expensive_task(x):
     out =  # ... details of the task ...
     return out
@@ -49,68 +46,58 @@ Register the function with the Multinode control plane.
 multinode deploy tasks/ --project-name=my_project
 ```
 
-Implement the rest of the application, invoking the function when needed.
+Implement the rest of your application, which invokes the function when needed.
+(In this particular example, the application is a FastAPI web server.)
 ```python
 # File: application/main.py
 # NB can be a different codebase from tasks/
 
 from multinode import get_deployed_function
+from fastapi import FastAPI
 
 run_expensive_task = get_deployed_function(
     project_name="my_project",
     function_name="run_expensive_task"
 )
 
-# ... other code ...
+app = FastAPI()
 
-# Start a task invocation.
-# The computation runs on *remote* hardware, which is *provisioned on demand*.
-invocation_id = run_expensive_task.start(x=10000)
+@app.post("/task_invocations")
+def start_task():
+    invocation_id = run_expensive_task.start(x=10000)
+    return {"invocation_id": invocation_id}
 
-# ... other code ...
+@app.get("/task_invocations/{invocation_id}")
+def get_task_status_and_result(invocation_id: str):
+    invocation_data = run_expensive_task.get(invocation_id)
+    return {
+        "status": invocation_data.status,  # e.g. PENDING, RUNNING, SUCCEEDED, FAILED
+        "result_if_complete": invocation_data.result
+    }
 
-# Get the status of the task invocation, and the result (if available)
-invocation = run_expensive_task.get(invocation_id)
-print(invocation.status)  # e.g. PENDING, RUNNING, SUCCEEDED
-print(invocation.result)  # e.g. 12345 (if available), or None (if still running)
+@app.put("/task_invocations/{invocation_id}/cancel")
+def cancel_task(invocation_id: str):
+    run_expensive_task.cancel(invocation_id)
 ```
 
+### Advanced usage
 
-### Further functionality
-
-In addition to the above basic functionality, Multinode allows you to:
-- Expose progress updates from an in-flight task.
-- Cancel a task programmatically.
-- Implement retries in case of code errors or hardware failures.
-- Configure timeouts and concurrency limits.
-- Spawn subtasks from a parent task.
-- Inspect task logs.
-- Add custom Python dependencies and environment variables.
-- Manage the lifecycle of the deployed application.
-
-For further details, see
-the [reference guide](python-client/README.md)
-or the [worked example](example-project/README.md).
+- [Client reference guide](python-client/README.md) - dependencies, project structure, deployment lifecycle and more.
+- [An example with distributed compute](example-project/README.md) - subtasks spawned dynamically at runtime.
 
 
-### Approaches to scaling: When to use Multinode?
 
-**Multinode's approach: Direct resource provisioning.**
-Multinode makes _direct API calls_ to the cloud provider, to provision a _new worker_ for _each new task_.
+### Use cases
 
-**Alternative approach: Autoscaling a warm worker pool.**
-Popular alternative frameworks for asynchronous tasks include Celery and Kafka consumers.
-Applications written in these frameworks usually run on a warm pool of workers.
-Each worker stays alive between task executions.
-The number of workers is _autoscaled_ according to some metric (e.g. the number of pending tasks).
+Multinode is designed for applications that run tasks that:
+- are **triggered on demand by the user** of the application;
+- take of the order of **minutes or hours** to complete;
+- require **expensive hardware** that should be provisioned only when required.
 
-Advantages of Multinode's approach:
-- Scales up _immediately_ when new tasks are created; scales down _immediately_ when a task finishes.
-- No risk of interrupting a task execution when scaling down.
-
-Advantages of the alternative warm-pool-based approach:
-- More suitable for processing a _higher volume_ of _shorter-lived_ tasks. 
-- Can maintain spare capacity to mitigate against cold starts.
+For example, Multinode can be used within:
+- a document/image/video processing app
+- a data analytics app
+- a scientific computing app
 
 
 ### Architecture
@@ -127,9 +114,25 @@ other AWS compute engines (e.g. EC2 with GPUs), to other cloud providers, and to
 We may implement these extensions if there is demand. 
 We also welcome contributions from the open source community in this regard.
 
-Currently, you need to deploy Multinode in _your own_ AWS account.
-(Terraform is provided in the [aws-infra](aws-infra/README.md) folder.)
-We may offer Multinode as a managed service in the future.
+
+### Resource provisioning - Multinode vs other solutions
+
+**Multinode's approach: Direct resource provisioning.**
+Multinode makes _direct API calls_ to the cloud provider, to provision a _new worker_ for _each new task_.
+
+**Alternative approach: Autoscaling a warm worker pool.**
+Popular alternative frameworks for asynchronous tasks include Celery and Kafka consumers.
+Applications written in these frameworks usually run on a warm pool of workers.
+Each worker stays alive between task executions.
+The number of workers is _autoscaled_ according to some metric (e.g. the number of pending tasks).
+
+**Advantages of Multinode's approach:**
+- Scales up _immediately_ when new tasks are created; scales down _immediately_ when a task finishes.
+- No risk of interrupting a task execution when scaling down.
+
+**Advantages of the alternative warm-pool-based approach:**
+- More suitable for processing a _higher volume_ of _shorter-lived_ tasks. 
+- Can maintain spare capacity to mitigate against cold starts.
 
 
 ### Programming language support
