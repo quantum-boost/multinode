@@ -167,7 +167,7 @@ And `solve_tsp` and `simulated_annealing` should appear as functions registered 
 multinode describe --project-name tsp-solver
 ```
 
-### Running the API
+#### Running the API
 
 All that remains is to start the FastAPI app, so that users can trigger the travelling salesman calculation
 via API calls:
@@ -177,7 +177,7 @@ uvicorn application.main:app --reload
 
 And you're done!
 
-### Calling the API
+#### Calling the API
 
 As a user, you can send requests to the API using the `curl` command. 
 
